@@ -21,14 +21,41 @@ export interface ResultType {
 }
 
 export interface Filter {
+    /**
+     * version: 1
+     */
     rent: NumericFilter;
+    /**
+     * version: 1
+     */
     income: NumericFilter;
+    /**
+     * version: 1
+     */
     childrenCount: NumericFilter;
+    /**
+     * version: 1
+     */
     childrenAge: NumericFilter;
+    /**
+     * version: 1
+     */
     zip: string[];
+    /**
+     * version: 1
+     */
     keyword: {includes: boolean, values: string[]}; // victimOfViolence, pregnant
+    /**
+     * version: 1
+     */
     insurances: Insurance[]; // only if in insurance
+    /**
+     * version: 1
+     */
     relationships: { includes: boolean, values: RelationshipType[]};
+    /**
+     * version: 1
+     */
     jobSituations: { includes: boolean, values: JobSituationType[]};
 }
 enum RelationshipType {}
