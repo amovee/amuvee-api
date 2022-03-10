@@ -1,10 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Category } from 'src/shared/schemas/category.schema';
+import { CategoriesService } from './categories.service';
 
-@Controller()
+@Controller('categories')
 export class CategoriesController {
-  constructor() {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+  ) {}
   @Get()
-  getHello(): string {
-    return 'hello';
+  async getHello(): Promise<Category[]> {
+    return this.categoriesService.findAll();
+  }
+  @Post()
+  async add(@Body() dto: any): Promise<Category>  {
+    console.log(dto);
+    
+    return this.categoriesService.create(dto);
   }
 }

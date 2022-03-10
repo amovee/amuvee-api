@@ -5,15 +5,15 @@ import { Location } from "./location.interface";
 
 export interface Result extends ContentMeta {
     name: string; 
-    shortDescription: string;
-    description: string;
-    startDate: Date;
-    endDate: Date;
-    location: Location | number;
-    actions: (Action | number)[];
-    type: ResultType | number;
-    amountMoney: {min: number, max: number};
-    filters: Filter[];
+    // shortDescription: string;
+    // description: string;
+    // startDate: Date;
+    // endDate: Date;
+    // location: Location | number;
+    // actions: (Action | number)[];
+    // type: ResultType | number;
+    // amountMoney: {min: number, max: number};
+    // filters: Filter[];
 }
 export interface ResultType {
     name: string;
