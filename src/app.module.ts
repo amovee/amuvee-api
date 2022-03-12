@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { ResultsModule } from './modules/results/results.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -12,6 +13,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule ,
     UsersModule,
     CategoriesModule,
+    ResultsModule,
     RouterModule.register([
       {
         path: '/users',

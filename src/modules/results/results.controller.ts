@@ -1,10 +1,10 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 
-@Controller()
+@Controller('/categories/:id/results')
 export class ResultsController {
   constructor() {}
   @Get()
-  getHello(): string {
-    return 'hello';
+  getHello(@Param('id') id: string): string {
+    return 'hello_'+id;
   }
 }

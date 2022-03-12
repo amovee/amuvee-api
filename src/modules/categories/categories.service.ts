@@ -9,8 +9,11 @@ export class CategoriesService {
     
   constructor(@InjectModel(Category.name) private categoryModel: Model<CategoryDocument>) {}
 
-  async create(createCategoryDto: any): Promise<Category> {
-    const createdCategory = new this.categoryModel(createCategoryDto);
+  async createEmpty(name: string): Promise<Category> {
+    const createdCategory = new this.categoryModel({
+      name,
+      results: []
+    });
     return createdCategory.save();
   }
 

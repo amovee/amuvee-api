@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body,Req, Controller, Get, Post } from '@nestjs/common';
 import { Category } from 'src/shared/schemas/category.schema';
 import { CategoriesService } from './categories.service';
+import { Request } from 'express';
+
 
 @Controller('categories')
 export class CategoriesController {
@@ -12,9 +14,7 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
   @Post()
-  async add(@Body() dto: any): Promise<Category>  {
-    console.log(dto);
-    
-    return this.categoriesService.create(dto);
+  async createEmpty(@Body("name") name: any): Promise<Category>  {
+    return this.categoriesService.createEmpty(name);
   }
 }
