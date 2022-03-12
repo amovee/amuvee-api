@@ -5,7 +5,11 @@ import { MigrationService } from './migration.service';
 export class MigrationController {
   constructor(private readonly migraionService: MigrationService) {}
   @Post('users')
-  async getHello(): Promise<any> {
+  async migrateAllUsers(): Promise<any> {
     return await this.migraionService.migrateUsers();
+  }
+  @Post('categories')
+  async migrateAllCategories(): Promise<any> {
+    return await this.migraionService.migrateCategories();
   }
 }
