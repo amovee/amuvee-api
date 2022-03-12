@@ -9,7 +9,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { User as IUser } from 'src/shared/interfaces/user.interface';
+import { IUser } from 'src/shared/interfaces/user.interface';
 import { User } from 'src/shared/schemas/user.schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';

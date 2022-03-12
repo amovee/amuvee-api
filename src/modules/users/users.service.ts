@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { Model } from 'mongoose';
-import { User as IUser } from 'src/shared/interfaces/user.interface';
+import { IUser } from 'src/shared/interfaces/user.interface';
 
 const publicUserFields = ['_id', 'role', 'username'];
 
@@ -57,6 +57,8 @@ export class UsersService {
           username: toCreate.username,
           password: toCreate.password,
           role: toCreate.role,
+          oldId: toCreate.id,
+          email: toCreate.email
         })).save();
       } else {
         throw new HttpException({

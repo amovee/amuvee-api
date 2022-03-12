@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { MigrationModule } from './modules/migration/migration.module';
 import { ResultsModule } from './modules/results/results.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -14,6 +15,7 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     CategoriesModule,
     ResultsModule,
+    MigrationModule,
     RouterModule.register([
       {
         path: '/users',
