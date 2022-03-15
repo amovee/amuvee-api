@@ -287,6 +287,7 @@ export class MigrationService {
     return keywords;
   }
   async migrateResultsFromAllCategories(): Promise<any> {
+    await this.resultModel.deleteMany().exec();
     const categories = await this.categoryModel.find().exec();
     categories.forEach(async (category) => {
       await this.migrateResults(category.oldId);
@@ -294,7 +295,6 @@ export class MigrationService {
     return 'done';
   }
   async migrateResults(oldId: string): Promise<any> {
-    await this.resultModel.deleteMany().exec();
     const category = await this.categoryModel
       .findOne({ oldId }, ['_id'])
       .exec();
@@ -331,12 +331,15 @@ export class MigrationService {
       jobRelatedSituationIds[jobRelatedSituation.oldId] =
         jobRelatedSituation._id;
     });
-    const fields = '*,has_insurance.*,has_relationship.*,has_job_related_situation.*,relationship_types.*,type.*';
+    const fields =
+      '*,has_insurance.*,has_relationship.*,has_job_related_situation.*,relationship_types.*,type.*';
     let results = (
       await axios.get(
         this.URL +
           'items/' +
-          'result?fields='+fields+'&filter={"category":{"_eq":' +
+          'result?fields=' +
+          fields +
+          '&filter={"category":{"_eq":' +
           oldId +
           '}}',
       )
@@ -360,36 +363,21 @@ export class MigrationService {
             min: result.min_children_count,
             max: result.max_children_count,
           },
-          childAge: { min: result.min_age, max: result.max_age },
+          childrenAge: { min: result.min_age, max: result.max_age },
           motherAge: { min: result.min_mother_age, max: result.max_mother_age },
-          placesOfResidence: {
-            required: true,
-            values: this.transformPostalCodes(result),
-          }, // postalcodes || zip
-          regionsOfResidence: {
-            required: true,
-            values: regionIds[result.region],
-          }, // Save Region as Module
+          zips: this.transformPostalCodes(result), // postalcodes || zip
+          regions: regionIds[result.region], // Save Region as Module
           requiredKeywords: this.transformKeyWords(result), // victimOfViolence, pregnant
           unrequiredKeywords: [], // victimOfViolence, pregnant
-          insurances: {
-            required: true,
-            values: result.has_insurance.map(
-              (i) => insuranceIds[i.insurance_id],
-            ),
-          },
-          relationships: {
-            required: true,
-            values: result.has_relationship.map(
-              (i) => relationshipTypeIds[i.relationship_types_id],
-            ),
-          },
-          jobSituations: {
-            required: true,
-            values: result.has_job_related_situation.map(
-              (i) => jobRelatedSituationIds[i.job_related_situations_id],
-            ),
-          },
+          insurances: result.has_insurance.map(
+            (i) => insuranceIds[i.insurance_id],
+          ),
+          relationships: result.has_relationship.map(
+            (i) => relationshipTypeIds[i.relationship_types_id],
+          ),
+          jobSituations: result.has_job_related_situation.map(
+            (i) => jobRelatedSituationIds[i.job_related_situations_id],
+          ),
         },
 
         oldId: result.id,

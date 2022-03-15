@@ -12,26 +12,26 @@ export class ResultFilter {
   @Prop({ type: {min: Number, max: Number}})
   childrenCount: {min: number, max: number};
   @Prop({ type: {min: Number, max: Number}})
-  childAge: {min: number, max: number};
+  childrenAge: {min: number, max: number};
   // @Prop()
   // motherAge: {min: number, max: number};
     
-  @Prop({type: { required: Boolean, values: [String]}}) // postalcodes || zip
-  placesOfResidence: { required: boolean, values: string[]}; //relation
-  @Prop({type: { required: Boolean, values: [String]}})
-  regionsOfResidence: { required: boolean, values: string[]}; //region
+  @Prop({type: [String]}) // postalcodes || zip
+  zips: string[]; //relation
+  @Prop({type: [String]})
+  regions: string[]; //region
   @Prop()
   requiredKeywords: string[]; // victimOfViolence, pregnant
   @Prop()
   unrequiredKeywords: string[]; // victimOfViolence, pregnant
-  @Prop({type: { required: Boolean, values: [String]}})
-  insurances: { required: boolean, values: string[]}; //relation
+  @Prop({type: [String]})
+  insurances: string[]; //relation
   
-  @Prop({type: { required: Boolean, values: [String]}})
-  relationships: { required: boolean, values: string[]}; //relation
+  @Prop({type: [String]})
+  relationships: string[]; //relation
   
-  @Prop({type: { required: Boolean, values: [String]}})
-  jobSituations: { required: boolean, values: string[]}; //relation
+  @Prop({type: [String]})
+  jobSituations: string[]; //relation
 }
 export const ResultFilterSchema = SchemaFactory.createForClass(ResultFilter);
 @Schema()
