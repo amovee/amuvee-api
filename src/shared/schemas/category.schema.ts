@@ -4,20 +4,23 @@ import { Result, ResultSchema } from './result.schema';
 
 export type CategoryDocument = Category & Document;
 
-
 @Schema()
 export class Category {
+  // @Prop([{ type: ResultSchema }])
+  // @Prop()
+  // results: string[];
+  @Prop()
+  description: string;
+
+  // META
   @Prop()
   name: string;
-  @Prop([{ type: ResultSchema }])
-  results: Result[];
-
   @Prop()
   oldId: string;
   @Prop()
   status: string;
   @Prop()
-  sort: number;
+  sort: number; // weight
   @Prop()
   userCreated: string;
   @Prop()
@@ -26,8 +29,6 @@ export class Category {
   userUpdated: string;
   @Prop()
   dateUpdated: Date;
-  @Prop()
-  description: string;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
