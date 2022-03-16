@@ -13,7 +13,7 @@ export class ResultsService {
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
   ) {}
 
-  async getFilteredResult(categoryId: string, answers: Answers, limit: number, offset: number): Promise<any> {
+  async getAllFilters(categoryId: string, answers: Answers): Promise<any> {
     let regions = await this.regionModel.find({ postalCodes: { $in: [answers.zip] } }).exec();
 
     let filters = [];
@@ -76,7 +76,13 @@ export class ResultsService {
     if (answers.jobSituation != null) { // TODO: test
       filters.push(generateJobSituationFilter(answers.jobSituation));
     }
+    return { $and: filters };
+  }
+  async getFilteredResult(categoryId: string, answers: Answers, limit: number, offset: number): Promise<any> {
     return await this.resultModel
-      .find({ $and: filters }).skip(offset).limit(limit).exec();
+      .find(await this.getAllFilters(categoryId, answers)).skip(offset).limit(limit).exec();
+  }
+  async getFilteredResultCount(categoryId: string, answers: Answers): Promise<number> {
+    return await this.resultModel.count(await this.getAllFilters(categoryId, answers)).exec();
   }
 }

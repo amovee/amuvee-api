@@ -5,6 +5,7 @@ import { ResultsService } from './results.service';
 @Controller('/categories/:id/results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
+  // NO AUTH
   @Get()
   async getFiltered(
     @Param('id') id: string,
@@ -20,5 +21,17 @@ export class ResultsController {
       clamp(0, limit, 30),
       Math.max(0, offset),
     );
+  }
+  // NO AUTH
+  @Get('counter')
+  async getFilteredCounter(
+    @Param('id') id: string,
+    @Body() answers: Answers
+  ): Promise<{counter: number}> {
+    return {
+      counter: await this.resultsService.getFilteredResultCount(
+      id,
+      answers
+    )};
   }
 }
