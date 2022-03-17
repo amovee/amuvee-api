@@ -11,27 +11,46 @@ export class ResultsController {
     @Param('id') id: string,
     @Query('limit') limit: number = 10,
     @Query('offset') offset: number = 0,
-    @Body() answers: Answers
+    @Body() answers: Answers,
   ): Promise<any> {
-    const clamp = (min: number, num: number, max: number) =>
-      Math.min(Math.max(num, min), max);
     return await this.resultsService.getFilteredResult(
       id,
       answers,
-      clamp(0, limit, 30),
+      Math.min(Math.max(limit, 0), 30),
       Math.max(0, offset),
+    );
+  }
+  @Get('min')
+  async getFilteredMin(
+    @Param('id') id: string,
+    @Query('limit') limit: number = 10,
+    @Query('offset') offset: number = 0,
+    @Body() answers: Answers,
+  ): Promise<any> {
+    return await this.resultsService.getFilteredResult(
+      id,
+      answers,
+      Math.min(Math.max(limit, 0), 30),
+      Math.max(0, offset),
+      {
+        dateUpdated: 0,
+        userUpdated: 0,
+        dateCreated: 0,
+        userCreated: 0,
+        status: 0,
+        oldId: 0,
+        filter: 0,
+      },
     );
   }
   // NO AUTH
   @Get('counter')
   async getFilteredCounter(
     @Param('id') id: string,
-    @Body() answers: Answers
-  ): Promise<{counter: number}> {
+    @Body() answers: Answers,
+  ): Promise<{ counter: number }> {
     return {
-      counter: await this.resultsService.getFilteredResultCount(
-      id,
-      answers
-    )};
+      counter: await this.resultsService.getFilteredResultCount(id, answers),
+    };
   }
 }

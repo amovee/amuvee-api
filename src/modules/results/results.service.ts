@@ -78,9 +78,9 @@ export class ResultsService {
     }
     return { $and: filters };
   }
-  async getFilteredResult(categoryId: string, answers: Answers, limit: number, offset: number): Promise<any> {
+  async getFilteredResult(categoryId: string, answers: Answers, limit: number, offset: number, projection: any = {}): Promise<any> {
     return await this.resultModel
-      .find(await this.getAllFilters(categoryId, answers)).skip(offset).limit(limit).exec();
+      .find(await this.getAllFilters(categoryId, answers), projection).skip(offset).limit(limit).exec();
   }
   async getFilteredResultCount(categoryId: string, answers: Answers): Promise<number> {
     return await this.resultModel.count(await this.getAllFilters(categoryId, answers)).exec();

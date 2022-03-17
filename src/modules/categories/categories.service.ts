@@ -3,9 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Category, CategoryDocument } from 'src/shared/schemas/category.schema';
 import { Model } from 'mongoose';
 
-import axios from 'axios';
-
-
 @Injectable()
 export class CategoriesService {
 

@@ -36,8 +36,10 @@ export class ResultFilter {
 export const ResultFilterSchema = SchemaFactory.createForClass(ResultFilter);
 @Schema()
 export class Result {
-  @Prop({type:{start: Date, end: Date}})
-  lapse: {start: Date, end: Date};
+  @Prop()
+  startDate: Date;
+  @Prop()
+  endDate: Date;
   @Prop()
   description: string;
   @Prop()

@@ -14,6 +14,7 @@ import {
 import { LocationDocument, Location } from 'src/shared/schemas/location.schema';
 import { regions } from './regions';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class MigrationService {
@@ -311,8 +312,10 @@ export class MigrationService {
     const types: any = {};
     const resultTypes = await this.resultTypeModel.find().exec();
     resultTypes.forEach((type) => {
-      types[type.oldId] = type._id;
+      types[type.oldId] = type._id.toString();
     });
+    
+    
     const insuranceIds: any = {};
     const insurances = await this.insuranceModel.find().exec();
     insurances.forEach((insurance) => {
@@ -343,14 +346,15 @@ export class MigrationService {
           oldId +
           '}}',
       )
-    ).data.data;
+    ).data.data;    
     results = results.map((result) => {
       return {
-        lapse: { start: result.start_date, end: result.end_date },
+        startDate: result.start_date,
+        endDate: result.end_date,
         description: result.description,
         shortDescription: result.short_description,
         categoryId: category._id,
-        typeId: types[result.oldId], //relation
+        typeId: types[result.type.id], //relation
         locationId: locationIds[result.location], //relation
         amountOfMoney: {
           min: result.min_amount_of_money,

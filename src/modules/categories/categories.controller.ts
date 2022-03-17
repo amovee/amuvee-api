@@ -1,16 +1,15 @@
 import { Body,Req, Controller, Get, Post } from '@nestjs/common';
 import { Category } from 'src/shared/schemas/category.schema';
 import { CategoriesService } from './categories.service';
-import { Request } from 'express';
-
 
 @Controller('categories')
 export class CategoriesController {
   constructor(
     private readonly categoriesService: CategoriesService,
   ) {}
+  // No Auth
   @Get()
-  async getHello(): Promise<Category[]> {
+  async findAll(): Promise<Category[]> {
     return this.categoriesService.findAll();
   }
   @Post()
