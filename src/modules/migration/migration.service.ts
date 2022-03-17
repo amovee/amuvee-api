@@ -14,7 +14,8 @@ import {
 import { LocationDocument, Location } from 'src/shared/schemas/location.schema';
 import { regions } from './regions';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
-import mongoose from 'mongoose';
+import { Action } from 'rxjs/internal/scheduler/Action';
+import { ActionDocument } from 'src/shared/schemas/action.schema';
 
 @Injectable()
 export class MigrationService {
@@ -25,6 +26,7 @@ export class MigrationService {
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
+    @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
     @InjectModel(Insurance.name)
     private insuranceModel: Model<InsuranceDocument>,
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
@@ -236,6 +238,43 @@ export class MigrationService {
     }
     return relationshipTypes;
   }
+
+  async migrateActions(): Promise<any> {
+    await this.actionModel.deleteMany().exec();
+    let counter = (
+      await axios.get(this.URL + 'items/action?fields=*&limit=0&meta=filter_count')
+    ).data.meta.filter_count;
+    let actions = (
+      await axios.get(this.URL + 'items/action?limit='+counter)
+    ).data.data;
+    actions = actions.map((action) => {
+      return {
+        name: action.name,
+        type: +action.type,
+        description: action.description,
+        oldId: action.id,
+        status: action.status,
+        sort: action.weight,
+        userCreated: action.user_created,
+        dateCreated: action.date_created,
+        userUpdated: action.user_updated,
+        dateUpdated: action.date_updated,
+      };
+    });
+    for (let i = 0; i < actions.length; i++) {
+      const userCreated = await this.userModel
+        .findOne({ oldId: actions[i].userCreated }, ['_id'])
+        .exec();
+      const userUpdated = await this.userModel
+        .findOne({ oldId: actions[i].userUpdated }, ['_id'])
+        .exec();
+      actions[i].userCreated = !!userCreated ? userCreated._id : null;
+      actions[i].userUpdated = !!userUpdated ? userUpdated._id : null;
+
+      new this.actionModel(actions[i]).save();
+    }
+    return actions;
+  }
   async migrateJobRelatedSituations(): Promise<any> {
     await this.jobRelatedSituationModel.deleteMany().exec();
     let jobRelatedSituations = (
@@ -326,6 +365,13 @@ export class MigrationService {
     relationshipTypes.forEach((relationshipType) => {
       relationshipTypeIds[relationshipType.oldId] = relationshipType._id;
     });
+    const actionIds: any = {};
+    const actions = await this.actionModel.find().exec();
+    actions.forEach((action) => {
+      actionIds[action.oldId] = action._id;
+    });
+    console.log(actionIds);
+    
     const jobRelatedSituationIds: any = {};
     const jobRelatedSituations = await this.jobRelatedSituationModel
       .find()
@@ -348,6 +394,8 @@ export class MigrationService {
       )
     ).data.data;    
     results = results.map((result) => {
+      console.log(result.actions);
+      
       return {
         startDate: result.start_date,
         endDate: result.end_date,
@@ -355,6 +403,9 @@ export class MigrationService {
         shortDescription: result.short_description,
         categoryId: category._id,
         typeId: types[result.type.id], //relation
+        actions: result.actions.map(
+          (i) => actionIds[i],
+        ),
         locationId: locationIds[result.location], //relation
         amountOfMoney: {
           min: result.min_amount_of_money,

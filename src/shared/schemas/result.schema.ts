@@ -48,6 +48,8 @@ export class Result {
   categoryId: string; //relation
   @Prop()
   typeId: string; //relation
+  @Prop({type: [String]})
+  actions: string[]; //relation
   @Prop({ type: {min: Number, max: Number}})
   amountOfMoney: {min: number, max: number};
   @Prop({ type: ResultFilterSchema })

@@ -17,12 +17,14 @@ import {
   generateRequiredKeywordsFilter,
   generateUnrequiredKeywordsFilter,
 } from './results.filters';
+import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 
 @Injectable()
 export class ResultsService {
   constructor(
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
+    @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
   ) {}
 
   async getAllFilters(categoryId: string, answers: Answers): Promise<any> {
@@ -130,6 +132,19 @@ export class ResultsService {
       .skip(offset)
       .limit(limit)
       .exec();
+  }
+  async getFilteredActions(
+    resultId: string,
+    projection: any = {},
+  ): Promise<any> {
+    const actionIds = (await this.resultModel
+      .findOne({_id: resultId}).exec()).actions;
+    return await this.actionModel
+    .find({
+      '_id': {
+        $in: actionIds,
+      },
+    }, projection).exec();
   }
   async getFilteredResultCount(
     categoryId: string,

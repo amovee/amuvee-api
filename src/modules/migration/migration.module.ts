@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Action } from 'rxjs/internal/scheduler/Action';
+import { ActionSchema } from 'src/shared/schemas/action.schema';
 import { Category, CategorySchema } from 'src/shared/schemas/category.schema';
 import { Insurance, InsuranceSchema } from 'src/shared/schemas/insurance.schema';
 import { Location, LocationSchema } from 'src/shared/schemas/location.schema';
@@ -22,6 +24,7 @@ import { MigrationService } from './migration.service';
       { name: Insurance.name, schema: InsuranceSchema },
       { name: Location.name, schema: LocationSchema },
       { name: Region.name, schema: RegionSchema },
+      { name: Action.name, schema: ActionSchema },
     ]),
   ],
   controllers: [MigrationController],

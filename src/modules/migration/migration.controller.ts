@@ -19,6 +19,7 @@ export class MigrationController {
   async migrateAllHelpers(): Promise<any> {
     await this.migraionService.migrateCategories();
     await this.migraionService.migrateLocations();
+    await this.migraionService.migrateActions();
     await this.migraionService.migrateRegions();
     await this.migraionService.migrateResultTypes();
     await this.migraionService.migrateInsurances();
@@ -29,6 +30,10 @@ export class MigrationController {
   @Post('categories')
   async migrateAllCategories(): Promise<any> {
     return await this.migraionService.migrateCategories();
+  }
+  @Post('actions')
+  async migrateAllActions(): Promise<any> {
+    return await this.migraionService.migrateActions();
   }
   @Post('locations')
   async migrateAllLocations(): Promise<any> {

@@ -20,6 +20,26 @@ export class ResultsController {
       Math.max(0, offset),
     );
   }
+  @Get(':resultId')
+  async getFilteredActions(
+    @Param('id') id: string,
+    @Param('resultId') resultId: string,
+    @Query('limit') limit: number = 10,
+    @Query('offset') offset: number = 0,
+    @Body() answers: Answers,
+  ): Promise<any> {
+    return await this.resultsService.getFilteredActions(
+      resultId,
+      {
+        dateUpdated: 0,
+        userUpdated: 0,
+        dateCreated: 0,
+        userCreated: 0,
+        status: 0,
+        oldId: 0,
+      }
+    );
+  }
   @Get('min')
   async getFilteredMin(
     @Param('id') id: string,
@@ -50,7 +70,7 @@ export class ResultsController {
     @Body() answers: Answers,
   ): Promise<{ counter: number }> {
     return {
-      counter: await this.resultsService.getFilteredResultCount(id, answers),
+      counter: await this.resultsService.getFilteredResultCount(id, answers)
     };
   }
 }
