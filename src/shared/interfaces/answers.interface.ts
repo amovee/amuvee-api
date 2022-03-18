@@ -1,4 +1,4 @@
-export interface Answers {
+export interface IAnswers {
   zip: string;
   rent: number;
   income: number;

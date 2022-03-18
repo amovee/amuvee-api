@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
 import { Model } from 'mongoose';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
-import { Answers } from 'src/shared/interfaces/answers.interface';
+import { IAnswers } from 'src/shared/interfaces/answers.interface';
 import {
   generateChildrenAge,
   generateChildrenCountFilter,
@@ -27,7 +27,7 @@ export class ResultsService {
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
   ) {}
 
-  async getAllFilters(categoryId: string, answers: Answers): Promise<any> {
+  async getAllFilters(categoryId: string, answers: IAnswers): Promise<any> {
     let regions = await this.regionModel
       .find({ postalCodes: { $in: [answers.zip] } })
       .exec();
@@ -122,7 +122,7 @@ export class ResultsService {
   }
   async getFilteredResult(
     categoryId: string,
-    answers: Answers,
+    answers: IAnswers,
     limit: number,
     offset: number,
     projection: any = {},
@@ -148,7 +148,7 @@ export class ResultsService {
   }
   async getFilteredResultCount(
     categoryId: string,
-    answers: Answers,
+    answers: IAnswers,
   ): Promise<number> {
     return await this.resultModel
       .count(await this.getAllFilters(categoryId, answers))

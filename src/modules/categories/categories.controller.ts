@@ -1,5 +1,5 @@
 import { Body,Req, Controller, Get, Post, Param, Query } from '@nestjs/common';
-import { Answers } from 'src/shared/interfaces/answers.interface';
+import { IAnswers } from 'src/shared/interfaces/answers.interface';
 import { Category } from 'src/shared/schemas/category.schema';
 import { ResultsService } from '../results/results.service';
 import { CategoriesService } from './categories.service';
@@ -24,7 +24,7 @@ export class CategoriesController {
     @Param('id') id: string,
     @Query('limit') limit: number = 10,
     @Query('offset') offset: number = 0,
-    @Body() answers: Answers,
+    @Body() answers: IAnswers,
   ): Promise<any> {
     return await this.resultsService.getFilteredResult(
       id,
@@ -38,7 +38,7 @@ export class CategoriesController {
     @Param('id') id: string,
     @Query('limit') limit: number = 10,
     @Query('offset') offset: number = 0,
-    @Body() answers: Answers,
+    @Body() answers: IAnswers,
   ): Promise<any> {
     return await this.resultsService.getFilteredResult(
       id,

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Query } from '@nestjs/common';
-import { Answers } from 'src/shared/interfaces/answers.interface';
+import { IAnswers } from 'src/shared/interfaces/answers.interface';
 import { ResultsService } from './results.service';
 
 @Controller('results')
@@ -37,7 +37,7 @@ export class ResultsController {
     @Param('id') id: string,
     @Query('limit') limit: number = 10,
     @Query('offset') offset: number = 0,
-    @Body() answers: Answers,
+    @Body() answers: IAnswers,
   ): Promise<any> {
     return await this.resultsService.getFilteredResult(
       id,
@@ -59,7 +59,7 @@ export class ResultsController {
   @Get('counter')
   async getFilteredCounter(
     @Param('id') id: string,
-    @Body() answers: Answers,
+    @Body() answers: IAnswers,
   ): Promise<{ counter: number }> {
     return {
       counter: await this.resultsService.getFilteredResultCount(id, answers)
