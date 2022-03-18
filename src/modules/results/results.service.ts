@@ -21,6 +21,25 @@ import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 
 @Injectable()
 export class ResultsService {
+
+  private MIN_PROJECTION: any = {
+    dateUpdated: 0,
+    userUpdated: 0,
+    dateCreated: 0,
+    userCreated: 0,
+    status: 0,
+    oldId: 0,
+    filter: 0,
+  }
+  private MIN_ACTION_PROJECTION: any = {
+    dateUpdated: 0,
+    userUpdated: 0,
+    dateCreated: 0,
+    userCreated: 0,
+    status: 0,
+    oldId: 0,
+  }
+
   constructor(
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
@@ -125,17 +144,17 @@ export class ResultsService {
     answers: IAnswers,
     limit: number,
     offset: number,
-    projection: any = {},
+    isMin: boolean = false
   ): Promise<any> {
     return await this.resultModel
-      .find(await this.getAllFilters(categoryId, answers), projection)
+      .find(await this.getAllFilters(categoryId, answers), isMin? this.MIN_PROJECTION: {})
       .skip(offset)
       .limit(limit)
       .exec();
   }
   async getFilteredActions(
     resultId: string,
-    projection: any = {},
+    isMin: boolean = false
   ): Promise<any> {
     const actionIds = (await this.resultModel
       .findOne({_id: resultId}).exec()).actions;
@@ -144,7 +163,7 @@ export class ResultsService {
       '_id': {
         $in: actionIds,
       },
-    }, projection).exec();
+    }, isMin? this.MIN_ACTION_PROJECTION: {}).exec();
   }
   async getFilteredResultCount(
     categoryId: string,

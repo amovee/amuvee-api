@@ -15,9 +15,9 @@ export class CategoriesController {
   async findAll(): Promise<Category[]> {
     return this.categoriesService.findAll();
   }
-  @Post()
-  async createEmpty(@Body("name") name: any): Promise<Category>  {
-    return this.categoriesService.createEmpty(name);
+  @Get('min')
+  async findAllMin(): Promise<Category[]> {
+    return this.categoriesService.findAll(true);
   }
   @Get(':id/results')
   async getFiltered(
@@ -45,15 +45,7 @@ export class CategoriesController {
       answers,
       Math.min(Math.max(limit, 0), 30),
       Math.max(0, offset),
-      {
-        dateUpdated: 0,
-        userUpdated: 0,
-        dateCreated: 0,
-        userCreated: 0,
-        status: 0,
-        oldId: 0,
-        filter: 0,
-      },
+      true
     );
   }
 }

@@ -5,7 +5,14 @@ import { Model } from 'mongoose';
 
 @Injectable()
 export class CategoriesService {
-
+  private MIN_PROJECTION: any = {
+    dateUpdated: 0,
+    userUpdated: 0,
+    dateCreated: 0,
+    userCreated: 0,
+    status: 0,
+    oldId: 0,
+  }
   public categories: any;
     
   constructor(
@@ -33,7 +40,7 @@ export class CategoriesService {
     return createdCategory.save();
   }
 
-  async findAll(): Promise<Category[]> {
-    return this.categoryModel.find().exec();
+  async findAll(isMin: boolean = false): Promise<Category[]> {
+    return this.categoryModel.find({}, isMin? this.MIN_PROJECTION: {}).exec();
   }
 }

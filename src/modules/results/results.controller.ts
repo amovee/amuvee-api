@@ -21,14 +21,7 @@ export class ResultsController {
   ): Promise<any> {
     return await this.resultsService.getFilteredActions(
       id,
-      {
-        dateUpdated: 0,
-        userUpdated: 0,
-        dateCreated: 0,
-        userCreated: 0,
-        status: 0,
-        oldId: 0,
-      }
+      true
     );
   }
   
@@ -44,15 +37,7 @@ export class ResultsController {
       answers,
       Math.min(Math.max(limit, 0), 30),
       Math.max(0, offset),
-      {
-        dateUpdated: 0,
-        userUpdated: 0,
-        dateCreated: 0,
-        userCreated: 0,
-        status: 0,
-        oldId: 0,
-        filter: 0,
-      },
+      true
     );
   }
   // NO AUTH
