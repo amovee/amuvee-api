@@ -2,34 +2,25 @@ import { Body, Controller, Get, Param, Query } from '@nestjs/common';
 import { Answers } from 'src/shared/interfaces/answers.interface';
 import { ResultsService } from './results.service';
 
-@Controller('/categories/:id/results')
+@Controller('results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
   // NO AUTH
-  @Get()
-  async getFiltered(
-    @Param('id') id: string,
-    @Query('limit') limit: number = 10,
-    @Query('offset') offset: number = 0,
-    @Body() answers: Answers,
-  ): Promise<any> {
-    return await this.resultsService.getFilteredResult(
-      id,
-      answers,
-      Math.min(Math.max(limit, 0), 30),
-      Math.max(0, offset),
-    );
-  }
-  @Get(':resultId')
+  @Get(':resultId/actions')
   async getFilteredActions(
-    @Param('id') id: string,
     @Param('resultId') resultId: string,
-    @Query('limit') limit: number = 10,
-    @Query('offset') offset: number = 0,
-    @Body() answers: Answers,
   ): Promise<any> {
     return await this.resultsService.getFilteredActions(
-      resultId,
+      resultId
+    );
+  }
+  
+  @Get(':id/actions/min')
+  async getFilteredActionsMin(
+    @Param('id') id: string,
+  ): Promise<any> {
+    return await this.resultsService.getFilteredActions(
+      id,
       {
         dateUpdated: 0,
         userUpdated: 0,
@@ -40,6 +31,7 @@ export class ResultsController {
       }
     );
   }
+  
   @Get('min')
   async getFilteredMin(
     @Param('id') id: string,

@@ -21,5 +21,6 @@ import { ResultsService } from './results.service';
   ],
   controllers: [ResultsController],
   providers: [ResultsService],
+  exports: [ResultsService]
 })
 export class ResultsModule {}

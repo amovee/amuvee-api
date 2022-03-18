@@ -311,11 +311,6 @@ export class MigrationService {
     }
     return postalcodes;
   }
-  transformRegions(result: any): string[] {
-    let regions = [];
-    // TODO: save Region in collection
-    return regions;
-  }
   transformKeyWords(result): string[] {
     let keywords = [];
     if (result.is_pregnant) {
