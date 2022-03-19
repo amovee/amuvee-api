@@ -3,7 +3,9 @@ import { IAnswers } from 'src/shared/interfaces/answers.interface';
 import { Category } from 'src/shared/schemas/category.schema';
 import { ResultsService } from '../results/results.service';
 import { CategoriesService } from './categories.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('categories')
 @Controller('categories')
 export class CategoriesController {
   constructor(

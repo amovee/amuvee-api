@@ -3,7 +3,9 @@ import { LocationsService } from './locations.service';
 import { Location } from 'src/shared/schemas/location.schema';
 import { Schema } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('locations')
 @Controller('locations')
 export class LocationsController {
     constructor(

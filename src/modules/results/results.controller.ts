@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Param, Query } from '@nestjs/common';
 import { IAnswers } from 'src/shared/interfaces/answers.interface';
 import { ResultsService } from './results.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('results')
 @Controller('results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}

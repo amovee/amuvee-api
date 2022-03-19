@@ -2,7 +2,9 @@ import { Body,Req, Controller, Get, Post } from '@nestjs/common';
 import { Meta } from 'src/shared/schemas/meta.schema';
 import { JobSituationsService } from './job-situation.service';
 
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('job-situation')
 @Controller('job-situations')
 export class JobSituationsController {
   constructor(

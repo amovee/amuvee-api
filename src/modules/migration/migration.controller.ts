@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Post } from '@nestjs/common';
 import { MigrationService } from './migration.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('migration')
 @Controller('migration')
 export class MigrationController {
   constructor(private readonly migraionService: MigrationService) {}
