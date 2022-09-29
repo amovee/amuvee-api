@@ -14,9 +14,11 @@ import { JobSituationsModule } from './modules/job-situations/job-situation.modu
 import { MigrationModule } from './modules/migration/migration.module';
 import { ResultsModule } from './modules/results/results.module';
 import { UsersModule } from './modules/users/users.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     InsurancesModule,
     ResultTypesModule,
     RelationshipTypesModule,

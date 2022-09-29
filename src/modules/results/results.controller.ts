@@ -8,12 +8,12 @@ import { ApiTags } from '@nestjs/swagger';
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
   // NO AUTH
-  @Get(':resultId/actions')
+  @Get(':id/actions')
   async getFilteredActions(
-    @Param('resultId') resultId: string,
+    @Param('id') id: string,
   ): Promise<any> {
     return await this.resultsService.getFilteredActions(
-      resultId
+      id
     );
   }
   
@@ -27,7 +27,7 @@ export class ResultsController {
     );
   }
   
-  @Get('min')
+  @Get(':id/min')
   async getFilteredMin(
     @Param('id') id: string,
     @Query('limit') limit: number = 10,
