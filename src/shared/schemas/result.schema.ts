@@ -59,7 +59,7 @@ export class Result {
   @Prop()
   name: string;
   @Prop()
-  oldId: string;
+  oldId: number;
   @Prop()
   status: string;
   @Prop()

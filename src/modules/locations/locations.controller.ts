@@ -1,18 +1,22 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Location } from './location.schema';
 import { LocationsService } from './locations.service';
-import { Location } from 'src/shared/schemas/location.schema';
-import { Schema } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
-import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('locations')
 @Controller('locations')
 export class LocationsController {
-    constructor(
-        private readonly locationsService: LocationsService,
-        ){}
-    @Get(':id')
-    async getOneLocation(@Param('id') id: string):Promise<Location> {
-        return await this.locationsService.findOne(id);
-    }
+  constructor(private readonly locationsService: LocationsService) {}
+  @Get()
+  async getAll(
+    @Query() query: { limit?: number; skip?: number }
+  ): Promise<Location[]> {
+    return await this.locationsService.getAll(
+      query.limit ? query.limit : 20,
+      query.skip ? query.skip : 0
+    );
+  }
+  @Post('migrate')
+  async migrate(): Promise<string> {
+    await this.locationsService.migrate();
+    return 'done';
+  }
 }

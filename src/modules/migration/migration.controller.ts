@@ -1,72 +1,75 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
+import { ActionsService } from '../actions/actions.service';
+import { CategoriesService } from '../categories/categories.service';
+import { InsurancesService } from '../insurances/insurances.service';
+import { LocationsService } from '../locations/locations.service';
+import { RegionService } from '../region/region.service';
+import { UsersService } from '../users/users.service';
 import { MigrationService } from './migration.service';
-import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('migration')
 @Controller('migration')
 export class MigrationController {
-  constructor(private readonly migraionService: MigrationService) {}
-  @Post('users')
-  async migrateAllUsers(): Promise<any> {
-    return await this.migraionService.migrateUsers();
-  }
+  constructor(private readonly migraionService: MigrationService,
+    private regionService: RegionService,
+    private locationService: LocationsService,
+    private categoryService: CategoriesService,
+    private insuranceService: InsurancesService,
+    private actionService: ActionsService,
+    private userService: UsersService) {}
+  // @Post('users')
+  // async migrateAllUsers(): Promise<any> {
+  //   return await this.migraionService.migrateUsers();
+  // }
   @Post('all')
-  async migrateAll(): Promise<any> {
+  async migrateAll(): Promise<string> {
     await this.migrateAllHelpers();
     await this.migrateAllResultsFromAllCategories();
     return 'done'
   }
+  @Post('users')
+  async migrateUsers(): Promise<string> {
+    this.userService.migrate();
+    return 'done'
+  }
+  @Post('region')
+  async migrateRegion(): Promise<string> {
+    this.regionService.migrate();
+    return 'done'
+  }
+  @Post('location')
+  async migrateLocation(): Promise<string> {
+    this.locationService.migrate();
+    return 'done'
+  }
+  @Post('category')
+  async migrateCategory(): Promise<string> {
+    this.categoryService.migrate();
+    return 'done'
+  }
+  @Post('insurance')
+  async migrateInsurances(): Promise<string> {
+    this.insuranceService.migrate();
+    return 'done'
+  }
+  @Post('action')
+  async migrateActions(): Promise<string> {
+    await this.actionService.migrate();
+    return 'done'
+  }
   
   @Post('helpers')
-  async migrateAllHelpers(): Promise<any> {
-    await this.migraionService.migrateCategories();
-    await this.migraionService.migrateLocations();
-    await this.migraionService.migrateActions();
-    await this.migraionService.migrateRegions();
-    await this.migraionService.migrateResultTypes();
-    await this.migraionService.migrateInsurances();
-    await this.migraionService.migrateRelationshipTypes();
-    await this.migraionService.migrateJobRelatedSituations();
+  async migrateAllHelpers(): Promise<string> {
+    await this.userService.migrate();
+    await this.categoryService.migrate();
+    await this.locationService.migrate();
+    await this.regionService.migrate();
+    await this.insuranceService.migrate();
+    await this.actionService.migrate();
     return "done";
   }
-  @Post('categories')
-  async migrateAllCategories(): Promise<any> {
-    return await this.migraionService.migrateCategories();
-  }
-  @Post('actions')
-  async migrateAllActions(): Promise<any> {
-    return await this.migraionService.migrateActions();
-  }
-  @Post('locations')
-  async migrateAllLocations(): Promise<any> {
-    return await this.migraionService.migrateLocations();
-  }
-  @Post('regions')
-  async migrateAllRegions(): Promise<any> {
-    return await this.migraionService.migrateRegions();
-  }
-  @Post('result_types')
-  async migrateAllResultTypes(): Promise<any> {
-    return await this.migraionService.migrateResultTypes();
-  }
-  @Post('insurances')
-  async migrateAllInsurances(): Promise<any> {
-    return await this.migraionService.migrateInsurances();
-  }
-  @Post('relationship_types')
-  async migrateAllRelationshipTypes(): Promise<any> {
-    return await this.migraionService.migrateRelationshipTypes();
-  }
-  @Post('job_related_situations')
-  async migrateAllJobRelatedSituations(): Promise<any> {
-    return await this.migraionService.migrateJobRelatedSituations();
-  }
-  @Post('results/:id')
-  async migrateAllResults(@Param('id') id: string): Promise<any> {
-    return await this.migraionService.migrateResults(id);
-  }
   @Post('results')
-  async migrateAllResultsFromAllCategories(): Promise<any> {
-    return await this.migraionService.migrateResultsFromAllCategories();
+  async migrateAllResultsFromAllCategories(): Promise<string> {
+    await this.migraionService.migrateResultsFromAllCategories();
+    return 'done';
   }
 }

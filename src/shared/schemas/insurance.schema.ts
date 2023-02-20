@@ -7,7 +7,7 @@ export class Insurance {
   @Prop()
   isPublic: string;
   @Prop()
-  oldId: string;
+  oldId: number;
   @Prop()
   status: string;
   @Prop()

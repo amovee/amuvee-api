@@ -6,7 +6,7 @@ https://docs.nestjs.com/modules
 
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Insurance, InsuranceSchema } from 'src/shared/schemas/insurance.schema';
+import { Insurance, InsuranceSchema } from './insurance.schema';
 
 @Module({
   imports: [

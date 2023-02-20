@@ -1,19 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Meta, MetaDocument } from 'src/shared/schemas/meta.schema';
+import { MetaDocument } from '../../schemas/meta.schema';
+import axios from 'axios';
+import { Insurance } from './insurance.schema';
 
 
 @Injectable()
-export class InsurancesService {
-    
+export class InsurancesService {    
   constructor(
     @InjectModel('Insurance')
-    private insurancesModel: Model<MetaDocument>,
+    private insuranceModel: Model<MetaDocument>,
   ) {}
   
-
-  async findAll(): Promise<Meta[]> {
-    return  (await this.insurancesModel.find().exec())
+  async migrate(): Promise<void> {
+    await this.insuranceModel.deleteMany().exec();
+    (await axios.get(process.env.DIRECTUS_URL + 'items/insurance')).data.data.forEach(
+      (insurance) => {
+        new this.insuranceModel({
+          oldId: +insurance.id,
+          status: 'published',
+          sort: insurance.weight,
+          isPublic: insurance.type == '1',
+          name: insurance.name,
+        }).save();
+      }
+    );
+  }
+  async getAll(): Promise<Insurance[]> {
+    return this.insuranceModel.find();
   }
 }

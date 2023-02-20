@@ -12,7 +12,7 @@ export class Location {
   @Prop()
   name: string;
   @Prop()
-  oldId: string;
+  oldId: number;
   @Prop()
   status: string;
   @Prop()

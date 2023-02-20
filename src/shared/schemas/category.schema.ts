@@ -16,7 +16,7 @@ export class Category {
   @Prop()
   name: string;
   @Prop()
-  oldId: string;
+  oldId: number;
   @Prop()
   status: string;
   @Prop()

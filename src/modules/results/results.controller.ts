@@ -1,55 +1,62 @@
-import { Body, Controller, Get, Param, Query } from '@nestjs/common';
-import { IAnswers } from 'src/shared/interfaces/answers.interface';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ResultsService } from './results.service';
-import { ApiTags } from '@nestjs/swagger';
+import { QueryFilterDTO, queryFilterParser } from 'src/types/types.dto';
+import { getFormattedResultDTO } from './results.dto';
 
-@ApiTags('results')
 @Controller('results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
-  // NO AUTH
-  @Get(':resultId/actions')
-  async getFilteredActions(
-    @Param('resultId') resultId: string,
-  ): Promise<any> {
-    return await this.resultsService.getFilteredActions(
-      resultId
-    );
+
+  @Get(':id/filters') async filters(@Param('id') id: string) {
+    return await this.resultsService.getResultFilterById(id);
   }
-  
-  @Get(':id/actions/min')
-  async getFilteredActionsMin(
-    @Param('id') id: string,
-  ): Promise<any> {
-    return await this.resultsService.getFilteredActions(
-      id,
-      true
-    );
+  @Get('currentfilters') async currentfilters(@Query() query: QueryFilterDTO) {
+    query = queryFilterParser(query);
+    return await this.resultsService.getCurrentFilters(query);
   }
-  
-  @Get('min')
-  async getFilteredMin(
-    @Param('id') id: string,
-    @Query('limit') limit: number = 10,
-    @Query('offset') offset: number = 0,
-    @Body() answers: IAnswers,
-  ): Promise<any> {
-    return await this.resultsService.getFilteredResult(
-      id,
-      answers,
-      Math.min(Math.max(limit, 0), 30),
-      Math.max(0, offset),
-      true
-    );
+  @Get()
+  async getFiltered(
+    @Query() query: QueryFilterDTO,
+  ): Promise<getFormattedResultDTO[]> {
+    query = queryFilterParser(query);
+    try {      
+      return await this.resultsService.getAll(
+        query.limit ? query.limit : 20,
+        query.skip ? query.skip : 0,
+        query,
+      );
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
   }
-  // NO AUTH
+  @Get('all')
+  async getAll(
+    @Query() query: {category: string, language: string},
+  ): Promise<getFormattedResultDTO[]> {
+    try {      
+      return await this.resultsService.getAllFromCategory(query.category, query.language)
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Get('counter')
   async getFilteredCounter(
-    @Param('id') id: string,
-    @Body() answers: IAnswers,
+    @Query() query: QueryFilterDTO,
   ): Promise<{ counter: number }> {
+    query = queryFilterParser(query);
     return {
-      counter: await this.resultsService.getFilteredResultCount(id, answers)
+      counter: await this.resultsService.getFilteredResultCount(query),
     };
+  }
+  @Get('/:oldId') async getOne(@Param('oldId') oldId: string, @Query('language') language: string): Promise<getFormattedResultDTO>{
+    return this.resultsService.getResultFromId(oldId, language);
   }
 }

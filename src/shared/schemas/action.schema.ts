@@ -8,7 +8,7 @@ export class Action {
   @Prop()
   type: number;
   @Prop()
-  oldId: string;
+  oldId: number;
   @Prop()
   description: string;
 
