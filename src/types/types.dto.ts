@@ -85,7 +85,7 @@ export interface QueryFilterDTO {
 
 export function queryFilterParser(input: any): QueryFilterDTO {
   const query: QueryFilterDTO = {
-    status: input.status? input.status:"public",
+    status: input.status? input.status:"published",
     filterByDate: !!input.filterByDate
   }
   if(input.limit){
