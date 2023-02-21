@@ -125,8 +125,6 @@ export class ResultsService {
           { regions: { $in: regions } },
         ],
       });
-    } else {
-      console.log('TODO');
     }
     if (query.parentGender) {
       innerfilters.push({

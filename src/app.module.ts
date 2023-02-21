@@ -28,6 +28,7 @@ export class LoggerMiddleware implements NestMiddleware {
 }
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     InsurancesModule,
     LocationsModule,
     AuthModule,
@@ -36,7 +37,6 @@ export class LoggerMiddleware implements NestMiddleware {
     ResultsModule,
     MigrationModule,
     RegionModule,
-    ConfigModule.forRoot(),
     RouterModule.register([
       {
         path: '/users',
