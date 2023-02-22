@@ -9,6 +9,7 @@ import {
 import { ResultsService } from './results.service';
 import { QueryFilterDTO, queryFilterParser } from 'src/types/types.dto';
 import { getFormattedResultDTO } from './results.dto';
+import { mongoDBFiltersFromQueryFilter } from './filter.parser';
 
 @Controller('results')
 export class ResultsController {
@@ -18,15 +19,14 @@ export class ResultsController {
     return await this.resultsService.getResultFilterById(id);
   }
   @Get('currentfilters') async currentfilters(@Query() query: QueryFilterDTO) {
-    query = queryFilterParser(query);
-    return await this.resultsService.getCurrentFilters(query);
+    return this.resultsService.getMongoDBFilters(queryFilterParser(query));
   }
   @Get()
   async getFiltered(
     @Query() query: QueryFilterDTO,
   ): Promise<getFormattedResultDTO[]> {
     query = queryFilterParser(query);
-    try {      
+    try {
       return await this.resultsService.getAll(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
@@ -38,10 +38,13 @@ export class ResultsController {
   }
   @Get('all')
   async getAll(
-    @Query() query: {category: string, language: string},
+    @Query() query: { category: string; language: string },
   ): Promise<getFormattedResultDTO[]> {
-    try {      
-      return await this.resultsService.getAllFromCategory(query.category, query.language)
+    try {
+      return await this.resultsService.getAllFromCategory(
+        query.category,
+        query.language,
+      );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
@@ -56,7 +59,10 @@ export class ResultsController {
       counter: await this.resultsService.getFilteredResultCount(query),
     };
   }
-  @Get('/:oldId') async getOne(@Param('oldId') oldId: string, @Query('language') language: string): Promise<getFormattedResultDTO>{
+  @Get('/:oldId') async getOne(
+    @Param('oldId') oldId: string,
+    @Query('language') language: string,
+  ): Promise<getFormattedResultDTO> {
     return this.resultsService.getResultFromId(oldId, language);
   }
 }

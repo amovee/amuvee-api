@@ -145,3 +145,26 @@ export function queryFilterParser(input: any): QueryFilterDTO {
   }
   return query;
 }
+
+// export function queryFilterParser(input: any): QueryFilterDTO {
+//   const query: QueryFilterDTO = {
+//     status: input.status || "published",
+//     filterByDate: !!input.filterByDate
+//   };
+
+//   const queryParamNames = ["limit", "skip", "rent", "income", "childrenCount", "parentAge", "parentGender",
+// "language", "category", "zip", "insurance", "jobRelatedSituation", "relationship", "childrenAgeGroups", "keys"];
+//   queryParamNames.forEach((paramName) => {
+//     if (input[paramName]) {
+//       if (paramName === "childrenAgeGroups") {
+//         query.childrenAgeGroups = input.childrenAgeGroups.map(ageGroup => +ageGroup);
+//       } else if (paramName === "keys") {
+//         query.keys = Array.isArray(input.keys) ? input.keys : [input.keys];
+//       } else {
+//         query[paramName] = +input[paramName] || input[paramName];
+//       }
+//     }
+//   });
+
+//   return query;
+// }

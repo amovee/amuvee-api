@@ -1,6 +1,4 @@
-// import { IAnswers } from 'src/types/types.dto';
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { Region } from '../../schemas/region.schema';
+import { Controller, Get, Param, Post } from '@nestjs/common';
 import { RegionService } from './region.service';
 
 @Controller('regions')
@@ -8,13 +6,14 @@ export class RegionController {
   constructor(
     private readonly regionService: RegionService
   ) {}
-  // No Auth
+  // Auth
   @Post('migrate')
   async migration(): Promise<string> {
     this.regionService.migrate();
     return 'done';
   }
 
+  // No Auth
   @Get('search/:text')
   async searchString(@Param('text') text: string) {
     return this.regionService.searchString(text);

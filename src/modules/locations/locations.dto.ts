@@ -1,6 +1,4 @@
-import { Result } from 'src/shared/schemas/result.schema';
 import { ObjectStatus } from 'src/types/types.dto';
-import { Location } from './location.schema';
 
 export interface LocationDTO extends ObjectStatus {
   name: string;

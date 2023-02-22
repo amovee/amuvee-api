@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../../schemas/user.schema';
 import mongoose, { Model, ObjectId } from 'mongoose';
-// import { IUser } from 'src/types/types.dto';
 import * as bcrypt from 'bcrypt';
 import { createUserDTO, UserDTO } from 'src/types/types.dto';
 import axios from 'axios';

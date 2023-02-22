@@ -20,8 +20,8 @@ export type ResultType = {
 };
 
 export interface getFormattedResultDTO {
-  id: string,
-  oldId: number,
+  id: string;
+  oldId: number;
   content: {
     [language: string]: {
       name: string;
@@ -34,7 +34,7 @@ export interface getFormattedResultDTO {
   categories: string[];
   period: { start: Date; end: Date };
   actions?: getFormattedActionDTO[];
-  type: {weight: number,  name:{[language: string]: string}};
+  type: { weight: number; name: { [language: string]: string } };
 }
 // Gibt es Resultate, die nur für Geflüchtete sind
 export interface ResultDTO extends ObjectStatus, AuthorInformation {
@@ -54,7 +54,6 @@ export interface ResultDTO extends ObjectStatus, AuthorInformation {
 }
 
 export interface Filter {
-  //ändert sie sich?
   id: number;
   rent: numberFilter;
 
