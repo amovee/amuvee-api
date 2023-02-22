@@ -4,17 +4,14 @@ import {
   Controller,
   Post,
   Request,
-  UseGuards,
 } from '@nestjs/common';
 import { User } from '../../schemas/user.schema';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
 
 @Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   async createUser(@Request() req, @Body() body: User): Promise<void> {
     // return this.usersService.createUser(req.user, body);

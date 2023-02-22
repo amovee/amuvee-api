@@ -41,14 +41,14 @@ export interface UserDTO {
   oldId: string;
   name: string;
   email: string;
-  role: string;
+  roles: [string];
 }
 export interface createUserDTO {
   name: string;
   oldId: string;
   password: string;
   email: string;
-  role: string;
+  roles: [string];
 }
 
 export interface IdNameTupel {

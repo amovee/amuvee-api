@@ -43,15 +43,17 @@ export class LoggerMiddleware implements NestMiddleware {
         module: UsersModule,
       },
     ]),
-    MongooseModule.forRoot(process.env.MODE=='LOCAL'?process.env.MONGODB_LOCAL_URL:process.env.MONGODB_DOCKER_URL),
+    MongooseModule.forRoot(
+      process.env.MODE == 'LOCAL'
+        ? process.env.MONGODB_LOCAL_URL
+        : process.env.MONGODB_DOCKER_URL,
+    ),
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggerMiddleware)
-      .forRoutes(AppController);
+    consumer.apply(LoggerMiddleware).forRoutes(AppController);
   }
 }

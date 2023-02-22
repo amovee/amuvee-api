@@ -1,12 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../../schemas/user.schema';
-import mongoose, { Model, ObjectId } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { createUserDTO, UserDTO } from 'src/types/types.dto';
 import axios from 'axios';
-
-const publicUserFields = ['_id', 'role', 'username'];
 
 @Injectable()
 export class UsersService {
@@ -19,7 +17,7 @@ export class UsersService {
             name: 'admin',
             password: encriptedKey,
             email: 'admin',
-            role: 'admin',
+            roles: ['admin'],
           } as createUserDTO).catch((err) => {
             console.log('admin exists');
           });
@@ -28,32 +26,22 @@ export class UsersService {
     });
   }
 
-  async findOneByName(name: string): Promise<User> {
-    return this.userModel.findOne({ name }).exec();
+  async findOneByEmail(email: string): Promise<User> {
+    return this.userModel.findOne({ email }).exec();
   }
-  updateToken(_id: ObjectId, token: string) {
-    this.userModel.findByIdAndUpdate({_id: _id}, {token: token});
+  async updateToken(_id: ObjectId, token: string) {
+    await this.userModel.findByIdAndUpdate({_id: _id}, {token: token});
   }
   // async findOneById(id: string): Promise<User> {
   //   return this.userModel.findOne({ _id: id }, publicUserFields).exec();
   // }
-  checkRole(role: string, newRole: string) {
-    const roles = ['admin', 'reviewer', 'author', 'external', 'tester'];
-    const rID: number = roles.findIndex((r: string) => r == role);
-    const nID: number = roles.findIndex((r: string) => r == newRole);
-    if (rID < 0 || nID < 0) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: 'unknown userrole',
-        },
-        HttpStatus.FORBIDDEN
-      );
-    }
-    if (nID >= rID) {
-      return true;
-    }
-    return false;
+  async checkRole(roles: string[], email: string): Promise<boolean> {
+    const user = await this.findOneByEmail(email)
+    console.log(user.roles, roles);
+    console.log(user.roles.filter(x => roles.includes(x)).length);
+    
+    
+    return !user.roles.filter(x => roles.includes(x)).length;
   }
   async createUser(user: createUserDTO): Promise<UserDTO> {
     const existingUser = await this.userModel
@@ -68,16 +56,16 @@ export class UsersService {
         HttpStatus.FORBIDDEN
       );
     }
-    const encriptedKey = await bcrypt.hash('test', 10);
+    const encriptedKey = await bcrypt.hash(process.env.SECRET, 10);
     new this.userModel({
       name: user.name,
-      role: user.role,
+      roles: user.roles,
       email: user.email,
       password: encriptedKey,
     }).save();
     return {
       name: user.name,
-      role: user.role,
+      roles: user.roles,
       email: user.email,
     } as UserDTO;
   }
@@ -152,7 +140,7 @@ export class UsersService {
           name: user.first_name + (user.last_name?user.last_name:''),
           password: encriptedKey,
           email: user.email,
-          role: 'guest'
+          roles: ['guest']
         }).save();
       }
     }

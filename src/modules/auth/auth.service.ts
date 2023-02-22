@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UserDTO } from 'src/types/types.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,8 +19,8 @@ export class AuthService {
     // console.log(jwtService.sign({test: 'bla'}));
   }
 
-  async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.usersService.findOneByName(username);
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.usersService.findOneByEmail(email);
     if (user && user.password === password) {
       return user;
     }
@@ -29,35 +28,30 @@ export class AuthService {
   }
 
   async login(
-    name: string,
+    email: string,
     password: string
   ): Promise<{
     access_token: string;
   }> {
-    const user = await this.usersService.findOneByName(name);    
+    const user = await this.usersService.findOneByEmail(email);
     const compare = await bcrypt.compare(password, user.password);
     if (!compare) {
       throw new HttpException(
         {
           status: HttpStatus.UNAUTHORIZED,
-          error: 'wrong passort ore username',
+          error: 'wrong login data',
         },
         HttpStatus.FORBIDDEN
       );
     }
     const token = this.jwtService.sign({
-      name: user.name,
+      email: user.email,
       password: user.password,
     });
-    this.usersService.updateToken(user._id, token);
+    await this.usersService.updateToken(user._id, token);
     
     return {
       access_token: token,
     };
-    // if (user && user.password === password) {
-    //   return user;
-    // }
-    // this.usersService
-    // const payload = { name, password };
   }
 }
