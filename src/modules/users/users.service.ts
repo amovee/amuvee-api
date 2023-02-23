@@ -5,11 +5,12 @@ import { Model, ObjectId } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { createUserDTO, UserDTO } from 'src/types/types.dto';
 import axios from 'axios';
+import { right } from 'src/types/rights';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {
-    userModel.count({}).then((count) => {
+    userModel.count().then((count) => {
       if (!count) {
         
         bcrypt.hash(process.env.DEFAULT_PASS, 10).then((encriptedKey: string)=>{
@@ -17,7 +18,8 @@ export class UsersService {
             name: 'admin',
             password: encriptedKey,
             email: 'admin',
-            roles: ['admin'],
+            rights: [],
+            isAdmin: true
           } as createUserDTO).catch((err) => {
             console.log('admin exists');
           });
@@ -35,13 +37,9 @@ export class UsersService {
   // async findOneById(id: string): Promise<User> {
   //   return this.userModel.findOne({ _id: id }, publicUserFields).exec();
   // }
-  async checkRole(roles: string[], email: string): Promise<boolean> {
+  async checkUserHasRight(right: right, email: string): Promise<boolean> {
     const user = await this.findOneByEmail(email)
-    console.log(user.roles, roles);
-    console.log(user.roles.filter(x => roles.includes(x)).length);
-    
-    
-    return !user.roles.filter(x => roles.includes(x)).length;
+    return user.isAdmin || user.rights.includes(right);
   }
   async createUser(user: createUserDTO): Promise<UserDTO> {
     const existingUser = await this.userModel
@@ -59,14 +57,16 @@ export class UsersService {
     const encriptedKey = await bcrypt.hash(process.env.SECRET, 10);
     new this.userModel({
       name: user.name,
-      roles: user.roles,
+      rights: user.rights,
       email: user.email,
       password: encriptedKey,
+      isAdmin: user.isAdmin,
     }).save();
     return {
       name: user.name,
-      roles: user.roles,
       email: user.email,
+      rights: user.rights,
+      isAdmin: user.isAdmin,
     } as UserDTO;
   }
   // async createUser(currentUser: User, toCreate: User): Promise<User> {
@@ -140,7 +140,8 @@ export class UsersService {
           name: user.first_name + (user.last_name?user.last_name:''),
           password: encriptedKey,
           email: user.email,
-          roles: ['guest']
+          rights: [],
+          isAdmin: false
         }).save();
       }
     }

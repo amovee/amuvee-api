@@ -15,5 +15,6 @@ import { Insurance, InsuranceSchema } from './insurance.schema';
     ]),],
   controllers: [InsurancesController],
   providers: [InsurancesService],
+  exports: [InsurancesService],
 })
 export class InsurancesModule {}

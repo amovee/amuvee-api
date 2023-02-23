@@ -8,18 +8,24 @@ import { Location, LocationSchema } from '../locations/location.schema';
 import { MetaSchema } from '../../schemas/meta.schema';
 import { Region, RegionSchema } from '../../schemas/region.schema';
 import { Filter, FilterSchema, Result, ResultSchema } from '../results/result.schema';
-import { User, UserSchema } from '../../schemas/user.schema';
-import { ActionsService } from '../actions/actions.service';
-import { CategoriesService } from '../categories/categories.service';
-import { InsurancesService } from '../insurances/insurances.service';
-import { LocationsService } from '../locations/locations.service';
-import { RegionService } from '../region/region.service';
-import { UsersService } from '../users/users.service';
 import { MigrationController } from './migration.controller';
 import { MigrationService } from './migration.service';
+import { UsersModule } from '../users/users.module';
+import { RegionModule } from '../region/region.module';
+import { LocationsModule } from '../locations/locations.module';
+import { CategoriesModule } from '../categories/categories.module';
+import { InsurancesModule } from '../insurances/insurances.module';
+import { ActionsModule } from '../actions/actions.module';
+import { User, UserSchema } from 'src/schemas/user.schema';
 
 @Module({
   imports: [
+    UsersModule,
+    RegionModule,
+    LocationsModule,
+    CategoriesModule,
+    InsurancesModule,
+    ActionsModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Category.name, schema: CategorySchema },
@@ -35,13 +41,7 @@ import { MigrationService } from './migration.service';
   ],
   controllers: [MigrationController],
   providers: [
-    MigrationService,
-    RegionService,
-    LocationsService,
-    CategoriesService,
-    InsurancesService,
-    ActionsService,
-    UsersService
+    MigrationService
   ],
 })
 export class MigrationModule {}

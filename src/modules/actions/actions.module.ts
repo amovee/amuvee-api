@@ -14,5 +14,6 @@ import { ActionsService } from './actions.service';
   ],
   controllers: [ActionsController],
   providers: [ActionsService],
+  exports: [ActionsService],
 })
 export class ActionsModule {}

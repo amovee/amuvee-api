@@ -15,5 +15,6 @@ import { User, UserSchema } from 'src/schemas/user.schema';
   ],
   controllers: [LocationsController],
   providers: [LocationsService],
+  exports: [LocationsService],
 })
 export class LocationsModule {}

@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { Document } from 'mongoose';
+import { right } from 'src/types/rights';
 
 export type UserDocument = User & Document;
 
@@ -15,8 +16,10 @@ export class User {
   password: string;
   @Prop()
   email: string;
-  @Prop({type: [String]})
-  roles: string[];
+  @Prop({ type: [String] })
+  rights: right[];
+  @Prop()
+  isAdmin: boolean;
   @Prop()
   token?: string;
 }

@@ -1,9 +1,8 @@
 import { Controller, Post, UseGuards, Query, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { Roles } from './role.decorator';
-import { Role } from './role.enum';
-import { RolesGuard } from './roles.guard';
+import { Right } from './rights.decorator';
+import { RightsGuard } from './rights.guard';
 
 @Controller('/auth')
 export class AuthController {
@@ -16,10 +15,10 @@ export class AuthController {
   async login(@Query() req) {
     return this.authService.login(req.email, req.password);
   }
-  @Roles(Role.Admin)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Get('test')
-  async test(){
-    return 'test'
-  }
+  // @Right("EVENTS_DELETE")
+  // @UseGuards(JwtAuthGuard, RightsGuard)
+  // @Get('test')
+  // async test(){
+  //   return 'test'
+  // }
 }

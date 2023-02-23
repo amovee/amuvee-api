@@ -1,3 +1,5 @@
+import { right } from "./rights";
+
 export interface Region {
   id: number;
   zips: string[];
@@ -41,14 +43,16 @@ export interface UserDTO {
   oldId: string;
   name: string;
   email: string;
-  roles: [string];
+  rights: right[];
+  isAdmin: boolean;
 }
 export interface createUserDTO {
   name: string;
   oldId: string;
   password: string;
   email: string;
-  roles: [string];
+  rights: right[];
+  isAdmin: boolean;
 }
 
 export interface IdNameTupel {
