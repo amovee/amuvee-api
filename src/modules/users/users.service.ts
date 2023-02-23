@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { createUserDTO, UserDTO } from 'src/types/types.dto';
 import axios from 'axios';
 import { right } from 'src/types/rights';
+import { UpdatePasswordDTO } from './update-password.dt';
 
 @Injectable()
 export class UsersService {
@@ -106,15 +107,15 @@ export class UsersService {
   //   })).save();
   // }
 
-  // async findAll(): Promise<User[]> {
-  //   return this.userModel.find({}, publicUserFields).exec();
-  // }
-
-  // async updateUserPassword(id: string, updatePasswordDTO: UpdatePasswordDTO): Promise<void> {
-  //   const filter = { _id: id };
-  //   const update = { password: updatePasswordDTO.newPassword };
-  //   await this.userModel.findOneAndUpdate(filter, update);
-  // }
+  async findAll(): Promise<User[]> {
+    return this.userModel.find().select('-password').exec();
+  }
+  async updateUserPassword(updatePasswordDTO: UpdatePasswordDTO, email: string): Promise<boolean> {
+    const filter = { email: email };
+    const update = { password: updatePasswordDTO };
+    return true;
+    // await this.userModel.findOneAndUpdate(filter, update);
+  }
   // async deleteOne (currentUser: IUser, id: string): Promise<void> {
   //   if(currentUser.role != "admin")
   //     throw new HttpException({

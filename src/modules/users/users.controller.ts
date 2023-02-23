@@ -2,10 +2,19 @@
 import {
   Body,
   Controller,
+  Param,
   Post,
+  Put,
   Request,
+  UseGuards,
+  Query,
+  Get
 } from '@nestjs/common';
 import { User } from '../../schemas/user.schema';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Right } from '../auth/rights.decorator';
+import { RightsGuard } from '../auth/rights.guard';
+import { UpdatePasswordDTO } from './update-password.dt';
 import { UsersService } from './users.service';
 
 @Controller()
@@ -27,12 +36,12 @@ export class UsersController {
   // async getUser(@Param('id') id: string): Promise<User> {
   //   return this.usersService.findOneById(id);
   // }
-
-  // @UseGuards(JwtAuthGuard)
-  // @Get()
-  // async getAllUsers(): Promise<User[]> {
-  //   return this.usersService.findAll();
-  // }
+  @Right('USERS_GET')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Get()
+  async getAllUsers(): Promise<User[]> {
+    return this.usersService.findAll();
+  }
 
   // // TODO: update password
   // @UseGuards(JwtAuthGuard)
@@ -40,15 +49,14 @@ export class UsersController {
   // async updateUser(): Promise<User> {
   //   return null;
   // }
-  // @UseGuards(JwtAuthGuard)
-  // @Post(':id/password')
-  // async updateUserPassword(
-  //   @Param('id') id: string,
-  //   @Body() body: any,
-  // ): Promise<void> {
-  //   this.usersService.updateUserPassword(id, body);
-  //   // TODO: return value
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Put('password')
+  async updateUserPassword(
+    @Query() query: UpdatePasswordDTO,
+    @Request() req
+  ): Promise<boolean> {
+    return this.usersService.updateUserPassword(query, req.user.email);
+  }
 
   // @UseGuards(JwtAuthGuard)
   // @Delete(':id')
