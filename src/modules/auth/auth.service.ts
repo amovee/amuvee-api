@@ -1,4 +1,7 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -7,7 +10,7 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {
     // console.log(jwtService.sign({test: 'test'}));
     // bcrypt.hash('test', 10).then(res=>{
@@ -29,27 +32,20 @@ export class AuthService {
 
   async login(
     email: string,
-    password: string
+    password: string,
   ): Promise<{
     access_token: string;
   }> {
     const user = await this.usersService.findOneByEmail(email);
+    if (!user) throw new UnauthorizedException();
     const compare = await bcrypt.compare(password, user.password);
-    if (!compare) {
-      throw new HttpException(
-        {
-          status: HttpStatus.UNAUTHORIZED,
-          error: 'wrong login data',
-        },
-        HttpStatus.FORBIDDEN
-      );
-    }
+    if (!compare) throw new UnauthorizedException();
     const token = this.jwtService.sign({
       email: user.email,
       password: user.password,
     });
     await this.usersService.updateToken(user._id, token);
-    
+
     return {
       access_token: token,
     };
