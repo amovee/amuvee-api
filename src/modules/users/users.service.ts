@@ -28,7 +28,6 @@ export class UsersService {
       }
     });
   }
-
   async findOneByEmail(email: string): Promise<User> {
     return this.userModel.findOne({ email }).exec();
   }

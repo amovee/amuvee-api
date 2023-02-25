@@ -13,7 +13,7 @@ export class User {
   @Prop()
   oldId: string;
   @Prop()
-  password: string;
+  password?: string;
   @Prop()
   email: string;
   @Prop({ type: [String] })

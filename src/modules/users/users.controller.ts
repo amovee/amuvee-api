@@ -2,7 +2,6 @@
 import {
   Body,
   Controller,
-  Param,
   Post,
   Put,
   Request,
@@ -10,6 +9,7 @@ import {
   Query,
   Get
 } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { User } from '../../schemas/user.schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Right } from '../auth/rights.decorator';
@@ -36,11 +36,27 @@ export class UsersController {
   // async getUser(@Param('id') id: string): Promise<User> {
   //   return this.usersService.findOneById(id);
   // }
-  // @Right('USERS_GET')
-  // @UseGuards(JwtAuthGuard, RightsGuard)
+  @Right('USERS_GET')
+  @UseGuards(JwtAuthGuard, RightsGuard)
   @Get()
   async getAllUsers(): Promise<User[]> {
     return this.usersService.findAll();
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('account')
+  async getAccount(@Request() req): Promise<User> {
+    if(req.hasOwnProperty('user') && req['user'].email) {
+      const user = await this.usersService.findOneByEmail(req['user'].email);
+      return {
+        _id: user._id,
+        isAdmin: user.isAdmin,
+        rights: user.rights,
+        email: user.email,
+        oldId: user.oldId,
+        name: user.name,
+      }
+    }
+    throw new UnauthorizedException();
   }
 
   // // TODO: update password
