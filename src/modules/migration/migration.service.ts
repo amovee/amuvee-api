@@ -30,15 +30,6 @@ export class MigrationService {
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
   ) {}
 
-  // generatePassword(len: number): string {
-  //   const charset =
-  //     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';
-  //   let retVal = '';
-  //   for (let i = 0, n = charset.length; i < len; ++i) {
-  //     retVal += charset.charAt(Math.floor(Math.random() * n));
-  //   }
-  //   return retVal;
-  // }
   // async migrateUsers(): Promise<any> {
   //   let users = (await axios.get(process.env.DIRECTUS_URL + 'users')).data.data;
   //   if (users) {

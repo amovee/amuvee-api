@@ -35,7 +35,7 @@ export class AuthService {
     password: string,
   ): Promise<{
     access_token: string;
-  }> {
+  }> {    
     const user = await this.usersService.findOneByEmail(email);
     if (!user) throw new UnauthorizedException();
     const compare = await bcrypt.compare(password, user.password);

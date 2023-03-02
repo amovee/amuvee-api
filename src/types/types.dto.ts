@@ -46,14 +46,6 @@ export interface UserDTO {
   rights: right[];
   isAdmin: boolean;
 }
-export interface createUserDTO {
-  name: string;
-  oldId: string;
-  password: string;
-  email: string;
-  rights: right[];
-  isAdmin: boolean;
-}
 
 export interface IdNameTupel {
   id: number;
