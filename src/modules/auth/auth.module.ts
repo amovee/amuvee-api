@@ -19,7 +19,11 @@ import { RightsGuard } from './rights.guard';
       signOptions: { expiresIn: '60m' },
     }),
   ],
-  providers: [AuthService, JwtStrategy, RightsGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    RightsGuard
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}
