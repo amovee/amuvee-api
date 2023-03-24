@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { Action, ActionSchema } from '../actions/action.schema';
 import { Insurance, InsuranceSchema } from '../insurances/insurance.schema';
 import { Region, RegionSchema } from '../../schemas/region.schema';
 import { ResultsController } from './results.controller';
 import { ResultsService } from './results.service';
 import { Result, ResultSchema } from './result.schema';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
