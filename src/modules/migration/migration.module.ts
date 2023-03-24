@@ -5,9 +5,8 @@ import { ActionSchema } from '../actions/action.schema';
 import { Category, CategorySchema } from '../categories/category.schema';
 import { Insurance, InsuranceSchema } from '../insurances/insurance.schema';
 import { Location, LocationSchema } from '../locations/location.schema';
-import { MetaSchema } from '../../schemas/meta.schema';
 import { Region, RegionSchema } from '../../schemas/region.schema';
-import { Filter, FilterSchema, Result, ResultSchema } from '../results/result.schema';
+import { Result, ResultSchema } from '../results/result.schema';
 import { MigrationController } from './migration.controller';
 import { MigrationService } from './migration.service';
 import { UsersModule } from '../users/users.module';
@@ -31,7 +30,6 @@ import { CountersModule } from '../counters/counters.module';
       { name: User.name, schema: UserSchema },
       { name: Category.name, schema: CategorySchema },
       { name: Result.name, schema: ResultSchema },
-      { name: Filter.name, schema: FilterSchema },
       { name: Insurance.name, schema: InsuranceSchema },
       { name: Location.name, schema: LocationSchema },
       { name: Region.name, schema: RegionSchema },

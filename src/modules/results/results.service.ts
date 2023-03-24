@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Filter,
-  FilterDocument,
   Result,
   ResultDocument,
 } from './result.schema';
@@ -21,7 +20,6 @@ export class ResultsService {
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
-    @InjectModel(Filter.name) private filterModel: Model<FilterDocument>,
   ) {}
 
   async getRegions(zip: string) {
@@ -40,13 +38,6 @@ export class ResultsService {
       query,
       await this.getRegions(query.zip),
     );
-  }
-
-  async getResultFilterById(resultId: string): Promise<any[]> {
-    const result = await this.resultModel.findOne({ _id: resultId });
-    return await this.filterModel.find({
-      _id: { $in: result.filters },
-    });
   }
 
   async getResultFromId(
@@ -68,7 +59,6 @@ export class ResultsService {
     if (!language) language = 'de';
     return (
       await this.resultModel.aggregate([
-        lookUp('filters'),
         {
           $match: {
             categories: { $in: [new mongoose.Types.ObjectId(id)] },
@@ -92,7 +82,6 @@ export class ResultsService {
     return (
       await this.resultModel
         .aggregate([
-          lookUp('filters'),
           {
             $match: filters,
           },
@@ -112,7 +101,6 @@ export class ResultsService {
       await this.getRegions(query.zip),
     );
     return [await this.resultModel.aggregate([
-      lookUp('filters'),
       {
         $match: filters,
       },

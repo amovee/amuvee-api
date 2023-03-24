@@ -7,7 +7,6 @@ import { Location } from '../locations/location.schema';
 import { Region } from '../../schemas/region.schema';
 
 export type ResultDocument = Result & Document;
-export type FilterDocument = Filter & Document;
 
 @Schema()
 export class Filter {
@@ -78,8 +77,6 @@ export class Filter {
   })
   variables: { [key: string]: { [key: string]: string } }[];
 }
-export const FilterSchema = SchemaFactory.createForClass(Filter);
-
 
 @Schema()
 export class Result {
@@ -111,7 +108,7 @@ export class Result {
     };
   };
 
-  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Filter' }])
+  @Prop([{ type: Filter}])
   filters: Filter[];
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Action' }] })

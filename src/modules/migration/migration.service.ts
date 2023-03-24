@@ -4,7 +4,6 @@ import { Model } from 'mongoose';
 import { Category, CategoryDocument } from '../categories/category.schema';
 import {
   Filter,
-  FilterDocument,
   Result,
   ResultDocument,
 } from '../results/result.schema';
@@ -23,7 +22,6 @@ export class MigrationService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
-    @InjectModel(Filter.name) private filterModel: Model<FilterDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
     @InjectModel(Insurance.name)
@@ -104,7 +102,6 @@ export class MigrationService {
   }
   async migrateResultsFromAllCategories(): Promise<void> {
     await this.resultModel.deleteMany().exec();
-    await this.filterModel.deleteMany().exec();
     const categories = await this.categoryModel.find().exec();
     for (let i = 0; i < categories.length; i++) {
       const category = categories[i];
@@ -274,12 +271,13 @@ export class MigrationService {
           shortDescription: result.ukrainian.short_description,
         };
       }
-      await new this.filterModel(filter).save((err, filter) => {
-        if (filter._id) {
-          r.filters.push(filter._id);
+      r.filters.push(filter)
+      // await new this.filterModel(filter).save((err, filter) => {
+      //   if (filter._id) {
+      //     r.filters.push(filter._id);
           new this.resultModel(r).save();
-        }
-      });
+      //   }
+      // });
     }
     return results;
   }

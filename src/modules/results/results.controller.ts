@@ -14,9 +14,6 @@ import { getFormattedResultDTO } from './results.dto';
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
 
-  @Get(':id/filters') async filters(@Param('id') id: string) {
-    return await this.resultsService.getResultFilterById(id);
-  }
   @Get('currentfilters') async currentfilters(@Query() query: QueryFilterDTO) {
     return this.resultsService.getMongoDBFilters(queryFilterParser(query));
   }
@@ -62,6 +59,7 @@ export class ResultsController {
     }
   }
 
+  // TODO: with filters option ???
   @Get('/:id') async getOne(
     @Param('id') id: string,
     @Query('language') language: string,
