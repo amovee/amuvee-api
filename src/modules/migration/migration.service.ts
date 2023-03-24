@@ -15,6 +15,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { Insurance, InsuranceDocument } from '../insurances/insurance.schema';
 import mongoose from 'mongoose';
+import { CounterService } from '../counters/counters.service';
 
 @Injectable()
 export class MigrationService {
@@ -28,6 +29,7 @@ export class MigrationService {
     @InjectModel(Insurance.name)
     private insuranceModel: Model<InsuranceDocument>,
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
+    private readonly counter: CounterService,
   ) {}
 
   // async migrateUsers(): Promise<any> {
@@ -124,7 +126,7 @@ export class MigrationService {
     const locations = await this.locationModel.find().exec();
     const users: User[] = await this.userModel.find().exec();
     locations.forEach((location) => {
-      locationIds[location.oldId] = location._id;
+      locationIds[location.id] = location._id;
     });
     const regionIds: any = {};
     const regions = await this.regionModel.find().exec();
@@ -134,7 +136,7 @@ export class MigrationService {
     const insuranceIds: any = {};
     const insurances = await this.insuranceModel.find().exec();
     insurances.forEach((insurance) => {
-      insuranceIds[insurance.oldId] = insurance._id;
+      insuranceIds[insurance.id] = insurance._id;
     });
     const fields =
       '*,has_insurance.*,has_relationship.*,has_job_related_situation.*,relationship_types.*,type.*,russian.*,ukrainian.*,actions.*';
@@ -154,7 +156,7 @@ export class MigrationService {
           '&sort=id&limit=' +
           counter +
           '&filter={"category":{"_eq":' +
-          category.oldId +
+          category.id +
           '}}',
       )
     ).data.data;
@@ -189,10 +191,9 @@ export class MigrationService {
         variables: {},
         actions: [],
       };
-
       const r: any = {
         _id: new mongoose.Types.ObjectId(),
-        oldId: +result.id,
+        id: await this.counter.setMaxSequenceValue('results', +result.id),
         specific: result.specific,
         timespan: { from: result.start_date, to: result.end_date }, //DONE
         categories: [category._id], //DONE
@@ -223,6 +224,7 @@ export class MigrationService {
           ? [locationIds[result.location]]
           : [],
       };
+      
       const userUpdated: User = users.find((user) => {
         return user.oldId == results[j].user_updated;
       });
@@ -252,7 +254,7 @@ export class MigrationService {
 
       for (let i = 0; i < result.actions.length; i++) {
         const action = await this.actionModel
-          .findOne({ oldId: result.actions[i].action_id }, ['results'])
+          .findOne({ id: result.actions[i].action_id }, ['results'])
           .exec();
         if (action) {
           r.actions.push(action._id);

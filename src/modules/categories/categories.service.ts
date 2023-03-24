@@ -4,12 +4,14 @@ import { Category, CategoryDocument } from './category.schema';
 import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/schemas/user.schema';
+import { CounterService } from '../counters/counters.service';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly counter: CounterService,
   ) {}
 
   async getCategories(language?: string): Promise<Category[]> {
@@ -43,7 +45,7 @@ export class CategoriesService {
     for (let i = 0; i < categories.length; i++) {
       const c: any = {
         _id: new mongoose.Types.ObjectId(),
-        oldId: +categories[i].id,
+        id: await this.counter.setMaxSequenceValue('categories', +categories[i].id),
         icon: categories[i].icon,
         status: categories[i].status,
         sort: categories[i].sort,

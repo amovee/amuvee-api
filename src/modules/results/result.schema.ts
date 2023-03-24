@@ -120,7 +120,7 @@ export class Result {
   locations: Location[];
   // META
   @Prop()
-  oldId: number;
+  id: number;
   @Prop()
   status: string;
   @Prop()

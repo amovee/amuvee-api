@@ -5,6 +5,7 @@ import { Category, CategorySchema } from './category.schema';
 import { ResultsModule } from '../results/results.module';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
+import { CountersModule } from '../counters/counters.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { CategoriesService } from './categories.service';
       { name: User.name, schema: UserSchema },
     ]),
     ResultsModule,
+    CountersModule
   ],
   controllers: [CategoriesController],
   providers: [CategoriesService],

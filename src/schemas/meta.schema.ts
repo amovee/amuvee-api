@@ -3,9 +3,9 @@ export type MetaDocument = Meta & Document;
 @Schema()
 export class Meta {
   @Prop()
-  name: string;
+  id: number;
   @Prop()
-  oldId: number;
+  name: string;
   @Prop()
   status: string;
   @Prop()

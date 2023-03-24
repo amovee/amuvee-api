@@ -27,7 +27,7 @@ export const Gender = {
 export type GenderType = typeof Gender[keyof typeof Gender];
 
 export interface ObjectStatus {
-  oldId: number;
+  id: number;
   status: StateType;
   created?: { by: UserDTO; date: Date }
   updated?: { by: UserDTO; date: Date }
@@ -74,15 +74,18 @@ export interface QueryFilterDTO {
   insurance?: string;
   jobRelatedSituation?: number | undefined;
   relationship?: number | undefined;
+  status?: string;
+  filterByDate?: boolean;
+  keyOperation?: 'IN' | 'NIN';
   keys?: string[] | string;
-  status: string;
-  filterByDate: boolean;
 }
 
 export function queryFilterParser(input: any): QueryFilterDTO {
   const query: QueryFilterDTO = {
-    status: input.status? input.status:"published",
-    filterByDate: !!input.filterByDate
+    filterByDate: !!input.filterByDate? input.filterByDate == 'true': false,
+  }
+  if(input.status) {
+    query.status = input.status
   }
   if(input.limit){
     query.limit = +input.limit;
@@ -131,6 +134,9 @@ export function queryFilterParser(input: any): QueryFilterDTO {
     input.childrenAgeGroups.forEach(ageGroup => {
       query.childrenAgeGroups.push(+ageGroup)
     });
+  }
+  if(input.keyOperation){
+    query.keyOperation = input.keyOperation;
   }
   if(input.keys){
     if(Array.isArray(input.keys)){

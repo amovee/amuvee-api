@@ -9,7 +9,6 @@ import {
 import { ResultsService } from './results.service';
 import { QueryFilterDTO, queryFilterParser } from 'src/types/types.dto';
 import { getFormattedResultDTO } from './results.dto';
-import { mongoDBFiltersFromQueryFilter } from './filter.parser';
 
 @Controller('results')
 export class ResultsController {
@@ -36,6 +35,19 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
+  @Get('counter')
+  async getCounter(
+    @Query() query: QueryFilterDTO
+  ): Promise<any> {
+    query = queryFilterParser(query);
+    try {
+      return await this.resultsService.getCounter(
+        query,
+      );
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
   @Get('all')
   async getAll(
     @Query() query: { category: string; language: string },
@@ -50,19 +62,10 @@ export class ResultsController {
     }
   }
 
-  @Get('counter')
-  async getFilteredCounter(
-    @Query() query: QueryFilterDTO,
-  ): Promise<{ counter: number }> {
-    query = queryFilterParser(query);
-    return {
-      counter: await this.resultsService.getFilteredResultCount(query),
-    };
-  }
-  @Get('/:oldId') async getOne(
-    @Param('oldId') oldId: string,
+  @Get('/:id') async getOne(
+    @Param('id') id: string,
     @Query('language') language: string,
   ): Promise<getFormattedResultDTO> {
-    return this.resultsService.getResultFromId(oldId, language);
+    return this.resultsService.getResultFromId(id, language);
   }
 }

@@ -17,6 +17,7 @@ import { CategoriesModule } from '../categories/categories.module';
 import { InsurancesModule } from '../insurances/insurances.module';
 import { ActionsModule } from '../actions/actions.module';
 import { User, UserSchema } from 'src/schemas/user.schema';
+import { CountersModule } from '../counters/counters.module';
 
 @Module({
   imports: [
@@ -31,13 +32,13 @@ import { User, UserSchema } from 'src/schemas/user.schema';
       { name: Category.name, schema: CategorySchema },
       { name: Result.name, schema: ResultSchema },
       { name: Filter.name, schema: FilterSchema },
-      { name: 'ResultType', schema: MetaSchema },
       { name: Insurance.name, schema: InsuranceSchema },
       { name: Location.name, schema: LocationSchema },
       { name: Region.name, schema: RegionSchema },
       { name: Action.name, schema: ActionSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    CountersModule
   ],
   controllers: [MigrationController],
   providers: [

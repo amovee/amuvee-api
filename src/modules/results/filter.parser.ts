@@ -1,50 +1,42 @@
 import mongoose from 'mongoose';
 import { QueryFilterDTO } from 'src/types/types.dto';
-
-export async function mongoDBFiltersFromQueryFilter(query: QueryFilterDTO, regions: any[]) {
+export async function mongoDBFiltersFromQueryFilter(
+  query: QueryFilterDTO,
+  regions: any[],
+) {
   const outerfilters = [];
   if (query.category) {
     outerfilters.push({
       $or: [
         {
-            categories: new mongoose.Types.ObjectId(query.category),
+          categories: new mongoose.Types.ObjectId(query.category),
         },
         {
-            categories: { $size: 0 },
+          categories: { $size: 0 },
         },
-    ],
-});
-}
-if (query.status) {
-    outerfilters.push({ status: { $eq: query.status } });
+      ],
+    });
+  }
+  if (query.status) {
+    outerfilters.push({ status: query.status });
   }
   const innerfilters = [];
-  if (query.rent != null && ++query.rent >= 0) {
+  if (query.rent != null && query.rent >= 0) {
     innerfilters.push(
-      minFilter('rent', +query.rent),
-      maxFilter('rent', +query.rent),
-    );
-  } else {
-    innerfilters.push(
-      { 'rent.min': { $eq: null } },
-      { 'rent.max': { $eq: null } },
+      minFilter('rent', query.rent),
+      maxFilter('rent', query.rent),
     );
   }
   if (query.income != null && query.income >= 0) {
     innerfilters.push(
-      minFilter('income', +query.income),
-      maxFilter('income', +query.income),
-    );
-  } else {
-    innerfilters.push(
-      { 'income.min': { $eq: null } },
-      { 'income.max': { $eq: null } },
+      minFilter('income', query.income),
+      maxFilter('income', query.income),
     );
   }
-  if (query.childrenCount != null && +query.childrenCount > 0) {
+  if (query.childrenCount != null && query.childrenCount > 0) {
     innerfilters.push(
-      minFilter('childrenCount', +query.childrenCount),
-      maxFilter('childrenCount', +query.childrenCount),
+      minFilter('childrenCount', query.childrenCount),
+      maxFilter('childrenCount', query.childrenCount),
     );
     if (query.childrenAgeGroups && query.childrenAgeGroups.length > 0) {
       innerfilters.push(
@@ -57,22 +49,12 @@ if (query.status) {
           Math.min(...(<number[]>query.childrenAgeGroups)),
         ),
       );
-    } else {
-      innerfilters.push(
-        { 'childrenAge.min': { $eq: null } },
-        { 'childrenAge.max': { $eq: null } },
-      );
     }
-  } else {
-    innerfilters.push(
-      { 'childrenCount.min': { $eq: null } },
-      { 'childrenCount.max': { $eq: null } },
-    );
   }
-  if (query.parentAge && +query.parentAge >= 0) {
+  if (query.parentAge && query.parentAge >= 0) {
     innerfilters.push(
-      minFilter('parentAge', +query.parentAge),
-      maxFilter('parentAge', +query.parentAge),
+      minFilter('parentAge', query.parentAge),
+      maxFilter('parentAge', query.parentAge),
     );
   }
   if (query.zip) {
@@ -91,8 +73,6 @@ if (query.status) {
         { parentGender: { $in: [`${query.parentGender}`] } },
       ],
     });
-  } else {
-    innerfilters.push({ parentGender: { $size: 0 } });
   }
   if (query.insurance) {
     innerfilters.push({
@@ -126,26 +106,44 @@ if (query.status) {
   }
 
   //DONE
-  innerfilters.push({
-    requiredKeys: {
-      $not: {
-        $elemMatch: {
-          $nin: query.keys ? query.keys : [],
+
+  if (Array.isArray(query.keys) && query.keyOperation) {
+    if (query.keyOperation == 'IN') {
+      innerfilters.push({
+        requiredKeys: {
+          $not: {
+            $elemMatch: {
+              $nin: query.keys,
+            },
+          },
         },
-      },
-    },
-  });
-  
-  
-  
+      });
+    }
+    if (Array.isArray(query.keys) && query.keyOperation == 'NIN') {
+      innerfilters.push({
+        requiredKeys: {
+          $elemMatch: {
+            $nin: query.keys,
+          },
+        },
+      });
+    }
+  }
+  if (innerfilters.length == 0 && outerfilters.length == 0) {
+    return { _id: { $ne: '' } };
+  }
   return {
     $and: [
       ...outerfilters,
-      {
-        filters: {
-          $elemMatch: { $and: innerfilters },
-        },
-      },
+      ...(innerfilters.length > 0
+        ? [
+            {
+              filters: {
+                $elemMatch: { $and: innerfilters },
+              },
+            },
+          ]
+        : []),
     ],
   };
 }

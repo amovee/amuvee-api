@@ -5,7 +5,7 @@ export class Meta {
   @Prop()
   name: string;
   @Prop()
-  oldId: number;
+  id: number;
   @Prop()
   status: string;
   @Prop()

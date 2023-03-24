@@ -4,12 +4,14 @@ import mongoose, { Model } from 'mongoose';
 import { LocationDocument, Location } from './location.schema';
 import axios from 'axios';
 import { User, UserDocument } from 'src/schemas/user.schema';
+import { CounterService } from '../counters/counters.service';
 
 @Injectable()
 export class LocationsService {
   constructor(
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly counter: CounterService
   ) {}
 
   async getAll(limit: number, skip: number): Promise<Location[]> {
@@ -36,7 +38,7 @@ export class LocationsService {
         },
         link: location.google_maps_link,
         name: location.name,
-        oldId: +location.id,
+        id: await this.counter.setMaxSequenceValue('locations', +location.id),
         status: "published",
         sort: location.sort == null ? 0 : location.sort,
       };

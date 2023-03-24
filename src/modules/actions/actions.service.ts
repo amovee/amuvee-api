@@ -5,12 +5,14 @@ import { ActionDocument } from './action.schema';
 import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/schemas/user.schema';
+import { CounterService } from '../counters/counters.service';
 
 @Injectable()
 export class ActionsService {
   constructor(
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly counter: CounterService,
   ) {}
   async migrate(): Promise<void> {
     await this.actionModel.deleteMany().exec();
@@ -31,7 +33,7 @@ export class ActionsService {
     for (let i = 0; i < actions.length; i++) {
       const a: any = {
         _id: new mongoose.Types.ObjectId(),
-        oldId: +actions[i].id,
+        id: await this.counter.setMaxSequenceValue('actions', +actions[i].id),
         status: actions[i].status,
         specific: actions[i].specific,
         sort: actions[i].weight,

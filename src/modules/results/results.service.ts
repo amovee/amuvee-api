@@ -7,12 +7,11 @@ import {
   ResultDocument,
 } from './result.schema';
 import mongoose from 'mongoose';
-import { Model, ObjectId } from 'mongoose';
+import { Model } from 'mongoose';
 import { Region, RegionDocument } from '../../schemas/region.schema';
 import { Action, ActionDocument } from '../actions/action.schema';
 import { QueryFilterDTO } from 'src/types/types.dto';
 import { getFormattedResultDTO } from './results.dto';
-import { getFormattedActionDTO } from '../actions/actions.dto';
 import { lookUp, mongoDBFiltersFromQueryFilter } from './filter.parser';
 import getType from './result.migration';
 
@@ -27,17 +26,20 @@ export class ResultsService {
 
   async getRegions(zip: string) {
     const regions: any[] = await this.regionModel
-    .find({
+      .find({
         zips: { $elemMatch: { $eq: zip } },
-    })
-    .select('_id');   
+      })
+      .select('_id');
     for (let i = 0; i < regions.length; i++) {
-        regions[i] = regions[i]._id;
+      regions[i] = regions[i]._id;
     }
     return regions;
   }
   async getMongoDBFilters(query: QueryFilterDTO) {
-    await mongoDBFiltersFromQueryFilter(query, await this.getRegions(query.zip))
+    await mongoDBFiltersFromQueryFilter(
+      query,
+      await this.getRegions(query.zip),
+    );
   }
 
   async getResultFilterById(resultId: string): Promise<any[]> {
@@ -53,7 +55,7 @@ export class ResultsService {
   ): Promise<getFormattedResultDTO> {
     if (!language) language = 'de';
     const result: Result = await this.regionModel
-      .findOne({ oldId: id })
+      .findOne({ id })
       .populate('filters')
       .populate('actions')
       .populate('locations');
@@ -82,7 +84,10 @@ export class ResultsService {
     skip: number,
     query: QueryFilterDTO,
   ): Promise<getFormattedResultDTO[]> {
-    const filters = await mongoDBFiltersFromQueryFilter(query, await this.getRegions(query.zip));
+    const filters = await mongoDBFiltersFromQueryFilter(
+      query,
+      await this.getRegions(query.zip),
+    );
 
     return (
       await this.resultModel
@@ -96,13 +101,44 @@ export class ResultsService {
         ])
         .skip(skip)
         .limit(limit)
-    ).map((result) =>
-      {this.parseResult(result, query.language); return this.parseResult(result, query.language)}
+    ).map((result) => {
+      this.parseResult(result, query.language);
+      return this.parseResult(result, query.language);
+    });
+  }
+  async getCounter(query: QueryFilterDTO): Promise<any> {
+    const filters = await mongoDBFiltersFromQueryFilter(
+      query,
+      await this.getRegions(query.zip),
     );
+    return [await this.resultModel.aggregate([
+      lookUp('filters'),
+      {
+        $match: filters,
+      },
+      {
+        $count: 'counter',
+      },
+    ]), await this.resultModel.aggregate([
+      {
+        $count: 'counter',
+      },
+    ])];
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
+    console.log(
+      await mongoDBFiltersFromQueryFilter(
+        query,
+        await this.getRegions(query.zip),
+      ),
+    );
     return await this.resultModel
-      .count(await mongoDBFiltersFromQueryFilter(query, await this.getRegions(query.zip)))
+      .count(
+        await mongoDBFiltersFromQueryFilter(
+          query,
+          await this.getRegions(query.zip),
+        ),
+      )
       .exec();
   }
 
@@ -114,8 +150,8 @@ export class ResultsService {
     }));
 
     return {
-      id: tmp._id.toString(),
-      oldId: +tmp.oldId,
+      _id: tmp._id.toString(),
+      id: +tmp.id,
       content: { [language || 'de']: content },
       locations: tmp.locations,
       amountOfMoney: tmp.amountOfMoney,

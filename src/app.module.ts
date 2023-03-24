@@ -16,6 +16,7 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { MiddlewareConsumer } from '@nestjs/common/interfaces/middleware';
 import { ConfigModule } from '@nestjs/config';
+import { CountersModule } from './modules/counters/counters.module';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -29,6 +30,7 @@ export class LoggerMiddleware implements NestMiddleware {
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    CountersModule,
     InsurancesModule,
     LocationsModule,
     AuthModule,

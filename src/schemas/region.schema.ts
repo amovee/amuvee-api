@@ -11,7 +11,7 @@ export class Region {
   @Prop()
   name: string;
   @Prop()
-  id: string;
+  id: number;
   @Prop()
   status: string;
   @Prop({type: {lon: Number, lat: Number}})

@@ -5,6 +5,7 @@ import { LocationsController } from './locations.controller';
 import { LocationSchema, Location } from './location.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
+import { CountersModule } from '../counters/counters.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { User, UserSchema } from 'src/schemas/user.schema';
       { name: Location.name, schema: LocationSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    CountersModule
   ],
   controllers: [LocationsController],
   providers: [LocationsService],

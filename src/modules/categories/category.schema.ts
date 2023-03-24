@@ -9,7 +9,7 @@ export class Category {
   @Prop()
   _id: mongoose.Schema.Types.ObjectId;
   @Prop()
-  oldId: number;
+  id: number;
   @Prop()
   icon: string;
   @Prop()

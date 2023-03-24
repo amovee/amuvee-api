@@ -5,11 +5,11 @@ export type InsuranceDocument = Insurance & Document;
 export class Insurance {
   _id: mongoose.Schema.Types.ObjectId;
   @Prop()
+  id: number;
+  @Prop()
   name: string;
   @Prop()
   isPublic: boolean;
-  @Prop()
-  oldId: number;
   @Prop()
   status: string;
   @Prop()

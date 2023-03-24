@@ -20,8 +20,8 @@ export type ResultType = {
 };
 
 export interface getFormattedResultDTO {
-  id: string;
-  oldId: number;
+  _id: string;
+  id: number;
   content: {
     [language: string]: {
       name: string;

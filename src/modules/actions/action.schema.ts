@@ -7,7 +7,7 @@ export type ActionTypeDocument = Action & Document;
 export class Action {
   _id: mongoose.Schema.Types.ObjectId;
   @Prop()
-  oldId: number;
+  id: number;
   @Prop()
   specific: string;
   @Prop()
