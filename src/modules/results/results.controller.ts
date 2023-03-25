@@ -59,10 +59,9 @@ export class ResultsController {
     }
   }
 
-  // TODO: with filters option ???
   @Get('/:id') async getOne(
     @Param('id') id: string,
-    @Query('language') language: string,
+    @Query('language') language?: string,
   ): Promise<getFormattedResultDTO> {
     return this.resultsService.getResultFromId(id, language);
   }

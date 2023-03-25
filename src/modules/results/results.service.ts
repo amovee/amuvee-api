@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  Filter,
-  Result,
-  ResultDocument,
-} from './result.schema';
+import { Filter, Result, ResultDocument } from './result.schema';
 import mongoose from 'mongoose';
 import { Model } from 'mongoose';
 import { Region, RegionDocument } from '../../schemas/region.schema';
@@ -42,21 +38,18 @@ export class ResultsService {
 
   async getResultFromId(
     id: string,
-    language: string,
+    language?: string,
   ): Promise<getFormattedResultDTO> {
-    if (!language) language = 'de';
-    const result: Result = await this.regionModel
-      .findOne({ id })
-      .populate('filters')
+    const result: Result = await this.resultModel
+      .findById(id)
       .populate('actions')
       .populate('locations');
     return this.parseResult(result, language);
   }
   async getAllFromCategory(
     id: string,
-    language: string,
+    language?: string,
   ): Promise<getFormattedResultDTO[]> {
-    if (!language) language = 'de';
     return (
       await this.resultModel.aggregate([
         {
@@ -90,36 +83,30 @@ export class ResultsService {
         ])
         .skip(skip)
         .limit(limit)
-    ).map((result) => {
-      this.parseResult(result, query.language);
-      return this.parseResult(result, query.language);
-    });
+    ).map((result) => this.parseResult(result, query.language));
   }
   async getCounter(query: QueryFilterDTO): Promise<any> {
     const filters = await mongoDBFiltersFromQueryFilter(
       query,
       await this.getRegions(query.zip),
     );
-    return [await this.resultModel.aggregate([
-      {
-        $match: filters,
-      },
-      {
-        $count: 'counter',
-      },
-    ]), await this.resultModel.aggregate([
-      {
-        $count: 'counter',
-      },
-    ])];
+    return [
+      await this.resultModel.aggregate([
+        {
+          $match: filters,
+        },
+        {
+          $count: 'counter',
+        },
+      ]),
+      await this.resultModel.aggregate([
+        {
+          $count: 'counter',
+        },
+      ]),
+    ];
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
-    console.log(
-      await mongoDBFiltersFromQueryFilter(
-        query,
-        await this.getRegions(query.zip),
-      ),
-    );
     return await this.resultModel
       .count(
         await mongoDBFiltersFromQueryFilter(
@@ -130,22 +117,48 @@ export class ResultsService {
       .exec();
   }
 
-  parseResult(tmp: any, language: string) {
-    const content = tmp.content[language] || {};
-    const actions = tmp.actions.map((action) => ({
+  parseAction(action: any, language?: string) {
+    if(!language) {
+      return {
+        id: action._id.toString(),
+        content: action.content,
+      };
+    }
+    if (!action.content.get(language) && language != 'de') {
+      return {
+        id: action._id.toString(),
+        content: { [language]: action.content.get('de') },
+      };
+    }
+    return {
       id: action._id.toString(),
-      content: { [language]: action.content[language] || action.content['de'] },
-    }));
+      content: { [language]: action.content.get(language) },
+    };
+  }
+  parseResultContent(content: any, language?: string) {
+    if(!language) {
+      return content;
+    }
+    if (!content.get(language) && language != 'de') {
+      return { 'de': content.get('de')};
+    }
+    return { [language]: content.get(language)}
+  }
+  parseResult(tmp: any, language?: string) {
+    const actions = tmp.actions.map((action) =>
+      this.parseAction(action, language),
+    );
 
     return {
       _id: tmp._id.toString(),
       id: +tmp.id,
-      content: { [language || 'de']: content },
+      content: this.parseResultContent(tmp.content, language),
       locations: tmp.locations,
       amountOfMoney: tmp.amountOfMoney,
       categories: tmp.categories,
       period: { start: null, end: null },
       actions,
+      filters: tmp.filters,
       type: getType(tmp.type, language),
     };
   }

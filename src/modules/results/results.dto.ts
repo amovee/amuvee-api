@@ -34,6 +34,7 @@ export interface getFormattedResultDTO {
   categories: string[];
   period: { start: Date; end: Date };
   actions?: getFormattedActionDTO[];
+  filters?: Filter[];
   type: { weight: number; name: { [language: string]: string } };
 }
 // Gibt es Resultate, die nur für Geflüchtete sind
