@@ -58,7 +58,10 @@ export default function getType(
       weight: 650,
     },
   ];
-  const tmpType = { weight: types[type].weight, name: {} };
-  tmpType.name[language] = types[type].name[language];
-  return tmpType;
+  return {
+    weight: types[type].weight,
+    name: language
+      ? { [language]: types[type].name[language] }
+      : types[type].name,
+  };
 }

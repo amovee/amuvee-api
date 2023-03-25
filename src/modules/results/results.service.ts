@@ -71,7 +71,7 @@ export class ResultsService {
       query,
       await this.getRegions(query.zip),
     );
-
+    
     return (
       await this.resultModel
         .aggregate([
@@ -80,6 +80,7 @@ export class ResultsService {
           },
           lookUp('actions'),
           lookUp('locations'),
+          { $sort: { id: 1 }}
         ])
         .skip(skip)
         .limit(limit)
@@ -124,31 +125,32 @@ export class ResultsService {
         content: action.content,
       };
     }
-    if (!action.content.get(language) && language != 'de') {
+    if (!action.content[language] && language != 'de') {
       return {
         id: action._id.toString(),
-        content: { [language]: action.content.get('de') },
+        content: { [language]: action.content['de'] },
       };
     }
+    
     return {
       id: action._id.toString(),
-      content: { [language]: action.content.get(language) },
+      content: { [language]: action.content[language] },
     };
   }
   parseResultContent(content: any, language?: string) {
     if(!language) {
       return content;
     }
-    if (!content.get(language) && language != 'de') {
-      return { 'de': content.get('de')};
+    if (!content[language] && language != 'de') {
+      return { 'de': content['de']};
     }
-    return { [language]: content.get(language)}
+    return { [language]: content[language]}
   }
   parseResult(tmp: any, language?: string) {
+    
     const actions = tmp.actions.map((action) =>
-      this.parseAction(action, language),
+    this.parseAction(action, language),
     );
-
     return {
       _id: tmp._id.toString(),
       id: +tmp.id,
