@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Action } from 'rxjs/internal/scheduler/Action';
-import { ActionDocument } from './action.schema';
+import { ActionDocument } from '../../shared/schemas/action.schema';
 import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
-import { User, UserDocument } from 'src/schemas/user.schema';
+import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
+import { mappingStateType } from 'src/types/types.dto';
+import { migrateRoles } from 'src/types/roles.dto';
 
 @Injectable()
 export class ActionsService {
@@ -15,6 +17,7 @@ export class ActionsService {
     private readonly counter: CounterService,
   ) {}
   async migrate(): Promise<void> {
+    await this.counter.deleteSequenzDocument('actions')
     await this.actionModel.deleteMany().exec();
     const users: User[] = await this.userModel.find().exec();
     const counter = (
@@ -34,9 +37,10 @@ export class ActionsService {
       const a: any = {
         _id: new mongoose.Types.ObjectId(),
         id: await this.counter.setMaxSequenceValue('actions', +actions[i].id),
-        status: actions[i].status,
+        status: mappingStateType(actions[i].status),
         specific: actions[i].specific,
         sort: actions[i].weight,
+        roles: migrateRoles(actions[i], users),
         content: {
           de: {
             name: actions[i].name,
@@ -44,24 +48,6 @@ export class ActionsService {
           },
         },
       };
-      const userUpdated: User = users.find(user=>{
-        return user.oldId == actions[i].user_updated
-      });
-      if(userUpdated) {
-        a.updated = {
-          by: userUpdated._id,
-          date: actions[i].date_updated
-        }
-      }
-      const userCreated: User = users.find(user=>{
-        return user.oldId == actions[i].user_created
-      });
-      if(userCreated) {
-        a.created = {
-          by: userCreated._id,
-          date: actions[i].date_created
-        }
-      }
       if (actions[i].russian != null) {
         a.content['ru'] = {
           name: actions[i].russian.name,

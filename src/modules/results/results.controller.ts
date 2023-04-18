@@ -7,8 +7,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ResultsService } from './results.service';
-import { QueryFilterDTO, queryFilterParser } from 'src/types/types.dto';
-import { getFormattedResultDTO } from './results.dto';
+import { QueryFilterDTO, queryFilterParser } from 'src/types/query-filter.dto';
+import { ResultDTO } from 'src/shared/dtos/results.dto';
 
 @Controller('results')
 export class ResultsController {
@@ -20,13 +20,28 @@ export class ResultsController {
   @Get()
   async getFiltered(
     @Query() query: QueryFilterDTO,
-  ): Promise<getFormattedResultDTO[]> {
+  ): Promise<any[]> {
     query = queryFilterParser(query);
     try {
       return await this.resultsService.getAll(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
-        query,
+        query
+      );
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+  @Get('min')
+  async getMininmalResults(
+    @Query() query: QueryFilterDTO,
+  ): Promise<any[]> {
+    query = queryFilterParser(query);
+    try {
+      return await this.resultsService.getMinifiedResults(
+        query.limit ? query.limit : 20,
+        query.skip ? query.skip : 0,
+        query
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
@@ -35,7 +50,7 @@ export class ResultsController {
   @Get('counter')
   async getCounter(
     @Query() query: QueryFilterDTO
-  ): Promise<any> {
+  ): Promise<{ filtered?: number, total: number }> {
     query = queryFilterParser(query);
     try {
       return await this.resultsService.getCounter(
@@ -48,7 +63,7 @@ export class ResultsController {
   @Get('all')
   async getAll(
     @Query() query: { category: string; language: string },
-  ): Promise<getFormattedResultDTO[]> {
+  ): Promise<ResultDTO[]> {
     try {
       return await this.resultsService.getAllFromCategory(
         query.category,
@@ -62,7 +77,7 @@ export class ResultsController {
   @Get('/:id') async getOne(
     @Param('id') id: string,
     @Query('language') language?: string,
-  ): Promise<getFormattedResultDTO> {
+  ): Promise<ResultDTO> {
     return this.resultsService.getResultFromId(id, language);
   }
 }

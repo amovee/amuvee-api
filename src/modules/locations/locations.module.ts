@@ -2,9 +2,9 @@ import { LocationsService } from './locations.service';
 
 import { Module } from '@nestjs/common';
 import { LocationsController } from './locations.controller';
-import { LocationSchema, Location } from './location.schema';
+import { LocationSchema, Location } from '../../shared/schemas/location.schema';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from 'src/schemas/user.schema';
+import { User, UserSchema } from 'src/shared/schemas/user.schema';
 import { CountersModule } from '../counters/counters.module';
 
 @Module({

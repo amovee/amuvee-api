@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Query, } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
-import { Category } from './category.schema';
+import { MinCategoryDTO } from 'src/shared/dtos/categories.dto';
 
 @Controller('categories')
 export class CategoriesController {
@@ -13,7 +13,7 @@ export class CategoriesController {
     await this.categoriesService.migrate();
     return 'done';
   }
-  @Get() async getAll(@Query('language') language?: string): Promise<Category[]> {
+  @Get() async getAll(@Query('language') language?: string): Promise<MinCategoryDTO[]> {
     return  await this.categoriesService.getCategories(language);
   }
 }

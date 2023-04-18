@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Category, CategoryDocument } from './category.schema';
+import { Category, CategoryDocument } from '../../shared/schemas/category.schema';
 import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
-import { User, UserDocument } from 'src/schemas/user.schema';
+import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
+import { mappingStateType } from 'src/types/types.dto';
+import { migrateRoles } from 'src/types/roles.dto';
+import { MinCategoryDTO } from 'src/shared/dtos/categories.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -14,13 +17,13 @@ export class CategoriesService {
     private readonly counter: CounterService,
   ) {}
 
-  async getCategories(language?: string): Promise<Category[]> {
-    const categories = <Category[]>(
-      await this.categoryModel.find().select('-updated -created -oldId -status')
+  async getCategories(language?: string): Promise<MinCategoryDTO[]> {
+    const categories = <MinCategoryDTO[]>(
+      await this.categoryModel.find().select('_id icon content')
     );
     if (language) {
       for (let i = 0; i < categories.length; i++) {
-        const c = <Category>new this.categoryModel(categories[i]).toJSON();
+        const c = <MinCategoryDTO>new this.categoryModel(categories[i]).toJSON();
         if (c.content.hasOwnProperty(language))
           c.content = { [language]: c.content[language] };
         else if (c.content.hasOwnProperty('de'))
@@ -33,6 +36,7 @@ export class CategoriesService {
   }
 
   async migrate(): Promise<void> {
+    await this.counter.deleteSequenzDocument('categories')
     await this.categoryModel.deleteMany().exec();
     const users: User[] = await this.userModel.find().exec();
     const categories = (
@@ -47,8 +51,9 @@ export class CategoriesService {
         _id: new mongoose.Types.ObjectId(),
         id: await this.counter.setMaxSequenceValue('categories', +categories[i].id),
         icon: categories[i].icon,
-        status: categories[i].status,
+        status: mappingStateType(categories[i].status),
         sort: categories[i].sort,
+        roles: migrateRoles(categories[i], users),
         content: {
           de: {
             description: categories[i].description,
@@ -57,24 +62,6 @@ export class CategoriesService {
           },
         },
       };
-      const userUpdated: User = users.find((user) => {
-        return user.oldId == categories[i].user_updated;
-      });
-      if (userUpdated) {
-        c.updated = {
-          by: userUpdated._id,
-          date: categories[i].date_updated,
-        };
-      }
-      const userCreated: User = users.find((user) => {
-        return user.oldId == categories[i].user_created;
-      });
-      if (userCreated) {
-        c.created = {
-          by: userCreated._id,
-          date: categories[i].date_created,
-        };
-      }
       if (categories[i].russian != null) {
         c.content['ru'] = {
           name: categories[i].russian.name,

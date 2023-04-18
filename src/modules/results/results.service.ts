@@ -1,14 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Filter, Result, ResultDocument } from './result.schema';
+import {
+  Result,
+  ResultDocument,
+} from '../../shared/schemas/result.schema';
 import mongoose from 'mongoose';
 import { Model } from 'mongoose';
-import { Region, RegionDocument } from '../../schemas/region.schema';
-import { Action, ActionDocument } from '../actions/action.schema';
-import { QueryFilterDTO } from 'src/types/types.dto';
-import { getFormattedResultDTO } from './results.dto';
-import { lookUp, mongoDBFiltersFromQueryFilter } from './filter.parser';
-import getType from './result.migration';
+import { Region, RegionDocument } from '../../shared/schemas/region.schema';
+import { Action, ActionDocument } from '../../shared/schemas/action.schema';
+import { QueryFilterDTO } from 'src/types/query-filter.dto';
+import { MinResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
+import {
+  filterResultLanguage,
+  getVariationProjection,
+  lookUp,
+  mongoDBFiltersFromQueryFilter,
+} from './helper.functions';
 
 @Injectable()
 export class ResultsService {
@@ -18,28 +25,25 @@ export class ResultsService {
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
   ) {}
 
-  async getRegions(zip: string) {
-    const regions: any[] = await this.regionModel
-      .find({
-        zips: { $elemMatch: { $eq: zip } },
+  async getRegionsByZip(zip: string): Promise<Region[]> {
+    const regions: Region[] = await this.regionModel
+      .find<Region>({
+        zips: { $regex: zip },
       })
       .select('_id');
-    for (let i = 0; i < regions.length; i++) {
-      regions[i] = regions[i]._id;
-    }
     return regions;
   }
   async getMongoDBFilters(query: QueryFilterDTO) {
-    await mongoDBFiltersFromQueryFilter(
+    return await mongoDBFiltersFromQueryFilter(
       query,
-      await this.getRegions(query.zip),
+      query.zip
+        ? (
+            await this.getRegionsByZip(query.zip)
+          ).map((region: Region) => region._id.toString())
+        : null,
     );
   }
-
-  async getResultFromId(
-    id: string,
-    language?: string,
-  ): Promise<getFormattedResultDTO> {
+  async getResultFromId(id: string, language?: string): Promise<ResultDTO> {
     const result: Result = await this.resultModel
       .findById(id)
       .populate('actions')
@@ -49,7 +53,7 @@ export class ResultsService {
   async getAllFromCategory(
     id: string,
     language?: string,
-  ): Promise<getFormattedResultDTO[]> {
+  ): Promise<ResultDTO[]> {
     return (
       await this.resultModel.aggregate([
         {
@@ -62,64 +66,103 @@ export class ResultsService {
       ])
     ).map((result) => this.parseResult(result, language));
   }
-  async getAll(
+  async getMinifiedResults(
     limit: number,
     skip: number,
     query: QueryFilterDTO,
-  ): Promise<getFormattedResultDTO[]> {
-    const filters = await mongoDBFiltersFromQueryFilter(
-      query,
-      await this.getRegions(query.zip),
-    );
-    
+  ): Promise<MinResultDTO[]> {
+    const filters = await this.getMongoDBFilters(query);
+
     return (
       await this.resultModel
-        .aggregate([
+        .aggregate<MinResultDTO>([
+          {
+            $unwind: {
+              path: '$variations',
+            },
+          },
           {
             $match: filters,
           },
+          {
+            $lookup: {
+              from: 'resulttypes',
+              localField: 'type',
+              foreignField: '_id',
+              as: 'type',
+            },
+          },
+          { $unwind: { path: '$type' } },
+          { $project: getVariationProjection('min') },
           lookUp('actions'),
           lookUp('locations'),
-          { $sort: { id: 1 }}
+          {
+            $project: {
+              'actions.specific': 0,
+              'actions.status': 0,
+              'actions.roles': 0,
+              'locations.status': 0,
+              'locations.roles': 0,
+            },
+          },
+          { $sort: { ['type.weight']: -1 } },
         ])
         .skip(skip)
         .limit(limit)
-    ).map((result) => this.parseResult(result, query.language));
+    ).map((res: MinResultDTO) => {
+      return filterResultLanguage(res, query.language);
+    });
   }
-  async getCounter(query: QueryFilterDTO): Promise<any> {
-    const filters = await mongoDBFiltersFromQueryFilter(
-      query,
-      await this.getRegions(query.zip),
-    );
-    return [
-      await this.resultModel.aggregate([
+
+  async getAll(
+    limit: number,
+    skip: number,
+    query: QueryFilterDTO
+  ): Promise<ResultDTO[]> {
+    const filters = await this.getMongoDBFilters(query);
+    return await this.resultModel
+      .aggregate<ResultDTO>([
+        {
+          $unwind: {
+            path: '$variations',
+          },
+        },
         {
           $match: filters,
         },
+        { $project: getVariationProjection() },
+        lookUp('actions'),
+        lookUp('locations'),
         {
-          $count: 'counter',
+          $lookup: {
+            from: 'resulttypes',
+            localField: 'type',
+            foreignField: '_id',
+            as: 'type',
+          },
         },
-      ]),
-      await this.resultModel.aggregate([
-        {
-          $count: 'counter',
-        },
-      ]),
-    ];
+        { $unwind: { path: '$type' } },
+        { $sort: { ['type.weight']: -1 } },
+      ])
+      .skip(skip)
+      .limit(limit);
+  }
+  async getCounter(
+    query: QueryFilterDTO,
+  ): Promise<{ filtered?: number; total: number }> {
+    const filters = await this.getMongoDBFilters(query);
+    // const filtered = await this.resultModel.find(filters).count();
+    const total = await this.resultModel.find(filters).count();
+    // console.log(regions);
+    return { total };
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
-    return await this.resultModel
-      .count(
-        await mongoDBFiltersFromQueryFilter(
-          query,
-          await this.getRegions(query.zip),
-        ),
-      )
-      .exec();
+    const filters = await this.getMongoDBFilters(query);
+    return await this.resultModel.count(filters).exec();
   }
 
   parseAction(action: any, language?: string) {
-    if(!language) {
+    if (!language) {
       return {
         id: action._id.toString(),
         content: action.content,
@@ -131,37 +174,25 @@ export class ResultsService {
         content: { [language]: action.content['de'] },
       };
     }
-    
+
     return {
       id: action._id.toString(),
       content: { [language]: action.content[language] },
     };
   }
   parseResultContent(content: any, language?: string) {
-    if(!language) {
+    if (!language) {
       return content;
     }
     if (!content[language] && language != 'de') {
-      return { 'de': content['de']};
+      return { de: content['de'] };
     }
-    return { [language]: content[language]}
+    return { [language]: content[language] };
   }
-  parseResult(tmp: any, language?: string) {
-    
+  parseResult(tmp: any, language?: string): ResultDTO {
     const actions = tmp.actions.map((action) =>
-    this.parseAction(action, language),
+      this.parseAction(action, language),
     );
-    return {
-      _id: tmp._id.toString(),
-      id: +tmp.id,
-      content: this.parseResultContent(tmp.content, language),
-      locations: tmp.locations,
-      amountOfMoney: tmp.amountOfMoney,
-      categories: tmp.categories,
-      period: { start: null, end: null },
-      actions,
-      filters: tmp.filters,
-      type: getType(tmp.type, language),
-    };
+    return null;
   }
 }

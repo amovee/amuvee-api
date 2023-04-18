@@ -6,8 +6,8 @@ export type RegionDocument = Region & Document;
 @Schema()
 export class Region {
   _id: mongoose.Schema.Types.ObjectId;
-  @Prop({type: [String]})
-  zips: string[];
+  @Prop()
+  zips: string;
   @Prop()
   name: string;
   @Prop()

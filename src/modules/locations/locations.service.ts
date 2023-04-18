@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { LocationDocument, Location } from './location.schema';
+import { LocationDocument, Location } from '../../shared/schemas/location.schema';
 import axios from 'axios';
-import { User, UserDocument } from 'src/schemas/user.schema';
+import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
+import { migrateRoles } from 'src/types/roles.dto';
 
 @Injectable()
 export class LocationsService {
@@ -19,6 +20,7 @@ export class LocationsService {
   }
 
   async migrate(): Promise<void> {
+    await this.counter.deleteSequenzDocument('locations')
     await this.locationModel.deleteMany().exec();
     const users: User[] = await this.userModel.find().exec();
 
@@ -39,28 +41,13 @@ export class LocationsService {
         link: location.google_maps_link,
         name: location.name,
         id: await this.counter.setMaxSequenceValue('locations', +location.id),
+        roles: migrateRoles(location, users),
         status: "published",
-        sort: location.sort == null ? 0 : location.sort,
       };
 
       const userUpdated: User = users.find((user) => {
         return user.oldId == location.user_updated;
       });
-      if (userUpdated) {
-        loc.updated = {
-          by: userUpdated._id,
-          date: location.date_updated,
-        };
-      }
-      const userCreated: User = users.find((user) => {
-        return user.oldId == location.user_created;
-      });
-      if (userCreated) {
-        loc.created = {
-          by: userCreated._id,
-          date: location.date_created,
-        };
-      }
       new this.locationModel(loc).save();
     }
   }

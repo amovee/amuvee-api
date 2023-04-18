@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from 'src/schemas/user.schema';
+import { User, UserSchema } from 'src/shared/schemas/user.schema';
 import { CountersModule } from '../counters/counters.module';
-import { Action, ActionSchema } from './action.schema';
+import { Action, ActionSchema } from '../../shared/schemas/action.schema';
 import { ActionsController } from './actions.controller';
 import { ActionsService } from './actions.service';
 

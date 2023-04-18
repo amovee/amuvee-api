@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
-import { Location } from './location.schema';
+import { Location } from '../../shared/schemas/location.schema';
 import { LocationsService } from './locations.service';
 
 @Controller('locations')

@@ -1,18 +1,22 @@
-import { AuthorInformation, ObjectStatus } from 'src/types/types.dto';
+import { RolesDTO } from 'src/types/roles.dto';
+import { StateType } from 'src/types/types.dto';
 
 // Gibt es Aktionen, die nur für Geflüchtete sind
-export interface createActionDTO extends ObjectStatus, AuthorInformation {
+export interface ActionDTO {
   _id: string;
+  status: StateType,
+  specific: string | null;
   content: {
     [languageKey: string]: {
       name: string;
       description: string;
     };
   };
+  roles: RolesDTO;
 }
 
-export interface getFormattedActionDTO {
-  id: string;
+export interface MinActionDTO {
+  _id: string;
   content: {
     [languageKey: string]: {
       name: string;

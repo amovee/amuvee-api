@@ -67,6 +67,12 @@ export class MigrationController {
     await this.actionService.migrate();
     return "done";
   }
+  
+  @Post('resulttypes')
+  async migrateResulttypes(): Promise<string> {
+    await this.migraionService.migrateResulttypes();
+    return 'done';
+  }
   @Post('results')
   async migrateAllResultsFromAllCategories(): Promise<string> {
     await this.migraionService.migrateResultsFromAllCategories();

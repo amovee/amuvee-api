@@ -1,20 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { Model } from 'mongoose';
-import { Category, CategoryDocument } from '../categories/category.schema';
-import {
-  Filter,
-  Result,
-  ResultDocument,
-} from '../results/result.schema';
-import { LocationDocument, Location } from '../locations/location.schema';
-import { Region, RegionDocument } from '../../schemas/region.schema';
-import { Action, ActionDocument } from '../actions/action.schema';
+import { Model, ObjectId } from 'mongoose';
+import { Category, CategoryDocument } from '../../shared/schemas/category.schema';
+import { Variation, Result, ResultDocument, ResultType, ResultTypeDocument } from '../../shared/schemas/result.schema';
+import { LocationDocument, Location } from '../../shared/schemas/location.schema';
+import { Region, RegionDocument } from '../../shared/schemas/region.schema';
+import { Action, ActionDocument } from '../../shared/schemas/action.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../../schemas/user.schema';
-import { Insurance, InsuranceDocument } from '../insurances/insurance.schema';
+import { User, UserDocument } from '../../shared/schemas/user.schema';
+import { Insurance, InsuranceDocument } from '../../shared/schemas/insurance.schema';
 import mongoose from 'mongoose';
 import { CounterService } from '../counters/counters.service';
+import { mappingStateType } from 'src/types/types.dto';
+import { migrateRoles } from 'src/types/roles.dto';
+import getType, { result_types } from '../results/result.migration';
 
 @Injectable()
 export class MigrationService {
@@ -22,6 +21,7 @@ export class MigrationService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
+    @InjectModel(ResultType.name) private resultTypeModel: Model<ResultTypeDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
     @InjectModel(Insurance.name)
@@ -30,63 +30,22 @@ export class MigrationService {
     private readonly counter: CounterService,
   ) {}
 
-  // async migrateUsers(): Promise<any> {
-  //   let users = (await axios.get(process.env.DIRECTUS_URL + 'users')).data.data;
-  //   if (users) {
-  //     users = users.map((user) => ({
-  //       username: user.last_name + '' + user.first_name,
-  //       password: this.generatePassword(15),
-  //       role: 'admin',
-  //       oldId: user.id,
-  //       email: user.email,
-  //     }));
-  //     for (let i = 0; i < users.length; i++) {
-  //       await this.migrateUser(users[i]);
-  //     }
-  //   }
-  //   return users.map((user) => ({
-  //     username: user.username,
-  //     password: user.password,
-  //   }));
-  // }
-  // async migrateUser(toCreate: IUser): Promise<User> {
-  //   const user = await this.userModel
-  //     .findOne({ username: toCreate.username })
-  //     .exec();
-  //   if (user == null) {
-  //     if (!toCreate || !toCreate.username || !toCreate.password) {
-  //       throw new HttpException(
-  //         {
-  //           status: HttpStatus.FORBIDDEN,
-  //           error: 'User not Complete',
-  //         },
-  //         HttpStatus.FORBIDDEN,
-  //       );
-  //     }
-  //     return new this.userModel({
-  //       username: toCreate.username,
-  //       password: toCreate.password,
-  //       role: toCreate.role,
-  //       oldId: toCreate.oldId,
-  //       email: toCreate.email,
-  //     }).save();
-  //   } else {
-  //     throw new HttpException(
-  //       {
-  //         status: HttpStatus.FORBIDDEN,
-  //         error: 'user already exists',
-  //       },
-  //       HttpStatus.FORBIDDEN,
-  //     );
-  //   }
-  // }
+  async migrateResulttypes() {
+    await this.resultTypeModel.deleteMany().exec();
+    result_types.forEach((resultType)=>{
+      new this.resultTypeModel({
+        name: resultType.name,
+        weight: resultType.weight
+      }).save();
+    })
+  }
 
   transformPostalCodes(result: any): string[] {
     let postalcodes = [];
     if (result.zip) {
-      postalcodes = result.zip.replace(' ', '').split(',');
+      postalcodes = result.zip.replace(' ', '');
     } else if (result.postalcodes) {
-      postalcodes = result.postalcodes.replace(' ', '').split(',');
+      postalcodes = result.postalcodes.replace(' ', '');
     }
     return postalcodes;
   }
@@ -96,7 +55,7 @@ export class MigrationService {
       requiredKeys.push('pregnant');
     }
     if (result.victim_of_violence) {
-      requiredKeys.push('victim_of_violence');
+      requiredKeys.push('victimsOfViolence');
     }
     return requiredKeys;
   }
@@ -118,166 +77,169 @@ export class MigrationService {
     };
   }
 
-  async migrateResults(category: Category): Promise<any> {
+  async getlocationIDs() {
     const locationIds: any = {};
     const locations = await this.locationModel.find().exec();
-    const users: User[] = await this.userModel.find().exec();
     locations.forEach((location) => {
       locationIds[location.id] = location._id;
     });
-    const regionIds: any = {};
-    const regions = await this.regionModel.find().exec();
-    regions.forEach((region) => {
-      regionIds[region.id] = region._id;
-    });
+    return locationIds;
+  }
+  async getRegion(result): Promise<ObjectId[]> {
+    if(result.zip) {
+      const region: Region = await this.regionModel.findOne({zips: result.zip}).exec();
+      return region? [region._id]: [];
+    } else if(result.region) {
+      const region: Region = await this.regionModel.findOne({id: result.region}).exec();
+      return region? [region._id]: [];
+    }
+    return [];
+  }
+  async getInsuranceIds() {
     const insuranceIds: any = {};
     const insurances = await this.insuranceModel.find().exec();
     insurances.forEach((insurance) => {
       insuranceIds[insurance.id] = insurance._id;
     });
-    const fields =
-      '*,has_insurance.*,has_relationship.*,has_job_related_situation.*,relationship_types.*,type.*,russian.*,ukrainian.*,actions.*';
-
-    const counter = (
+    return insuranceIds;
+  }
+  async getNumberOfAllResults() {
+    return (
       await axios.get(
-        process.env.DIRECTUS_URL +
-          'items/result?fields=*&limit=0&meta=filter_count',
+        `${process.env.DIRECTUS_URL}items/result?fields=*&limit=0&meta=filter_count`,
       )
     ).data.meta.filter_count;
+  }
+  async getActionList(result: any) {
+    const actions = [];
+    for (let i = 0; i < result.actions.length; i++) {
+      const action = await this.actionModel
+        .findOne({ id: result.actions[i].action_id }, ['results'])
+        .exec();
+      if (action) {
+        actions.push(action._id);
+      }
+    }
+    return actions;
+  }
+  async createFilter(
+    result: any,
+    insurances: any,
+    locationIds: any,
+  ) {
+    const relationships = result.has_relationship.map(
+      (i) => i.relationship_types_id,
+    );
+    const jobRelatedSituations = result.has_job_related_situation.map(
+      (i) => i.job_related_situations_id,
+    );
+    const parentGender = result.parent_gender ? [result.parent_gender] : [];
+    return {
+      name: 'Variation 1',
+      timespan: { from: result.start_date, to: result.end_date },
+      rent: this.generateMinMaxFilter(result.min_rent, result.max_rent),
+      income: this.generateMinMaxFilter(result.min_income, result.max_income),
+      childrenCount: this.generateMinMaxFilter(
+        result.min_children_count,
+        result.max_children_count,
+      ),
+      childrenAge: this.generateMinMaxFilter(result.min_age, result.max_age),
+      parentAge: this.generateMinMaxFilter(
+        result.min_mother_age,
+        result.max_mother_age,
+      ),
+      parentGender,
+      regions: await this.getRegion(result),
+      requiredKeys: this.transformKeyWords(result),
+      insurances,
+      relationships,
+      jobRelatedSituations,
+
+      amountOfMoney: this.generateMinMaxFilter(
+        result.min_amount_of_money,
+        result.max_amount_of_money,
+      ),
+      content: this.getContent(result),
+      actions: await this.getActionList(result),
+      locations: locationIds[result.location]
+      ? [locationIds[result.location]]
+      : [],
+      variables: [],
+    };
+  }
+  getContent(result: any) {
+    const content = {
+      de: {
+        title: result.name,
+        description: result.description,
+        shortDescription: result.short_description,
+      },
+    };
+    if (!!result.russian) {
+      content['ru'] = {
+        title: result.russian.name,
+        description: result.russian.description,
+        shortDescription: result.russian.short_description,
+      };
+    }
+    if (!!result.ukrainian) {
+      content['uk'] = {
+        title: result.ukrainian.name,
+        description: result.ukrainian.description,
+        shortDescription: result.ukrainian.short_description,
+      };
+    }
+    return content;
+  }
+  async migrateResults(category: Category): Promise<any> {
+    const locationIds: any = await this.getlocationIDs();
+    const insuranceIds: any = await this.getInsuranceIds();
+    const users: User[] = await this.userModel.find().exec();
+    const resultTypes: ResultType[] = await this.resultTypeModel.find().exec();
+    const resultTypeMap = {}
+    resultTypes.forEach(type => {
+      resultTypeMap[type.weight] = type._id;
+    });
+    // console.log(resultTypes.filter((rt)=>rt.weight == 700));
+
+    const fields = [
+      '*',
+      'has_insurance.*',
+      'has_relationship.*',
+      'has_job_related_situation.*',
+      'relationship_types.*',
+      'type.*',
+      'russian.*',
+      'ukrainian.*',
+      'actions.*',
+    ].join(',');
+
+    const counter = await this.getNumberOfAllResults();
     const results = (
       await axios.get(
-        process.env.DIRECTUS_URL +
-          'items/' +
-          'result?fields=' +
-          fields +
-          '&sort=id&limit=' +
-          counter +
-          '&filter={"category":{"_eq":' +
-          category.id +
-          '}}',
+        `${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"category":{"_eq":${category.id}}}`,
       )
     ).data.data;
 
     for (let j = 0; j < results.length; j++) {
       const result = results[j];
-      const filter = {
-        rent: this.generateMinMaxFilter(result.min_rent, result.max_rent), //DONE
-        income: this.generateMinMaxFilter(result.min_income, result.max_income), //DONE
-        childrenCount: this.generateMinMaxFilter(
-          result.min_children_count,
-          result.max_children_count,
-        ), //DONE
-        childrenAge: this.generateMinMaxFilter(result.min_age, result.max_age), //DONE
-        parentAge: this.generateMinMaxFilter(
-          result.min_mother_age,
-          result.max_mother_age,
-        ), //DONE
-        parentGender: result.parent_gender ? [result.parent_gender] : [],
-        zips: this.transformPostalCodes(result), // DONE
-        regions: regionIds[result.region] ? [regionIds[result.region]] : [], // DONE
-        requiredKeys: this.transformKeyWords(result), //DONE
-        insurances: result.has_insurance.map(
-          (i) => insuranceIds[i.insurance_id],
-        ), //DONE
-        relationships: result.has_relationship.map(
-          (i) => i.relationship_types_id,
-        ), //DONE
-        jobRelatedSituations: result.has_job_related_situation.map(
-          (i) => i.job_related_situations_id,
-        ), //DONE
-        variables: {},
-        actions: [],
-      };
-      const r: any = {
+      const filter = await this.createFilter(
+        result,
+        result.has_insurance.map((i) => insuranceIds[i.insurance_id]),
+        locationIds,
+      );      
+      new this.resultModel({
         _id: new mongoose.Types.ObjectId(),
+        name: result.name.replaceAll('&shy;', ''),
         id: await this.counter.setMaxSequenceValue('results', +result.id),
         specific: result.specific,
-        timespan: { from: result.start_date, to: result.end_date }, //DONE
-        categories: [category._id], //DONE
-        type: {
-          6: 0,
-          1: 1,
-          4: 2,
-          10: 3,
-          2: 4,
-          9: 5,
-        }[result.type.id], //DONE
-        amountOfMoney: this.generateMinMaxFilter(
-          result.min_amount_of_money,
-          result.max_amount_of_money,
-        ), //DONE
-        filters: [],
-        content: {
-          de: {
-            name: result.name,
-            description: result.description,
-            shortDescription: result.short_description,
-          },
-        },
-        status: result.status,
+        categories: [category._id],
+        variations: [filter],
+        status: mappingStateType(result.status),
         sort: result.sort,
-        actions: [],
-        locations: locationIds[result.location]
-          ? [locationIds[result.location]]
-          : [],
-      };
-      
-      const userUpdated: User = users.find((user) => {
-        return user.oldId == results[j].user_updated;
-      });
-      if (userUpdated) {
-        r.updated = {
-          by: userUpdated._id,
-          date: results[j].date_updated,
-        };
-        filter['updated'] = {
-          by: userUpdated._id,
-          date: results[j].date_updated,
-        };
-      }
-      const userCreated: User = users.find((user) => {
-        return user.oldId == results[j].user_created;
-      });
-      if (userCreated) {
-        r.created = {
-          by: userCreated._id,
-          date: results[j].date_created,
-        };
-        filter['created'] = {
-          by: userCreated._id,
-          date: results[j].date_created,
-        };
-      }
-
-      for (let i = 0; i < result.actions.length; i++) {
-        const action = await this.actionModel
-          .findOne({ id: result.actions[i].action_id }, ['results'])
-          .exec();
-        if (action) {
-          r.actions.push(action._id);
-        }
-      }
-      if (result.russian != null) {
-        r.content['ru'] = {
-          name: result.russian.name,
-          description: result.russian.description,
-          shortDescription: result.russian.short_description,
-        };
-      }
-      if (result.ukrainian != null) {
-        r.content['uk'] = {
-          name: result.ukrainian.name,
-          description: result.ukrainian.description,
-          shortDescription: result.ukrainian.short_description,
-        };
-      }
-      r.filters.push(filter)
-      // await new this.filterModel(filter).save((err, filter) => {
-      //   if (filter._id) {
-      //     r.filters.push(filter._id);
-          new this.resultModel(r).save();
-      //   }
-      // });
+        roles: migrateRoles(result, users),
+        type: resultTypeMap[result.type.weight],
+      }).save();
     }
     return results;
   }

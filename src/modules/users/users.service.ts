@@ -1,12 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../../schemas/user.schema';
+import { User, UserDocument } from '../../shared/schemas/user.schema';
 import { Model, ObjectId } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { UserDTO } from 'src/types/types.dto';
 import axios from 'axios';
 import { right } from 'src/types/rights';
-import { createUserDTO, UpdatePasswordDTO, updateUserDTO } from './user.dto';
+import { UpdatePasswordDTO, createUserDTO, updateUserDTO } from 'src/shared/dtos/user.dto';
 
 @Injectable()
 export class UsersService {

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MetaDocument } from '../../schemas/meta.schema';
+import { MetaDocument } from '../../shared/schemas/meta.schema';
 import axios from 'axios';
-import { Insurance } from './insurance.schema';
+import { Insurance } from '../../shared/schemas/insurance.schema';
 import { CounterService } from '../counters/counters.service';
 
 @Injectable()
@@ -15,6 +15,7 @@ export class InsurancesService {
   ) {}
   
   async migrate(): Promise<void> {
+    await this.counter.deleteSequenzDocument('insurances')
     await this.insuranceModel.deleteMany().exec();
     (await axios.get(process.env.DIRECTUS_URL + 'items/insurance')).data.data.forEach(
       async (insurance) => {

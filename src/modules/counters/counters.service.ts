@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import {
   Counter,
   CountersDocument as CounterDocument,
-} from './counters.schema';
+} from '../../shared/schemas/counters.schema';
 import { Model } from 'mongoose';
 
 @Injectable()
@@ -21,6 +21,9 @@ export class CounterService {
         { upsert: true, new: true, setDefaultsOnInsert: true },
       );
     return sequenceDocument.sequence_value;
+  }
+  public async deleteSequenzDocument(sequenceName: string) {
+    await this.countersModel.findOneAndDelete({_id: sequenceName}).exec();
   }
   public async setMaxSequenceValue(
     sequenceName: string,
