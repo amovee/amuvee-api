@@ -7,7 +7,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ResultsService } from './results.service';
-import { QueryFilterDTO, queryFilterParser } from 'src/types/query-filter.dto';
+import { QueryFilterDTO, queryFilterParser } from 'src/shared/dtos/query-filter.dto';
 import { ResultDTO } from 'src/shared/dtos/results.dto';
 
 @Controller('results')

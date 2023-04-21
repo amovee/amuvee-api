@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  Result,
-  ResultDocument,
-} from '../../shared/schemas/result.schema';
+import { Result, ResultDocument } from '../../shared/schemas/result.schema';
 import mongoose from 'mongoose';
 import { Model } from 'mongoose';
 import { Region, RegionDocument } from '../../shared/schemas/region.schema';
 import { Action, ActionDocument } from '../../shared/schemas/action.schema';
-import { QueryFilterDTO } from 'src/types/query-filter.dto';
+import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 import { MinResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
 import {
   filterResultLanguage,
@@ -72,7 +69,6 @@ export class ResultsService {
     query: QueryFilterDTO,
   ): Promise<MinResultDTO[]> {
     const filters = await this.getMongoDBFilters(query);
-
     return (
       await this.resultModel
         .aggregate<MinResultDTO>([
@@ -117,7 +113,7 @@ export class ResultsService {
   async getAll(
     limit: number,
     skip: number,
-    query: QueryFilterDTO
+    query: QueryFilterDTO,
   ): Promise<ResultDTO[]> {
     const filters = await this.getMongoDBFilters(query);
     return await this.resultModel

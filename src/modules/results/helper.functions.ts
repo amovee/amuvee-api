@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { QueryFilterDTO } from 'src/types/query-filter.dto';
+import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 import { MinActionDTO } from 'src/shared/dtos/actions.dto';
 import { MinResultDTO, ResultType } from 'src/shared/dtos/results.dto';
 
@@ -10,13 +10,11 @@ function filterResultTypeLanguage(type: ResultType, language?: string) {
     };
   } else if (type['de']) {
     type.name = {
-      [language]: type.name[language],
+      ['de']: type.name['de'],
     };
   } else {
     // TODO: Fälle testen?
-    type.name = {
-      [language]: null,
-    };
+    type.name = {};
   }
   return type;
 }
@@ -29,20 +27,17 @@ function filterResultContentLanguage(
     };
   },
   language: string,
-) {
+) {  
   if (content && content[language]) {
     content = {
       [language]: content[language],
     };
-  } else if (content['de']) {
+  } else if (content && content['de']) {
     content = {
-      [language]: content[language],
+      ['de']: content['de'],
     };
   } else {
-    // TODO: Fälle testen?
-    content = {
-      [language]: null,
-    };
+    content = {};
   }
   return content;
 }
@@ -53,13 +48,10 @@ function filterActionLanguage(action: MinActionDTO, language: string) {
     };
   } else if (action.content['de']) {
     action.content = {
-      [language]: action.content[language],
+      ['de']: action.content['de'],
     };
   } else {
-    // TODO: Fälle testen?
-    action.content = {
-      [language]: null,
-    };
+    action.content = {};
   }
   return action;
 }

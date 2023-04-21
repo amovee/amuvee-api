@@ -13,7 +13,7 @@ export class CategoriesController {
     await this.categoriesService.migrate();
     return 'done';
   }
-  @Get() async getAll(@Query('language') language?: string): Promise<MinCategoryDTO[]> {
+  @Get('min') async getAll(@Query('language') language?: string): Promise<MinCategoryDTO[]> {
     return  await this.categoriesService.getCategories(language);
   }
 }
