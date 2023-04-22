@@ -9,73 +9,65 @@ import { MigrationService } from './migration.service';
 
 @Controller('migration')
 export class MigrationController {
-  constructor(private readonly migraionService: MigrationService,
+  constructor(
+    private readonly migraionService: MigrationService,
     private regionService: RegionService,
     private locationService: LocationsService,
     private categoryService: CategoriesService,
     private insuranceService: InsurancesService,
     private actionService: ActionsService,
-    private userService: UsersService) {}
+    private userService: UsersService,
+  ) {}
   // @Post('users')
   // async migrateAllUsers(): Promise<any> {
   //   return await this.migraionService.migrateUsers();
   // }
   @Post('all')
-  async migrateAll(): Promise<string> {
+  async migrateAll(): Promise<void> {
     await this.migrateAllHelpers();
     await this.migrateAllResultsFromAllCategories();
-    return 'done'
   }
   @Post('users')
-  async migrateUsers(): Promise<string> {
+  async migrateUsers(): Promise<void> {
     this.userService.migrate();
-    return 'done'
   }
-  @Post('region')
-  async migrateRegion(): Promise<string> {
+  @Post('regions')
+  async migrateRegion(): Promise<void> {
     this.regionService.migrate();
-    return 'done'
   }
-  @Post('location')
-  async migrateLocation(): Promise<string> {
+  @Post('locations')
+  async migrateLocation(): Promise<void> {
     this.locationService.migrate();
-    return 'done'
   }
-  @Post('category')
-  async migrateCategory(): Promise<string> {
+  @Post('categories')
+  async migrateCategory(): Promise<void> {
     this.categoryService.migrate();
-    return 'done'
   }
-  @Post('insurance')
-  async migrateInsurances(): Promise<string> {
+  @Post('insurances')
+  async migrateInsurances(): Promise<void> {
     this.insuranceService.migrate();
-    return 'done'
   }
-  @Post('action')
-  async migrateActions(): Promise<string> {
+  @Post('actions')
+  async migrateActions(): Promise<void> {
     await this.actionService.migrate();
-    return 'done'
   }
-  
+
   @Post('helpers')
-  async migrateAllHelpers(): Promise<string> {
+  async migrateAllHelpers(): Promise<void> {
     await this.userService.migrate();
     await this.categoryService.migrate();
     await this.locationService.migrate();
     await this.regionService.migrate();
     await this.insuranceService.migrate();
     await this.actionService.migrate();
-    return "done";
   }
-  
+
   @Post('resulttypes')
-  async migrateResulttypes(): Promise<string> {
+  async migrateResulttypes(): Promise<void> {
     await this.migraionService.migrateResulttypes();
-    return 'done';
   }
   @Post('results')
-  async migrateAllResultsFromAllCategories(): Promise<string> {
+  async migrateAllResultsFromAllCategories(): Promise<void> {
     await this.migraionService.migrateResultsFromAllCategories();
-    return 'done';
   }
 }

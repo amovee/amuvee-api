@@ -38,10 +38,14 @@ export interface QueryFilterDTO {
     if (input.jobRelatedSituation) query.jobRelatedSituation = +input.jobRelatedSituation;
     if (input.relationship) query.relationship = +input.relationship;
     if (input.childrenAgeGroups) {
-      query.childrenAgeGroups = [];
-      input.childrenAgeGroups.forEach((ageGroup) => {
-        query.childrenAgeGroups.push(+ageGroup);
-      });
+      if(Array.isArray(input.childrenAgeGroups)){
+        query.childrenAgeGroups = [];
+        input.childrenAgeGroups.forEach((ageGroup) => {
+          query.childrenAgeGroups.push(+ageGroup);
+        });
+      } else {
+        query.childrenAgeGroups = [input.childrenAgeGroups];
+      }
     }
     if (input.keyOperation) query.keyOperation = input.keyOperation;
     if (input.keys) {

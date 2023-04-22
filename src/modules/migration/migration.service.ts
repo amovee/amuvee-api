@@ -34,6 +34,7 @@ export class MigrationService {
     await this.resultTypeModel.deleteMany().exec();
     result_types.forEach((resultType)=>{
       new this.resultTypeModel({
+        _id: new mongoose.Types.ObjectId(),
         name: resultType.name,
         weight: resultType.weight
       }).save();
