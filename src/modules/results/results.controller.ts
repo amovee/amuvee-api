@@ -47,6 +47,18 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
+  @Get('favorites/min')
+  async getMininmalResultsFromIdList(
+    @Query() query: {language: string, ids: string[] | string},
+  ): Promise<any[]> {
+    try {
+      return await this.resultsService.getMinifiedResultsByIdList(
+        query.language, Array.isArray(query.ids)? query.ids : [query.ids]
+      );
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
   @Get('counter')
   async getCounter(
     @Query() query: QueryFilterDTO

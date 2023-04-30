@@ -109,6 +109,48 @@ export class ResultsService {
       return filterResultLanguage(res, query.language);
     });
   }
+  async getMinifiedResultsByIdList(
+    language: string,
+    idList: string[],
+  ): Promise<MinResultDTO[]> {
+    return (
+      await this.resultModel
+        .aggregate<MinResultDTO>([
+          {
+            $unwind: {
+              path: '$variations',
+            },
+          },
+          {
+            $lookup: {
+              from: 'resulttypes',
+              localField: 'type',
+              foreignField: '_id',
+              as: 'type',
+            },
+          },
+          { $unwind: { path: '$type' } },
+          { $project: getVariationProjection('min') },
+          {
+            $match: { "v_id": { $in:  idList.map(id => new mongoose.Types.ObjectId(id))} },
+          },
+          lookUp('actions'),
+          lookUp('locations'),
+          {
+            $project: {
+              'actions.specific': 0,
+              'actions.status': 0,
+              'actions.roles': 0,
+              'locations.status': 0,
+              'locations.roles': 0,
+            },
+          },
+          { $sort: { ['type.weight']: -1 } },
+        ])
+    ).map((res: MinResultDTO) => {
+      return filterResultLanguage(res, language);
+    });
+  }
 
   async getAll(
     limit: number,

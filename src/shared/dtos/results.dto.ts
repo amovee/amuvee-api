@@ -12,6 +12,7 @@ export type ResultType = {
 
 export interface ResultDTO {
   _id?: string;
+  v_id: string;
   id?: number;
   status?: string;
   specific?: string;
@@ -53,6 +54,7 @@ export interface VariationDTO {
 
 export interface MinResultDTO {
   _id: string;
+  v_id: string;
   id: number;
   language: string;
   content?: {

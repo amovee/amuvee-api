@@ -27,7 +27,7 @@ function filterResultContentLanguage(
     };
   },
   language: string,
-) {  
+) {
   if (content && content[language]) {
     content = {
       [language]: content[language],
@@ -245,8 +245,9 @@ const FILTER_KEYS = [
 const META_KEYS = ['status', 'specific', 'roles', 'name', 'categories'];
 export function getVariationProjection(min?: 'min') {
   const fields = min
-    ? {}
+    ? { v_id: '$variations._id' }
     : {
+        v_id: '$variations._id',
         variationName: '$variations.name',
       };
   ['_id', 'id', 'type', ...(min ? [] : META_KEYS)].forEach((key) => {
@@ -260,7 +261,6 @@ export function getVariationProjection(min?: 'min') {
     'actions',
     'locations',
     'variables',
-    '_id',
     ...(min ? [] : FILTER_KEYS),
   ].forEach((key) => {
     fields[key] = `$variations.${key}`;
