@@ -88,7 +88,8 @@ export class MigrationService {
   }
   async getRegion(result): Promise<ObjectId[]> {
     if(result.zip) {
-      const region: Region = await this.regionModel.findOne({zips: result.zip}).exec();
+      const zips = result.zip.replaceAll(' ', '').replaceAll('\n', '').replaceAll(',,', ',')
+      const region: Region = await this.regionModel.findOne({zips}).exec();
       return region? [region._id]: [];
     } else if(result.region) {
       const region: Region = await this.regionModel.findOne({id: result.region}).exec();
