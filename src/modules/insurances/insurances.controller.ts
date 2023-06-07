@@ -1,5 +1,5 @@
 import { Controller, Get, Post } from '@nestjs/common';
-import { Insurance } from '../../shared/schemas/insurance.schema';
+import { Insurance } from 'src/shared/schemas/insurance.schema';
 import { InsurancesService } from './insurances.service';
 
 @Controller('insurance')

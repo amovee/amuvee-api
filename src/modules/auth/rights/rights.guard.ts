@@ -2,8 +2,8 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { right } from 'src/types/rights';
-import { UsersService } from '../users/users.service';
 import { RIGHT_KEY } from './rights.decorator';
+import { UsersService } from 'src/modules/users/users.service';
 
 @Injectable()
 export class RightsGuard implements CanActivate {

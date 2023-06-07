@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import {
   Counter,
   CountersDocument as CounterDocument,
-} from '../../shared/schemas/counters.schema';
+} from 'src/shared/schemas/counters.schema';
 import { Model } from 'mongoose';
 
 @Injectable()

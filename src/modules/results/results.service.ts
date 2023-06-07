@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Result, ResultDocument } from '../../shared/schemas/result.schema';
+import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
 import mongoose from 'mongoose';
 import { Model } from 'mongoose';
-import { Region, RegionDocument } from '../../shared/schemas/region.schema';
-import { Action, ActionDocument } from '../../shared/schemas/action.schema';
+import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
+import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 import { MinResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
 import {

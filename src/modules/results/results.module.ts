@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { Action, ActionSchema } from '../../shared/schemas/action.schema';
-import { Insurance, InsuranceSchema } from '../../shared/schemas/insurance.schema';
-import { Region, RegionSchema } from '../../shared/schemas/region.schema';
+import { Action, ActionSchema } from 'src/shared/schemas/action.schema';
+import { Insurance, InsuranceSchema } from 'src/shared/schemas/insurance.schema';
+import { Region, RegionSchema } from 'src/shared/schemas/region.schema';
 import { ResultsController } from './results.controller';
 import { ResultsService } from './results.service';
-import { Result, ResultSchema, ResultType, ResultTypeSchema } from '../../shared/schemas/result.schema';
+import { Result, ResultSchema, ResultType, ResultTypeSchema } from 'src/shared/schemas/result.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RegionModule } from '../region/region.module';
 

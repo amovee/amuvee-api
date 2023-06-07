@@ -11,10 +11,10 @@ import {
   Param,
 } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
-import { User } from '../../shared/schemas/user.schema';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Right } from '../auth/rights.decorator';
-import { RightsGuard } from '../auth/rights.guard';
+import { User } from 'src/shared/schemas/user.schema';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { Right } from '../auth/rights/rights.decorator';
+import { RightsGuard } from '../auth/rights/rights.guard';
 import { UsersService } from './users.service';
 import { UpdatePasswordDTO, createUserDTO, updateUserDTO } from 'src/shared/dtos/user.dto';
 

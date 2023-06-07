@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Category, CategoryDocument } from '../../shared/schemas/category.schema';
+import { Category, CategoryDocument } from 'src/shared/schemas/category.schema';
 import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';

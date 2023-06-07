@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MetaDocument } from '../../shared/schemas/meta.schema';
+import { MetaDocument } from 'src/shared/schemas/meta.schema';
 import axios from 'axios';
-import { Insurance } from '../../shared/schemas/insurance.schema';
+import { Insurance } from 'src/shared/schemas/insurance.schema';
 import { CounterService } from '../counters/counters.service';
 
 @Injectable()

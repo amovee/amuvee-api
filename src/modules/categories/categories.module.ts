@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/shared/schemas/user.schema';
-import { Category, CategorySchema } from '../../shared/schemas/category.schema';
+import { Category, CategorySchema } from 'src/shared/schemas/category.schema';
 import { ResultsModule } from '../results/results.module';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Region, RegionDocument } from '../../shared/schemas/region.schema';
+import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { CounterService } from '../counters/counters.service';
 import { regions } from './regions';
 import axios from 'axios';

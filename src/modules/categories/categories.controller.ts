@@ -9,9 +9,8 @@ export class CategoriesController {
   ) {}
   // No Auth
   @Post('migrate')
-  async migrate(): Promise<string> {
+  async migrate(): Promise<void> {
     await this.categoriesService.migrate();
-    return 'done';
   }
   @Get('min') async getAll(@Query('language') language?: string): Promise<MinCategoryDTO[]> {
     return  await this.categoriesService.getCategories(language);

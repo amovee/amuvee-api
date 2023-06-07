@@ -18,10 +18,6 @@ export class MigrationController {
     private actionService: ActionsService,
     private userService: UsersService,
   ) {}
-  // @Post('users')
-  // async migrateAllUsers(): Promise<any> {
-  //   return await this.migraionService.migrateUsers();
-  // }
   @Post('all')
   async migrateAll(): Promise<void> {
     await this.migrateAllHelpers();
