@@ -267,13 +267,16 @@ export function getVariationProjection(min?: 'min') {
   });
   return fields;
 }
-export function lookUp(collection: string) {
+export function unwind(path: string): { $unwind: { path: string } } {
+  return { $unwind: { path: path } };
+}
+export function lookUp(from: string, to?: string) {
   return {
     $lookup: {
-      from: collection,
-      localField: collection,
+      from: from,
+      localField: to ? to : from,
       foreignField: '_id',
-      as: collection,
+      as: to ? to : from,
     },
   };
 }

@@ -56,6 +56,7 @@ export class MigrationController {
     await this.regionService.migrate();
     await this.insuranceService.migrate();
     await this.actionService.migrate();
+    await this.migraionService.migrateResulttypes();
   }
 
   @Post('resulttypes')

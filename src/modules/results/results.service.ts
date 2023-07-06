@@ -12,6 +12,7 @@ import {
   getVariationProjection,
   lookUp,
   mongoDBFiltersFromQueryFilter,
+  unwind,
 } from './helper.functions';
 
 @Injectable()
@@ -72,23 +73,12 @@ export class ResultsService {
     return (
       await this.resultModel
         .aggregate<MinResultDTO>([
-          {
-            $unwind: {
-              path: '$variations',
-            },
-          },
+          unwind('$variations'),
           {
             $match: filters,
           },
-          {
-            $lookup: {
-              from: 'resulttypes',
-              localField: 'type',
-              foreignField: '_id',
-              as: 'type',
-            },
-          },
-          { $unwind: { path: '$type' } },
+          lookUp('resulttypes', 'type'),
+          unwind('$type'),
           { $project: getVariationProjection('min') },
           lookUp('actions'),
           lookUp('locations'),
@@ -114,39 +104,29 @@ export class ResultsService {
     idList: string[],
   ): Promise<MinResultDTO[]> {
     return (
-      await this.resultModel
-        .aggregate<MinResultDTO>([
-          {
-            $unwind: {
-              path: '$variations',
-            },
+      await this.resultModel.aggregate<MinResultDTO>([
+        unwind('$variations'),
+        lookUp('resulttypes', 'type'),
+        unwind('$type'),
+        { $project: getVariationProjection('min') },
+        {
+          $match: {
+            v_id: { $in: idList.map((id) => new mongoose.Types.ObjectId(id)) },
           },
-          {
-            $lookup: {
-              from: 'resulttypes',
-              localField: 'type',
-              foreignField: '_id',
-              as: 'type',
-            },
+        },
+        lookUp('actions'),
+        lookUp('locations'),
+        {
+          $project: {
+            'actions.specific': 0,
+            'actions.status': 0,
+            'actions.roles': 0,
+            'locations.status': 0,
+            'locations.roles': 0,
           },
-          { $unwind: { path: '$type' } },
-          { $project: getVariationProjection('min') },
-          {
-            $match: { "v_id": { $in:  idList.map(id => new mongoose.Types.ObjectId(id))} },
-          },
-          lookUp('actions'),
-          lookUp('locations'),
-          {
-            $project: {
-              'actions.specific': 0,
-              'actions.status': 0,
-              'actions.roles': 0,
-              'locations.status': 0,
-              'locations.roles': 0,
-            },
-          },
-          { $sort: { ['type.weight']: -1 } },
-        ])
+        },
+        { $sort: { ['type.weight']: -1 } },
+      ])
     ).map((res: MinResultDTO) => {
       return filterResultLanguage(res, language);
     });
@@ -158,28 +138,29 @@ export class ResultsService {
     query: QueryFilterDTO,
   ): Promise<ResultDTO[]> {
     const filters = await this.getMongoDBFilters(query);
+    console.log(JSON.stringify([
+      unwind('$variations'),
+      {
+        $match: filters,
+      },
+      { $project: getVariationProjection() },
+      lookUp('actions'),
+      lookUp('locations'),
+      lookUp('resulttypes', 'type'),
+      unwind('$type'),
+      { $sort: { ['type.weight']: -1 } },
+    ]))
     return await this.resultModel
       .aggregate<ResultDTO>([
-        {
-          $unwind: {
-            path: '$variations',
-          },
-        },
+        unwind('$variations'),
         {
           $match: filters,
         },
         { $project: getVariationProjection() },
         lookUp('actions'),
         lookUp('locations'),
-        {
-          $lookup: {
-            from: 'resulttypes',
-            localField: 'type',
-            foreignField: '_id',
-            as: 'type',
-          },
-        },
-        { $unwind: { path: '$type' } },
+        lookUp('resulttypes', 'type'),
+        unwind('$type'),
         { $sort: { ['type.weight']: -1 } },
       ])
       .skip(skip)
@@ -189,9 +170,7 @@ export class ResultsService {
     query: QueryFilterDTO,
   ): Promise<{ filtered?: number; total: number }> {
     const filters = await this.getMongoDBFilters(query);
-    // const filtered = await this.resultModel.find(filters).count();
     const total = await this.resultModel.find(filters).count();
-    // console.log(regions);
     return { total };
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
