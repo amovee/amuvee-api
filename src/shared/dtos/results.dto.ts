@@ -70,3 +70,11 @@ export interface MinResultDTO {
   timespan: { start: Date | null; end: Date | null };
   type: ResultType;
 }
+export interface ResultTableRowDTO {
+  _id: string;
+  id: number;
+  name: string;
+  timespan: { start: Date | null; end: Date | null };
+  type: ResultType;
+  roles?: RolesDTO;
+}

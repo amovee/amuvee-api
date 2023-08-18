@@ -18,12 +18,27 @@ export class ResultsController {
     return this.resultsService.getMongoDBFilters(queryFilterParser(query));
   }
   @Get()
-  async getFiltered(
+  async getFilteredResults(
+    @Query() query: QueryFilterDTO,
+  ): Promise<any[]> {
+    query = queryFilterParser(query);    
+    try {
+      return await this.resultsService.getFilteredResults(
+        query.limit ? query.limit : 20,
+        query.skip ? query.skip : 0,
+        // query
+      );
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+  @Get('unwinded')
+  async getUnwindedVariations(
     @Query() query: QueryFilterDTO,
   ): Promise<any[]> {
     query = queryFilterParser(query);
     try {
-      return await this.resultsService.getAll(
+      return await this.resultsService.getUnwindedVariations(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
         query
@@ -87,9 +102,9 @@ export class ResultsController {
   }
 
   @Get('/:id') async getOne(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Query('language') language?: string,
-  ): Promise<ResultDTO> {
-    return this.resultsService.getResultFromId(id, language);
+  ): Promise<any> {
+    return this.resultsService.getResultFromId(+id, language);
   }
 }

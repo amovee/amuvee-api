@@ -41,12 +41,21 @@ export class ResultsService {
         : null,
     );
   }
-  async getResultFromId(id: string, language?: string): Promise<ResultDTO> {
-    const result: Result = await this.resultModel
-      .findById(id)
-      .populate('actions')
-      .populate('locations');
-    return this.parseResult(result, language);
+  async getResultFromId(id: number, language?: string): Promise<any> {
+    const result: any = await this.resultModel.aggregate([
+      unwind('$variations'),
+      {
+        $match: {
+          id: { $in: [id] },
+        },
+      },
+      lookUp('resulttypes', 'type'),
+      unwind('$type'),
+      { $project: getVariationProjection() },
+      lookUp('actions'),
+      lookUp('locations'),
+    ]);
+    return result;
   }
   async getAllFromCategory(
     id: string,
@@ -132,30 +141,51 @@ export class ResultsService {
     });
   }
 
-  async getAll(
+  async getUnwindedVariations(
     limit: number,
     skip: number,
     query: QueryFilterDTO,
   ): Promise<ResultDTO[]> {
     const filters = await this.getMongoDBFilters(query);
-    console.log(JSON.stringify([
-      unwind('$variations'),
-      {
-        $match: filters,
-      },
-      { $project: getVariationProjection() },
-      lookUp('actions'),
-      lookUp('locations'),
-      lookUp('resulttypes', 'type'),
-      unwind('$type'),
-      { $sort: { ['type.weight']: -1 } },
-    ]))
     return await this.resultModel
       .aggregate<ResultDTO>([
         unwind('$variations'),
         {
           $match: filters,
         },
+        { $project: getVariationProjection() },
+        lookUp('actions'),
+        lookUp('locations'),
+        lookUp('resulttypes', 'type'),
+        unwind('$type'),
+        { $sort: { ['type.weight']: -1 } },
+      ])
+      .skip(skip)
+      .limit(limit);
+  }
+  async getFilteredResults(
+    limit: number,
+    skip: number,
+    // query: QueryFilterDTO,
+  ): Promise<ResultDTO[]> {
+    // const filters = await this.getMongoDBFilters(query);
+    console.log([
+      // {
+      //   $match: filters,
+      // },
+      { $project: getVariationProjection() },
+      lookUp('actions'),
+      lookUp('locations'),
+      lookUp('resulttypes', 'type'),
+      unwind('$type'),
+      { $sort: { ['type.weight']: -1 } },
+    ]);
+
+    return await this.resultModel
+      .aggregate<ResultDTO>([
+        // {
+        //   $match: filters,
+        // },
         { $project: getVariationProjection() },
         lookUp('actions'),
         lookUp('locations'),
