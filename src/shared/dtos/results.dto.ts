@@ -1,9 +1,13 @@
 import { ActionDTO, MinActionDTO } from 'src/shared/dtos/actions.dto';
-import { RolesDTO } from 'src/types/roles.dto';
-import { numberFilter, Region, Variables } from 'src/types/types.dto';
 import { LocationDTO } from './locations.dto';
+import { Ref } from './ref';
+import { CategoryDTO } from './categories.dto';
+import { RolesDTO } from './roles.dto';
+import { NumberRange, StateType, Variables } from './types.dto';
+import { Region } from '../schemas/region.schema';
 
-export type ResultType = {
+export type ResultTypeDTO = {
+  _id?: string;
   name: {
     [language: string]: string
   };
@@ -12,34 +16,20 @@ export type ResultType = {
 
 export interface ResultDTO {
   _id?: string;
-  v_id: string;
   id?: number;
-  status?: string;
+  status?: StateType;
   specific?: string;
   roles?: RolesDTO;
-
   name?: string;
-  categories: string[];
-  type?: string;
-
+  categories: Ref<CategoryDTO>[];
+  type?: Ref<ResultTypeDTO>;
   variations?: VariationDTO[];
 }
 
 export interface VariationDTO {
   name?: string;
-  timespan?: { start: Date | null; end: Date | null };
-  rent?: numberFilter;
-  income?: numberFilter;
-  childrenCount?: numberFilter;
-  childrenAge?: numberFilter;
-  parentAge?: numberFilter;
-  parentGender?: ('FEMALE' | 'MALE' | 'DIVERSE')[];
-  regions?: Region[];
-  hasKeys?: ('pregnant' | 'victimsOfViolence')[];
-  insurances?: string[];
-  relationship?: number[];
-  jobRelatedSituation?: number[];
-  amountOfMoney?: numberFilter;
+  timespan?: Timespan;
+  amountOfMoney?: NumberRange;
   content?: {
     [language: string]: {
       title: string;
@@ -47,11 +37,32 @@ export interface VariationDTO {
       description: string;
     };
   };
-  actions?: ActionDTO[];
-  locations?: LocationDTO[];
+  actions?: Ref<ActionDTO>[];
+  locations?: Ref<LocationDTO>[];
   variables: Variables;
+  filters: ResultFilters;
 }
 
+interface Timespan {
+  from: null | Date;
+  to: null | Date;
+}
+
+export interface ResultFilters {
+  rent?: NumberRange;
+  income?: NumberRange;
+  childrenCount?: NumberRange;
+  childrenAge?: NumberRange;
+  parentAge?: NumberRange;
+  parentGender?: ('FEMALE' | 'MALE' | 'DIVERSE')[];
+  regions?: Ref<Region>[];
+  hasKeys?: ('pregnant' | 'victimsOfViolence')[];
+  insurances?: string[]; // _id[]
+  relationship?: number[];
+  jobRelatedSituation?: number[];
+}
+
+// ???
 export interface MinResultDTO {
   _id: string;
   v_id: string;
@@ -64,17 +75,18 @@ export interface MinResultDTO {
       description: string;
     };
   };
-  actions: MinActionDTO[];
-  locations: LocationDTO[];
-  amountOfMoney: numberFilter;
+  actions: Ref<MinActionDTO>[];
+  locations: Ref<LocationDTO>[];
+  amountOfMoney: NumberRange;
   timespan: { start: Date | null; end: Date | null };
-  type: ResultType;
+  type: Ref<ResultTypeDTO>;
 }
+// ???
 export interface ResultTableRowDTO {
   _id: string;
   id: number;
   name: string;
   timespan: { start: Date | null; end: Date | null };
-  type: ResultType;
+  type: Ref<ResultTypeDTO>;
   roles?: RolesDTO;
 }

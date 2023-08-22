@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { UserDTO } from 'src/types/types.dto';
 import { Action } from './action.schema';
 import { Category } from './category.schema';
 import { Location } from './location.schema';
@@ -34,12 +33,9 @@ export class NumberFilter {
   @Prop()
   max: number
 }
+
 @Schema()
-export class Variation {
-  @Prop()
-  name: string;
-  @Prop({ type: { from: Date, to: Date, _id: false } })
-  timespan: { from: Date; to: Date };
+export class ResultFilters {
   @Prop({ _id: false, type: NumberFilter })
   rent: NumberFilter;
   @Prop({ _id: false, type: NumberFilter })
@@ -52,7 +48,7 @@ export class Variation {
   parentAge: NumberFilter;
   @Prop()
   parentGender: string[];
-
+  
   @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Region' }])
   regions: Region[]; // TODO: generate from zips
   @Prop({ type: [String] })
@@ -63,7 +59,16 @@ export class Variation {
   relationships: number[];
   @Prop()
   jobRelatedSituations: number[];
+}
 
+@Schema()
+export class Variation {
+  @Prop()
+  name: string;
+  @Prop({ type: { from: Date, to: Date, _id: false } })
+  timespan: { from: Date; to: Date };
+  @Prop([{ type: ResultFilters }])
+  filters: ResultFilters[];
   @Prop({ _id: false, type: NumberFilter })
   amountOfMoney: NumberFilter;
   @Prop({

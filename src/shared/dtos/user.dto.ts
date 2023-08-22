@@ -1,4 +1,4 @@
-import { right } from 'src/types/rights';
+import { right } from 'src/shared/dtos/rights';
 
 export class UpdatePasswordDTO {
   oldPassword: string;

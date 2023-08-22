@@ -5,9 +5,9 @@ import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
-import { mappingStateType } from 'src/types/types.dto';
-import { migrateRoles } from 'src/types/roles.dto';
-import { MinCategoryDTO } from 'src/shared/dtos/categories.dto';
+import { CategoryDTO, MinCategoryDTO } from 'src/shared/dtos/categories.dto';
+import { mappingStateType } from 'src/shared/dtos/types.dto';
+import { migrateRoles } from 'src/shared/dtos/roles.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -17,13 +17,31 @@ export class CategoriesService {
     private readonly counter: CounterService,
   ) {}
 
-  async getCategories(language?: string): Promise<MinCategoryDTO[]> {
+  async getCategoriesMin(language?: string): Promise<MinCategoryDTO[]> {
     const categories = <MinCategoryDTO[]>(
       await this.categoryModel.find().select('_id icon content')
     );
     if (language) {
       for (let i = 0; i < categories.length; i++) {
         const c = <MinCategoryDTO>new this.categoryModel(categories[i]).toJSON();
+        if (c.content.hasOwnProperty(language))
+          c.content = { [language]: c.content[language] };
+        else if (c.content.hasOwnProperty('de'))
+          c.content = { de: c.content.de };
+        else c.content = {};
+        categories[i] = c;
+      }
+    }
+    return categories;
+  }
+
+  async getCategories(language?: string): Promise<CategoryDTO[]> {
+    const categories = <CategoryDTO[]>(
+      await this.categoryModel.find()
+    );
+    if (language) {
+      for (let i = 0; i < categories.length; i++) {
+        const c = <CategoryDTO>new this.categoryModel(categories[i]).toJSON();
         if (c.content.hasOwnProperty(language))
           c.content = { [language]: c.content[language] };
         else if (c.content.hasOwnProperty('de'))

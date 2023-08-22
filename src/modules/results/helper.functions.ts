@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 import { MinActionDTO } from 'src/shared/dtos/actions.dto';
-import { MinResultDTO, ResultType } from 'src/shared/dtos/results.dto';
+import { MinResultDTO, ResultTypeDTO } from 'src/shared/dtos/results.dto';
 
-function filterResultTypeLanguage(type: ResultType, language?: string) {
+function filterResultTypeLanguage(type: ResultTypeDTO, language?: string) {
   if (type?.name[language]) {
     type.name = {
       [language]: type.name[language],
@@ -55,23 +55,23 @@ function filterActionLanguage(action: MinActionDTO, language: string) {
   }
   return action;
 }
-export function filterResultLanguage(
-  res: MinResultDTO,
-  language?: string,
-): MinResultDTO {
-  if (language) {
-    res.content = filterResultContentLanguage(res.content, language);
-    res.type = filterResultTypeLanguage(res.type, language);
-    res.actions.forEach((action: MinActionDTO) => {
-      action = filterActionLanguage(action, language);
-    });
-  }
-  return res;
-}
+// export function filterResultLanguage(
+//   res: MinResultDTO,
+//   language?: string,
+// ): MinResultDTO {
+//   if (language) {
+//     res.content = filterResultContentLanguage(res.content, language);
+//     res.type = filterResultTypeLanguage(res.type, language);
+//     res.actions.forEach((action: MinActionDTO) => {
+//       action = filterActionLanguage(action, language);
+//     });
+//   }
+//   return res;
+// }
 
 export async function mongoDBFiltersFromQueryFilter(
   query: QueryFilterDTO,
-  regions?: string[],
+  regions?: mongoose.Types.ObjectId[],
 ) {
   const outerfilters = [];
   if (query.category) {
@@ -133,35 +133,36 @@ export async function mongoDBFiltersFromQueryFilter(
     );
   }
   if (regions) {
+    const ids = regions.map(r=> new mongoose.Types.ObjectId(r));
     innerfilters.push({
       $or: [
-        { ['variations.regions']: { $size: 0 } },
-        { ['variations.regions']: { $in: regions } },
+        { ['variations.filters.regions']: { $size: 0 } },
+        { ['variations.filters.regions']: { $in: ids } },
       ],
     });
   }
   if (query.parentGender) {
     innerfilters.push({
       $or: [
-        { ['variations.parentGender']: { $size: 0 } },
-        { ['variations.parentGender']: { $in: [`${query.parentGender}`] } },
+        { ['variations.filters.parentGender']: { $size: 0 } },
+        { ['variations.filters.parentGender']: { $in: [`${query.parentGender}`] } },
       ],
     });
   }
   if (query.insurance) {
     innerfilters.push({
       $or: [
-        { ['variations.insurances']: { $size: 0 } },
-        { ['variations.insurances']: { $in: [query.insurance] } },
+        { ['variations.filters.insurances']: { $size: 0 } },
+        { ['variations.filters.insurances']: { $in: [query.insurance] } },
       ],
     });
   }
   if (query.jobRelatedSituation != undefined) {
     innerfilters.push({
       $or: [
-        { ['variations.jobRelatedSituations']: { $size: 0 } },
+        { ['variations.filters.jobRelatedSituations']: { $size: 0 } },
         {
-          ['variations.jobRelatedSituations']: {
+          ['variations.filters.jobRelatedSituations']: {
             $in: [query.jobRelatedSituation],
           },
         },
@@ -173,18 +174,18 @@ export async function mongoDBFiltersFromQueryFilter(
   if (query.relationship != undefined) {
     innerfilters.push({
       $or: [
-        { ['variations.relationships']: { $size: 0 } },
-        { ['variations.relationships']: { $in: [query.relationship] } },
+        { ['variations.filters.relationships']: { $size: 0 } },
+        { ['variations.filters.relationships']: { $in: [query.relationship] } },
       ],
     });
   }
 
   //DONE
 
-  if (Array.isArray(query.keys) && query.keyOperation) {
+  if (Array.isArray(query.keys)) {
     if (query.keyOperation == 'IN') {
       innerfilters.push({
-        ['variations.requiredKeys']: {
+        ['variations.filters.requiredKeys']: {
           $not: {
             $elemMatch: {
               $nin: query.keys,
@@ -192,10 +193,9 @@ export async function mongoDBFiltersFromQueryFilter(
           },
         },
       });
-    }
-    if (Array.isArray(query.keys) && query.keyOperation == 'NIN') {
+    } else {
       innerfilters.push({
-        ['variations.requiredKeys']: {
+        ['variations.filters.requiredKeys']: {
           $elemMatch: {
             $nin: query.keys,
           },
@@ -224,8 +224,8 @@ export async function mongoDBFiltersFromQueryFilter(
 export function numberFilter(key: string, value: number, type: 'min' | 'max') {
   return {
     $or: [
-      { [`variations.${key}.${type}`]: { $eq: null } },
-      { [`variations.${key}.${type}`]: { $lte: value } },
+      { [`variations.filters.${key}.${type}`]: { $eq: null } },
+      { [`variations.filters.${key}.${type}`]: { $lte: value } },
     ],
   };
 }
@@ -269,6 +269,16 @@ export function getVariationProjection(min?: 'min') {
 }
 export function unwind(path: string): { $unwind: { path: string } } {
   return { $unwind: { path: path } };
+}
+export function lookUpInVariation(from: string, to?: string) {
+  return {
+    $lookup: {
+      from: from,
+      localField: to ? to : "variations."+from,
+      foreignField: '_id',
+      as: to ? to : "variations."+from,
+    },
+  };
 }
 export function lookUp(from: string, to?: string) {
   return {

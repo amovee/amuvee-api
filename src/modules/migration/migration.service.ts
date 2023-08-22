@@ -11,9 +11,9 @@ import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { Insurance, InsuranceDocument } from 'src/shared/schemas/insurance.schema';
 import mongoose from 'mongoose';
 import { CounterService } from '../counters/counters.service';
-import { mappingStateType } from 'src/types/types.dto';
-import { migrateRoles } from 'src/types/roles.dto';
 import getType, { result_types } from '../results/result.migration';
+import { mappingStateType } from 'src/shared/dtos/types.dto';
+import { migrateRoles } from 'src/shared/dtos/roles.dto';
 
 @Injectable()
 export class MigrationService {
@@ -139,24 +139,25 @@ export class MigrationService {
     return {
       name: 'Variation 1',
       timespan: { from: result.start_date, to: result.end_date },
-      rent: this.generateMinMaxFilter(result.min_rent, result.max_rent),
-      income: this.generateMinMaxFilter(result.min_income, result.max_income),
-      childrenCount: this.generateMinMaxFilter(
-        result.min_children_count,
-        result.max_children_count,
-      ),
-      childrenAge: this.generateMinMaxFilter(result.min_age, result.max_age),
-      parentAge: this.generateMinMaxFilter(
-        result.min_mother_age,
-        result.max_mother_age,
-      ),
-      parentGender,
-      regions: await this.getRegion(result),
-      requiredKeys: this.transformKeyWords(result),
-      insurances,
-      relationships,
-      jobRelatedSituations,
-
+      filters: {
+        rent: this.generateMinMaxFilter(result.min_rent, result.max_rent),
+        income: this.generateMinMaxFilter(result.min_income, result.max_income),
+        childrenCount: this.generateMinMaxFilter(
+          result.min_children_count,
+          result.max_children_count,
+        ),
+        childrenAge: this.generateMinMaxFilter(result.min_age, result.max_age),
+        parentAge: this.generateMinMaxFilter(
+          result.min_mother_age,
+          result.max_mother_age,
+        ),
+        parentGender,
+        regions: await this.getRegion(result),
+        requiredKeys: this.transformKeyWords(result),
+        insurances,
+        relationships,
+        jobRelatedSituations,
+      },
       amountOfMoney: this.generateMinMaxFilter(
         result.min_amount_of_money,
         result.max_amount_of_money,
@@ -222,7 +223,6 @@ export class MigrationService {
         `${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"category":{"_eq":${category.id}}}`,
       )
     ).data.data;
-
     for (let j = 0; j < results.length; j++) {
       const result = results[j];
       const filter = await this.createFilter(

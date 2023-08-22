@@ -5,7 +5,7 @@ import { LocationDocument, Location } from 'src/shared/schemas/location.schema';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
-import { migrateRoles } from 'src/types/roles.dto';
+import { migrateRoles } from 'src/shared/dtos/roles.dto';
 
 @Injectable()
 export class LocationsService {

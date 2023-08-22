@@ -3,9 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { Model, ObjectId } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { UserDTO } from 'src/types/types.dto';
 import axios from 'axios';
-import { right } from 'src/types/rights';
+import { right } from 'src/shared/dtos/rights';
 import { UpdatePasswordDTO, createUserDTO, updateUserDTO } from 'src/shared/dtos/user.dto';
 
 @Injectable()

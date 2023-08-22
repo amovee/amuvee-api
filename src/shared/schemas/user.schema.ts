@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { Document } from 'mongoose';
-import { right } from 'src/types/rights';
+import { right } from 'src/shared/dtos/rights';
 
 export type UserDocument = User & Document;
 

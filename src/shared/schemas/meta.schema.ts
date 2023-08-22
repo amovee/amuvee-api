@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { UserDTO } from 'src/types/types.dto';
+import { UserDTO } from '../dtos/types.dto';
 export type MetaDocument = Meta & Document;
 @Schema()
 export class Meta {

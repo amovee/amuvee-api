@@ -61,7 +61,7 @@ export interface IdNameTupel {
   name: string;
 }
 export type Variables = { [variableName: string]: { [language: string]: string } }[]
-export type numberFilter = {
-  min: number;
-  max: number;
+export type NumberRange = {
+  min?: number;
+  max?: number;
 }

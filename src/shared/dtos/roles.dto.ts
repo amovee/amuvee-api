@@ -1,10 +1,21 @@
 import { User } from 'src/shared/schemas/user.schema';
 import { UserDTO } from './types.dto';
+import { Ref } from 'src/shared/dtos/ref';
 
 export interface RolesDTO {
-  author?: { by: UserDTO; date: Date };
-  reviewer?: { by: UserDTO; date: Date };
-  history: [{ by: UserDTO; date: Date; type: string; value: string }];
+  author?: RoleDetail;
+  reviewer?: RoleDetail;
+  history: [RoleDetail];
+}
+
+interface RoleDetail {
+  by: Ref<UserDTO>;
+  date: Date;
+}
+
+interface History extends RoleDetail {
+  type: string;
+  value?: string;
 }
 
 export function migrateRoles(obj: any, users) {

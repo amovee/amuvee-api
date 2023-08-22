@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Roles } from 'src/shared/schemas/meta.schema';
-import { StateType, UserDTO } from 'src/types/types.dto';
+import { StateType } from '../dtos/types.dto';
 export type ActionDocument = Action & Document;
 export type ActionTypeDocument = Action & Document;
-@Schema()
+@Schema({collection: 'actions'})
 export class Action {
   _id: mongoose.Schema.Types.ObjectId;
   @Prop()

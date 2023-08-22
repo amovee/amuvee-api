@@ -1,5 +1,5 @@
-import { RolesDTO } from 'src/types/roles.dto';
-import { StateType } from 'src/types/types.dto';
+import { RolesDTO } from "./roles.dto";
+import { StateType } from "./types.dto";
 
 export interface LocationDTO {
   id: number;

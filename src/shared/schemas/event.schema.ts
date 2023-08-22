@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import mongoose, { Document } from 'mongoose';
 import { Roles } from 'src/shared/schemas/meta.schema';
-import { StateType, UserDTO } from 'src/types/types.dto';
+import { StateType } from '../dtos/types.dto';
 export type EventDocument = Event & Document;
 
 @Schema()

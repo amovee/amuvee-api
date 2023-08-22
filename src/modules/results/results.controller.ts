@@ -26,7 +26,7 @@ export class ResultsController {
       return await this.resultsService.getFilteredResults(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
-        // query
+        query
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
@@ -104,7 +104,7 @@ export class ResultsController {
   @Get('/:id') async getOne(
     @Param('id') id: number,
     @Query('language') language?: string,
-  ): Promise<any> {
+  ): Promise<ResultDTO | undefined> {
     return this.resultsService.getResultFromId(+id, language);
   }
 }
