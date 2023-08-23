@@ -62,7 +62,7 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
-  @Get('favorites/min')
+  @Get('favorites')
   async getMininmalResultsFromIdList(
     @Query() query: {language: string, ids: string[] | string},
   ): Promise<any[]> {

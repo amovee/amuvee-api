@@ -15,6 +15,7 @@ import {
   mongoDBFiltersFromQueryFilter,
   unwind,
 } from './helper.functions';
+import { log } from 'console';
 
 @Injectable()
 export class ResultsService {
@@ -38,11 +39,17 @@ export class ResultsService {
       query.zip
         ? (
             await this.getRegionsByZip(query.zip)
-          ).map((region: Region) => new mongoose.Types.ObjectId(region._id.toString()))
+          ).map(
+            (region: Region) =>
+              new mongoose.Types.ObjectId(region._id.toString()),
+          )
         : null,
     );
   }
-  async getResultFromId(id: number, language?: string): Promise<ResultDTO | undefined> {
+  async getResultFromId(
+    id: number,
+    language?: string,
+  ): Promise<ResultDTO | undefined> {
     const request: PipelineStage[] = [
       {
         $match: {
@@ -84,7 +91,9 @@ export class ResultsService {
         $sort: { id: 1 },
       },
     ];
-    const list: ResultDTO[] = await this.resultModel.aggregate<ResultDTO>(request).limit(1)
+    const list: ResultDTO[] = await this.resultModel
+      .aggregate<ResultDTO>(request)
+      .limit(1);
     if (list.length === 0) return;
     return list[0];
   }
@@ -150,42 +159,59 @@ export class ResultsService {
   async getMinifiedResultsByIdList(
     language: string,
     idList: string[],
-  ): Promise<MinResultDTO[]> {
-    return (
-      await this.resultModel.aggregate<MinResultDTO>([
-        unwind('$variations'),
-        {
-          $lookup: {
-            from: 'resulttypes',
-            localField: 'type',
-            foreignField: '_id',
-            as: 'type',
-          },
+  ): Promise<ResultDTO[]> {
+    const request: PipelineStage[] = [
+      // { $project: getVariationProjection() },
+      {
+        $unwind: '$variations',
+      },
+      lookUpInVariation('actions'),
+      lookUpInVariation('locations'),
+      {
+        $lookup: {
+          from: 'resulttypes',
+          localField: 'type',
+          foreignField: '_id',
+          as: 'type',
         },
-        unwind('$type'),
-        { $project: getVariationProjection('min') },
-        {
-          $match: {
-            v_id: { $in: idList.map((id) => new mongoose.Types.ObjectId(id)) },
-          },
+      },
+      {
+        $match: {
+          $or: [
+            {
+              _id: { $in: idList.map((id) => new mongoose.Types.ObjectId(id)) },
+            },
+            {
+              'variations._id': {
+                $in: idList.map((id) => new mongoose.Types.ObjectId(id)),
+              },
+            },
+          ],
         },
-        lookUpInVariation('actions'),
-        lookUpInVariation('locations'),
-        {
-          $project: {
-            'actions.specific': 0,
-            'actions.status': 0,
-            'actions.roles': 0,
-            'locations.status': 0,
-            'locations.roles': 0,
-          },
+      },
+      {
+        $addFields: {
+          type: { $arrayElemAt: ['$type', 0] },
         },
-        { $sort: { ['type.weight']: -1 } },
-      ])
-    ).map((res: MinResultDTO) => {
-      return res;
-      // return filterResultLanguage(res, language);
-    });
+      },
+      {
+        $group: {
+          _id: '$_id',
+          id: { $first: '$id' },
+          name: { $first: '$name' },
+          type: { $first: '$type' },
+          status: { $first: '$status' },
+          specific: { $first: '$specific' },
+          roles: { $first: '$roles' },
+          categories: { $first: '$categories' },
+          variations: { $push: '$variations' },
+        },
+      },
+      {
+        $sort: { id: 1 },
+      },
+    ];
+    return await this.resultModel.aggregate<ResultDTO>(request);
   }
 
   async getUnwindedVariations(
@@ -222,7 +248,7 @@ export class ResultsService {
     skip: number,
     query: QueryFilterDTO,
   ): Promise<ResultDTO[]> {
-    const filters = await this.getMongoDBFilters(query);    
+    const filters = await this.getMongoDBFilters(query);
     const request: PipelineStage[] = [
       {
         $match: filters,
