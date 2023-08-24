@@ -9,6 +9,7 @@ export interface createUserDTO {
   email: string;
   rights: right[];
   isAdmin: boolean;
+  password?: string;
 }
 export interface updateUserDTO {
   name?: string;

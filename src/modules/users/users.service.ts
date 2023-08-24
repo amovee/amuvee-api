@@ -5,27 +5,29 @@ import { Model, ObjectId } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import axios from 'axios';
 import { right } from 'src/shared/dtos/rights';
-import { UpdatePasswordDTO, createUserDTO, updateUserDTO } from 'src/shared/dtos/user.dto';
+import {
+  UpdatePasswordDTO,
+  createUserDTO,
+  updateUserDTO,
+} from 'src/shared/dtos/user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {
-    userModel.count().then((count) => {
-      if (!count) {
-        bcrypt
-          .hash(process.env.DEFAULT_PASS, 10)
-          .then((encriptedKey: string) => {
-            this.createUser({
-              name: 'admin',
-              password: encriptedKey,
-              email: 'admin',
-              rights: [],
-              isAdmin: true,
-            } as createUserDTO).catch((err) => {
-              console.log('admin exists');
-            });
-          });
-      }
+    this.userModel.count().then((count) => {
+      if (!count) this.initAdmin();
+    });
+  }
+  async initAdmin() {
+    const encriptedKey = await bcrypt.hash(process.env.DEFAULT_PASS, 10);
+    this.createUser({
+      name: 'admin',
+      password: encriptedKey,
+      email: 'admin@admin.de',
+      rights: [],
+      isAdmin: true,
+    } as createUserDTO).catch((err) => {
+      console.log('user already exists');
     });
   }
   async findOneByEmail(email: string): Promise<User> {
@@ -63,7 +65,7 @@ export class UsersService {
       name: user.name,
       rights: user.rights,
       email: user.email,
-      password: encriptedKey,
+      password: user.password ? user.password : encriptedKey,
       isAdmin: user.isAdmin,
     }).save();
     return newPassword;
@@ -87,7 +89,7 @@ export class UsersService {
       throw new HttpException(
         {
           status: HttpStatus.NOT_FOUND,
-          error: 'User does not exist!',
+          error: 'user does not exist!',
         },
         HttpStatus.NOT_FOUND,
       );
@@ -114,6 +116,7 @@ export class UsersService {
   }
   async migrate(): Promise<void> {
     await this.userModel.deleteMany().exec();
+    await this.initAdmin();
     const users = (
       await axios.get(
         process.env.DIRECTUS_URL + 'users?fields=id,first_name,email,status',
