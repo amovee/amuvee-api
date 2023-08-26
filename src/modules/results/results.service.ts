@@ -297,10 +297,12 @@ export class ResultsService {
   }
   async getCounter(
     query: QueryFilterDTO,
-  ): Promise<{ filtered?: number; total: number }> {
+  ): Promise<any> {
     const filters = await this.getMongoDBFilters(query);
-    const total = await this.resultModel.find(filters).count();
-    return { total };
+    const total = await this.resultModel.aggregate([{$match: filters}, {
+      $count: "total"
+    }]);
+    return total[0];
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
     const filters = await this.getMongoDBFilters(query);

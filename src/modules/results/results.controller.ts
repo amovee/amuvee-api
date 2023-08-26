@@ -78,7 +78,7 @@ export class ResultsController {
   async getCounter(
     @Query() query: QueryFilterDTO
   ): Promise<{ filtered?: number, total: number }> {
-    query = queryFilterParser(query);
+    query = queryFilterParser(query);    
     try {
       return await this.resultsService.getCounter(
         query,

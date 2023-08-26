@@ -1,12 +1,19 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Post,
+  Query,
+  Param,
+} from '@nestjs/common';
 import { Location } from 'src/shared/schemas/location.schema';
 import { LocationsService } from './locations.service';
+import { LocationDTO } from 'src/shared/dtos/locations.dto';
 
 @Controller('locations')
 export class LocationsController {
-  constructor(
-    private readonly locationsService: LocationsService
-  ) {}
+  constructor(private readonly locationsService: LocationsService) {}
   @Get()
   async getAll(
     @Query() query: { limit?: number; skip?: number },
@@ -20,5 +27,24 @@ export class LocationsController {
   async migrate(): Promise<string> {
     await this.locationsService.migrate();
     return 'done';
+  }
+  @Get('counter')
+  async getCounter(): // @Query() query: QueryFilterDTO
+  Promise<{ filtered?: number; total: number }> {
+    // query = queryFilterParser(query);
+    try {
+      return await this.locationsService
+        .getCounter
+        // query,
+        ();
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+  @Get('/:id') async getOne(
+    @Param('id') id: number | string,
+    @Query('language') language?: string,
+  ): Promise<LocationDTO | undefined> {
+    return this.locationsService.getLocationFromId(!+id ? id : +id, language);
   }
 }

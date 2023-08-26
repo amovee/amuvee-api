@@ -6,6 +6,7 @@ import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
 import { migrateRoles } from 'src/shared/dtos/roles.dto';
+import { LocationDTO } from 'src/shared/dtos/locations.dto';
 
 @Injectable()
 export class LocationsService {
@@ -16,7 +17,7 @@ export class LocationsService {
   ) {}
 
   async getAll(limit: number, skip: number): Promise<Location[]> {
-    return await this.locationModel.find().limit(limit).skip(skip);
+    return await this.locationModel.find().sort( { "id": 1 } ).limit(limit).skip(skip);
   }
 
   async migrate(): Promise<void> {
@@ -50,5 +51,29 @@ export class LocationsService {
       });
       new this.locationModel(loc).save();
     }
+  }
+  async getCounter(
+    // query: QueryFilterDTO,
+  ): Promise<any> {
+    // const filters = await this.getMongoDBFilters(query);
+    const total = await this.locationModel.aggregate([{
+      $count: "total"
+    }]);
+    console.log(total);
+    
+    return total[0];
+  }
+
+  async getLocationFromId(
+    id: number | string,
+    language?: string,
+  ): Promise<LocationDTO | undefined> {
+    const list: LocationDTO[] = await this.locationModel
+      .aggregate<LocationDTO>([{
+        $match: {$or: [{id: id}, {_id: new mongoose.Types.ObjectId(id)}]}
+      }])
+      .limit(1);
+    if (list.length === 0) return;
+    return list[0];
   }
 }
