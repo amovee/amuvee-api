@@ -21,10 +21,8 @@ export class Event {
   type: string;
   @Prop()
   image: string;
-  @Prop()
-  start: Date;
-  @Prop()
-  end: Date;
+  @Prop({ type: { from: Date, to: Date, _id: false } })
+  timespan: { from: Date; to: Date };
   @Prop({ _id: false, type: Roles })
   roles: Roles;
   @Prop({

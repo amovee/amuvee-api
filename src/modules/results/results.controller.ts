@@ -78,8 +78,8 @@ export class ResultsController {
   async getCounter(
     @Query() query: QueryFilterDTO
   ): Promise<{ filtered?: number, total: number }> {
-    query = queryFilterParser(query);    
-    try {
+    query = queryFilterParser(query);
+    try {      
       return await this.resultsService.getCounter(
         query,
       );
@@ -102,9 +102,9 @@ export class ResultsController {
   }
 
   @Get('/:id') async getOne(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Query('language') language?: string,
   ): Promise<ResultDTO | undefined> {
-    return this.resultsService.getResultFromId(+id, language);
+    return this.resultsService.getResultFromId(id, language);
   }
 }

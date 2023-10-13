@@ -10,12 +10,10 @@ import { MinResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
 import {
   // filterResultLanguage,
   getVariationProjection,
-  lookUp,
   lookUpInVariation,
   mongoDBFiltersFromQueryFilter,
   unwind,
 } from './helper.functions';
-import { log } from 'console';
 
 @Injectable()
 export class ResultsService {
@@ -47,13 +45,13 @@ export class ResultsService {
     );
   }
   async getResultFromId(
-    id: number,
+    id: string,
     language?: string,
   ): Promise<ResultDTO | undefined> {
     const request: PipelineStage[] = [
       {
         $match: {
-          id: { $in: [id] },
+          _id: new mongoose.Types.ObjectId(id),
         },
       },
       {
@@ -295,14 +293,15 @@ export class ResultsService {
       .skip(skip)
       .limit(limit);
   }
-  async getCounter(
-    query: QueryFilterDTO,
-  ): Promise<any> {
+  async getCounter(query: QueryFilterDTO): Promise<any> {
     const filters = await this.getMongoDBFilters(query);
-    const total = await this.resultModel.aggregate([{$match: filters}, {
-      $count: "total"
-    }]);
-    return total[0];
+    const total = await this.resultModel.aggregate([
+      { $match: filters },
+      {
+        $count: 'total',
+      },
+    ]);    
+    return total.length ? total[0] : {total: 0};
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
     const filters = await this.getMongoDBFilters(query);

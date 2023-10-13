@@ -17,6 +17,7 @@ import { Request, Response } from 'express';
 import { MiddlewareConsumer } from '@nestjs/common/interfaces/middleware';
 import { ConfigModule } from '@nestjs/config';
 import { CountersModule } from './modules/counters/counters.module';
+import { EventsModule } from './modules/events/events.module';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -39,6 +40,7 @@ export class LoggerMiddleware implements NestMiddleware {
     ResultsModule,
     MigrationModule,
     RegionModule,
+    EventsModule,
     RouterModule.register([
       {
         path: '/users',
