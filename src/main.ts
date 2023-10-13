@@ -3,8 +3,8 @@ import { AppModule } from './app.module';
 import fs from 'fs';
 
 const httpsOptions = {
-  key: fs.readFileSync('./secrets/private-key.pem'),
-  cert: fs.readFileSync('./secrets/public-certificate.pem'),
+  key: fs.readFileSync('./secrets/amuvee.de_private_key.key'),
+  cert: fs.readFileSync('./secrets/amuvee.de_ssl_certificate.cer'),
 };
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
