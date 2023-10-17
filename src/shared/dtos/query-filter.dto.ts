@@ -15,7 +15,6 @@ export interface QueryFilterDTO {
   relationship?: number | undefined;
   status?: string | string[];
   filterByDate?: boolean;
-  keyOperation?: 'IN' | 'NIN';
   keys?: string[] | string;
 }
 
@@ -47,7 +46,6 @@ export function queryFilterParser(input: any): QueryFilterDTO {
       query.childrenAgeGroups = [input.childrenAgeGroups];
     }
   }
-  if (input.keyOperation) query.keyOperation = input.keyOperation;
   if (input.keys) {
     if (Array.isArray(input.keys)) {
       query.keys = input.keys;

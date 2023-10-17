@@ -133,7 +133,7 @@ export async function mongoDBFiltersFromQueryFilter(
     );
   }
   if (regions) {
-    const ids = regions.map(r=> new mongoose.Types.ObjectId(r));
+    const ids = regions.map((r) => new mongoose.Types.ObjectId(r));
     innerfilters.push({
       $or: [
         { ['variations.filters.regions']: { $size: 0 } },
@@ -145,7 +145,11 @@ export async function mongoDBFiltersFromQueryFilter(
     innerfilters.push({
       $or: [
         { ['variations.filters.parentGender']: { $size: 0 } },
-        { ['variations.filters.parentGender']: { $in: [`${query.parentGender}`] } },
+        {
+          ['variations.filters.parentGender']: {
+            $in: [`${query.parentGender}`],
+          },
+        },
       ],
     });
   }
@@ -170,7 +174,6 @@ export async function mongoDBFiltersFromQueryFilter(
     });
   }
 
-  //DONE
   if (query.relationship != undefined) {
     innerfilters.push({
       $or: [
@@ -180,28 +183,16 @@ export async function mongoDBFiltersFromQueryFilter(
     });
   }
 
-  //DONE
-
   if (Array.isArray(query.keys)) {
-    if (query.keyOperation == 'IN') {
-      innerfilters.push({
-        ['variations.filters.requiredKeys']: {
-          $not: {
-            $elemMatch: {
-              $nin: query.keys,
-            },
-          },
-        },
-      });
-    } else {
-      innerfilters.push({
-        ['variations.filters.requiredKeys']: {
+    innerfilters.push({
+      ['variations.filters.requiredKeys']: {
+        $not: {
           $elemMatch: {
-            $nin: query.keys,
+            $in: query.keys,
           },
         },
-      });
-    }
+      },
+    });
   }
 
   if (innerfilters.length == 0 && outerfilters.length == 0) {
@@ -274,9 +265,9 @@ export function lookUpInVariation(from: string, to?: string) {
   return {
     $lookup: {
       from: from,
-      localField: to ? to : "variations."+from,
+      localField: to ? to : 'variations.' + from,
       foreignField: '_id',
-      as: to ? to : "variations."+from,
+      as: to ? to : 'variations.' + from,
     },
   };
 }
