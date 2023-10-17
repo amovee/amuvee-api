@@ -34,3 +34,7 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# These are for https
+secrets/amuvee.de_private_key.key
+secrets/amuvee.de_ssl_certificate.cer
