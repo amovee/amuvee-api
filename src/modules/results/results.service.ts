@@ -45,14 +45,13 @@ export class ResultsService {
     );
   }
   async getResultFromId(
-    id: string,
+    id: string | number,
     language?: string,
   ): Promise<ResultDTO | undefined> {
+    const idMatch = isNaN(+id) ? {_id: new mongoose.Types.ObjectId(id)}:{id: +id}
     const request: PipelineStage[] = [
       {
-        $match: {
-          _id: new mongoose.Types.ObjectId(id),
-        },
+        $match: idMatch,
       },
       {
         $unwind: '$variations',
