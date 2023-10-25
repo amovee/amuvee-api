@@ -7,7 +7,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { ResultsService } from './results.service';
-import { QueryFilterDTO, queryFilterParser } from 'src/shared/dtos/query-filter.dto';
+import {
+  QueryFilterDTO,
+  queryFilterParser,
+} from 'src/shared/dtos/query-filter.dto';
 import { ResultDTO } from 'src/shared/dtos/results.dto';
 
 @Controller('results')
@@ -18,45 +21,39 @@ export class ResultsController {
     return this.resultsService.getMongoDBFilters(queryFilterParser(query));
   }
   @Get()
-  async getFilteredResults(
-    @Query() query: QueryFilterDTO,
-  ): Promise<any[]> {
-    query = queryFilterParser(query);    
+  async getFilteredResults(@Query() query: QueryFilterDTO): Promise<any[]> {
+    query = queryFilterParser(query);
     try {
       return await this.resultsService.getFilteredResults(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
-        query
+        query,
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
   @Get('unwinded')
-  async getUnwindedVariations(
-    @Query() query: QueryFilterDTO,
-  ): Promise<any[]> {
+  async getUnwindedVariations(@Query() query: QueryFilterDTO): Promise<any[]> {
     query = queryFilterParser(query);
     try {
       return await this.resultsService.getUnwindedVariations(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
-        query
+        query,
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
   @Get('min')
-  async getMininmalResults(
-    @Query() query: QueryFilterDTO,
-  ): Promise<any[]> {
+  async getMininmalResults(@Query() query: QueryFilterDTO): Promise<any[]> {
     query = queryFilterParser(query);
     try {
       return await this.resultsService.getMinifiedResults(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
-        query
+        query,
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
@@ -64,11 +61,12 @@ export class ResultsController {
   }
   @Get('favorites')
   async getMininmalResultsFromIdList(
-    @Query() query: {language: string, ids: string[] | string},
+    @Query() query: { language: string; ids: string[] | string },
   ): Promise<any[]> {
     try {
       return await this.resultsService.getMinifiedResultsByIdList(
-        query.language, Array.isArray(query.ids)? query.ids : [query.ids]
+        query.language,
+        Array.isArray(query.ids) ? query.ids : [query.ids],
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
@@ -76,13 +74,11 @@ export class ResultsController {
   }
   @Get('counter')
   async getCounter(
-    @Query() query: QueryFilterDTO
-  ): Promise<{ filtered?: number, total: number }> {
+    @Query() query: QueryFilterDTO,
+  ): Promise<{ filtered?: number; total: number }> {
     query = queryFilterParser(query);
-    try {      
-      return await this.resultsService.getCounter(
-        query,
-      );
+    try {
+      return await this.resultsService.getCounter(query);
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }

@@ -94,6 +94,21 @@ export async function mongoDBFiltersFromQueryFilter(
     }
   }
   const innerfilters = [];
+  if(query.filterByDate){
+    const now = new Date();
+    innerfilters.push({
+      $or: [
+        { [`variations.timespan.from`]: { $eq: null } },
+        { [`variations.timespan.from`]: { $lte: now } },
+      ],
+    });
+    innerfilters.push({
+      $or: [
+        { [`variations.timespan.to`]: { $eq: null } },
+        { [`variations.timespan.to`]: { $gte: now } },
+      ],
+    });
+  }
   if (query.rent != null && query.rent >= 0) {
     innerfilters.push(
       numberFilter('rent', query.rent, 'min'),
@@ -213,12 +228,21 @@ export async function mongoDBFiltersFromQueryFilter(
 }
 
 export function numberFilter(key: string, value: number, type: 'min' | 'max') {
-  return {
-    $or: [
-      { [`variations.filters.${key}.${type}`]: { $eq: null } },
-      { [`variations.filters.${key}.${type}`]: { $lte: value } },
-    ],
-  };
+  if (type === 'min') {
+    return {
+      $or: [
+        { [`variations.filters.${key}.${type}`]: { $eq: null } },
+        { [`variations.filters.${key}.${type}`]: { $lte: value } },
+      ],
+    };
+  } else {
+    return {
+      $or: [
+        { [`variations.filters.${key}.${type}`]: { $eq: null } },
+        { [`variations.filters.${key}.${type}`]: { $gte: value } },
+      ],
+    };
+  }
 }
 const FILTER_KEYS = [
   'rent',
