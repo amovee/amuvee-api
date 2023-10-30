@@ -2,13 +2,22 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { Model, ObjectId } from 'mongoose';
 import { Category, CategoryDocument } from 'src/shared/schemas/category.schema';
-import { Variation, Result, ResultDocument, ResultType, ResultTypeDocument } from 'src/shared/schemas/result.schema';
+import {
+  Variation,
+  Result,
+  ResultDocument,
+  ResultType,
+  ResultTypeDocument,
+} from 'src/shared/schemas/result.schema';
 import { LocationDocument, Location } from 'src/shared/schemas/location.schema';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
-import { Insurance, InsuranceDocument } from 'src/shared/schemas/insurance.schema';
+import {
+  Insurance,
+  InsuranceDocument,
+} from 'src/shared/schemas/insurance.schema';
 import mongoose from 'mongoose';
 import { CounterService } from '../counters/counters.service';
 import getType, { result_types } from '../results/result.migration';
@@ -21,7 +30,8 @@ export class MigrationService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
-    @InjectModel(ResultType.name) private resultTypeModel: Model<ResultTypeDocument>,
+    @InjectModel(ResultType.name)
+    private resultTypeModel: Model<ResultTypeDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
     @InjectModel(Insurance.name)
@@ -32,13 +42,13 @@ export class MigrationService {
 
   async migrateResulttypes() {
     await this.resultTypeModel.deleteMany().exec();
-    result_types.forEach((resultType)=>{
+    result_types.forEach((resultType) => {
       new this.resultTypeModel({
         _id: new mongoose.Types.ObjectId(),
         name: resultType.name,
-        weight: resultType.weight
+        weight: resultType.weight,
       }).save();
-    })
+    });
   }
 
   transformPostalCodes(result: any): string[] {
@@ -87,13 +97,18 @@ export class MigrationService {
     return locationIds;
   }
   async getRegion(result): Promise<ObjectId[]> {
-    if(result.zip) {
-      const zips = result.zip.replaceAll(' ', '').replaceAll('\n', '').replaceAll(',,', ',')
-      const region: Region = await this.regionModel.findOne({zips}).exec();
-      return region? [region._id]: [];
-    } else if(result.region) {
-      const region: Region = await this.regionModel.findOne({id: result.region}).exec();
-      return region? [region._id]: [];
+    if (result.zip) {
+      const zips = result.zip
+        .replaceAll(' ', '')
+        .replaceAll('\n', '')
+        .replaceAll(',,', ',');
+      const region: Region = await this.regionModel.findOne({ zips }).exec();
+      return region ? [region._id] : [];
+    } else if (result.region) {
+      const region: Region = await this.regionModel
+        .findOne({ id: result.region })
+        .exec();
+      return region ? [region._id] : [];
     }
     return [];
   }
@@ -128,6 +143,11 @@ export class MigrationService {
     result: any,
     insurances: any,
     locationIds: any,
+    roles: {
+      author: any;
+      reviewer: any;
+      history: any[];
+    },
   ) {
     const relationships = result.has_relationship.map(
       (i) => i.relationship_types_id,
@@ -138,6 +158,8 @@ export class MigrationService {
     const parentGender = result.parent_gender ? [result.parent_gender] : [];
     return {
       name: 'Variation 1',
+      status: mappingStateType(result.status),
+      roles,
       timespan: { from: result.start_date, to: result.end_date },
       filters: {
         rent: this.generateMinMaxFilter(result.min_rent, result.max_rent),
@@ -165,8 +187,8 @@ export class MigrationService {
       content: this.getContent(result),
       actions: await this.getActionList(result),
       locations: locationIds[result.location]
-      ? [locationIds[result.location]]
-      : [],
+        ? [locationIds[result.location]]
+        : [],
       variables: [],
     };
   }
@@ -199,8 +221,8 @@ export class MigrationService {
     const insuranceIds: any = await this.getInsuranceIds();
     const users: User[] = await this.userModel.find().exec();
     const resultTypes: ResultType[] = await this.resultTypeModel.find().exec();
-    const resultTypeMap = {}
-    resultTypes.forEach(type => {
+    const resultTypeMap = {};
+    resultTypes.forEach((type) => {
       resultTypeMap[type.weight] = type._id;
     });
     // console.log(resultTypes.filter((rt)=>rt.weight == 700));
@@ -225,11 +247,13 @@ export class MigrationService {
     ).data.data;
     for (let j = 0; j < results.length; j++) {
       const result = results[j];
+      const roles = migrateRoles(result, users);
       const filter = await this.createFilter(
         result,
         result.has_insurance.map((i) => insuranceIds[i.insurance_id]),
         locationIds,
-      );      
+        roles,
+      );
       new this.resultModel({
         _id: new mongoose.Types.ObjectId(),
         name: result.name.replaceAll('&shy;', ''),
@@ -237,9 +261,8 @@ export class MigrationService {
         specific: result.specific,
         categories: [category._id],
         variations: [filter],
-        status: mappingStateType(result.status),
         sort: result.sort,
-        roles: migrateRoles(result, users),
+        roles,
         type: resultTypeMap[result.type.weight],
       }).save();
     }

@@ -17,7 +17,6 @@ export type ResultTypeDTO = {
 export interface ResultDTO {
   _id?: string;
   id?: number;
-  status?: StateType;
   specific?: string;
   roles?: RolesDTO;
   name?: string;
@@ -27,6 +26,8 @@ export interface ResultDTO {
 }
 
 export interface VariationDTO {
+  status?: StateType;
+  roles?: RolesDTO;
   name?: string;
   timespan?: Timespan;
   amountOfMoney?: NumberRange;

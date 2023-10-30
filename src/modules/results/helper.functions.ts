@@ -18,14 +18,14 @@ export async function mongoDBFiltersFromQueryFilter(
       ],
     });
   }
+  const innerfilters = [];
   if (query.status) {
     if (Array.isArray(query.status)) {
-      outerfilters.push({ status: { $in: query.status } });
+      innerfilters.push({ ['variations.status']: { $in: query.status } });
     } else {
-      outerfilters.push({ status: query.status });
+      innerfilters.push({ ['variations.status']: query.status });
     }
   }
-  const innerfilters = [];
   if(query.filterByDate){
     const now = new Date();
     innerfilters.push({

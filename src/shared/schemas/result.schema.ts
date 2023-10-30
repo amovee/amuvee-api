@@ -48,7 +48,6 @@ export class ResultFilters {
   parentAge: NumberFilter;
   @Prop()
   parentGender: string[];
-  
   @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Region' }])
   regions: Region[]; // TODO: generate from zips
   @Prop({ type: [String] })
@@ -63,6 +62,10 @@ export class ResultFilters {
 
 @Schema()
 export class Variation {
+  @Prop()
+  status: string;
+  @Prop({ _id: false, type: Roles })
+  roles: Roles;
   @Prop()
   name: string;
   @Prop({ type: { from: Date, to: Date, _id: false } })
@@ -101,13 +104,10 @@ export class Result {
   _id: mongoose.Schema.Types.ObjectId;
   @Prop()
   id: number;
-  @Prop()
-  status: string;
-  @Prop()
-  specific: string;
   @Prop({ _id: false, type: Roles })
   roles: Roles;
-
+  @Prop()
+  specific: string;
   @Prop()
   name: string;
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }] })
