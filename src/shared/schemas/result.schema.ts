@@ -50,8 +50,10 @@ export class ResultFilters {
   parentGender: string[];
   @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Region' }])
   regions: Region[]; // TODO: generate from zips
-  @Prop({ type: [String] })
-  requiredKeys: string[];
+  @Prop()
+  isPregnant: boolean;
+  @Prop()
+  isVictimOfViolence: boolean;
   @Prop({ type: [String] })
   insurances: string[];
   @Prop()

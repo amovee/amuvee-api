@@ -60,16 +60,6 @@ export class MigrationService {
     }
     return postalcodes;
   }
-  transformKeyWords(result): string[] {
-    const requiredKeys = [];
-    if (result.is_pregnant) {
-      requiredKeys.push('pregnant');
-    }
-    if (result.victim_of_violence) {
-      requiredKeys.push('victimsOfViolence');
-    }
-    return requiredKeys;
-  }
   async migrateResultsFromAllCategories(): Promise<void> {
     await this.resultModel.deleteMany().exec();
     const categories = await this.categoryModel.find().exec();
@@ -175,7 +165,8 @@ export class MigrationService {
         ),
         parentGender,
         regions: await this.getRegion(result),
-        requiredKeys: this.transformKeyWords(result),
+        isPregnant: result.is_pregnant,
+        isVictimOfViolence: result.victim_of_violence,
         insurances,
         relationships,
         jobRelatedSituations,

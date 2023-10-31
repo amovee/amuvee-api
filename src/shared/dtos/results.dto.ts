@@ -57,7 +57,8 @@ export interface ResultFilters {
   parentAge?: NumberRange;
   parentGender?: ('FEMALE' | 'MALE' | 'DIVERSE')[];
   regions?: Ref<Region>[];
-  hasKeys?: ('pregnant' | 'victimsOfViolence')[];
+  isPregnant?: boolean;
+  isVictimOfViolence?: boolean;
   insurances?: string[]; // _id[]
   relationship?: number[];
   jobRelatedSituation?: number[];

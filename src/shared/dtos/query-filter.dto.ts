@@ -15,7 +15,8 @@ export interface QueryFilterDTO {
   relationship?: number | undefined;
   status?: string | string[];
   filterByDate?: boolean;
-  keys?: string[] | string;
+  isPregnant?: boolean;
+  isVictimOfViolence?: boolean;
 }
 
 export function queryFilterParser(input: any): QueryFilterDTO {
@@ -34,10 +35,11 @@ export function queryFilterParser(input: any): QueryFilterDTO {
   if (input.category) query.category = input.category;
   if (input.zip) query.zip = input.zip;
   if (input.insurance) query.insurance = input.insurance;
-  if (input.jobRelatedSituation) query.jobRelatedSituation = +input.jobRelatedSituation;
+  if (input.jobRelatedSituation)
+    query.jobRelatedSituation = +input.jobRelatedSituation;
   if (input.relationship) query.relationship = +input.relationship;
   if (input.childrenAgeGroups) {
-    if(Array.isArray(input.childrenAgeGroups)){
+    if (Array.isArray(input.childrenAgeGroups)) {
       query.childrenAgeGroups = [];
       input.childrenAgeGroups.forEach((ageGroup) => {
         query.childrenAgeGroups.push(+ageGroup);
@@ -46,12 +48,7 @@ export function queryFilterParser(input: any): QueryFilterDTO {
       query.childrenAgeGroups = [input.childrenAgeGroups];
     }
   }
-  if (input.keys) {
-    if (Array.isArray(input.keys)) {
-      query.keys = input.keys;
-    } else {
-      query.keys = [input.keys];
-    }
-  }
+  query.isPregnant = input.isPregnant == 'true' ? true : false;
+  query.isVictimOfViolence = input.isVictimOfViolence == 'true' ? true : false;
   return query;
 }
