@@ -48,7 +48,11 @@ export function queryFilterParser(input: any): QueryFilterDTO {
       query.childrenAgeGroups = [input.childrenAgeGroups];
     }
   }
-  query.isPregnant = input.isPregnant == 'true' ? true : false;
-  query.isVictimOfViolence = input.isVictimOfViolence == 'true' ? true : false;
+  if (input.isPregnant != undefined) {
+    query.isPregnant = input.isPregnant == 'true' ? true : false;
+  }
+  if (input.isVictimOfViolence != undefined) {
+    query.isVictimOfViolence = input.isVictimOfViolence == 'true' ? true : false;
+  }
   return query;
 }

@@ -129,11 +129,11 @@ export async function mongoDBFiltersFromQueryFilter(
       ],
     });
   }
-  if(!query.isPregnant) {
-    innerfilters.push({ [`variations.isPregnant`]: { $eq: false } })
+  if(query.isPregnant === false) {
+    innerfilters.push({ [`variations.filters.isPregnant`]: { $eq: false } })
   }
-  if(!query.isVictimOfViolence) {
-    innerfilters.push({ [`variations.isVictimOfViolence`]: { $eq: false } })
+  if(query.isVictimOfViolence === false) {
+    innerfilters.push({ [`variations.filters.isVictimOfViolence`]: { $eq: false } })
   }
 
   if (innerfilters.length == 0 && outerfilters.length == 0) {
