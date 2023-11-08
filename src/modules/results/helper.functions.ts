@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 
-export async function mongoDBFiltersFromQueryFilter(
+export function mongoDBFiltersFromQueryFilter(
   query: QueryFilterDTO,
   regions?: mongoose.Types.ObjectId[],
 ) {
@@ -26,7 +26,7 @@ export async function mongoDBFiltersFromQueryFilter(
       innerfilters.push({ ['variations.status']: query.status });
     }
   }
-  if(query.filterByDate){
+  if (query.filterByDate) {
     const now = new Date();
     innerfilters.push({
       $or: [
@@ -41,99 +41,48 @@ export async function mongoDBFiltersFromQueryFilter(
       ],
     });
   }
-  if (query.rent != null && query.rent >= 0) {
-    innerfilters.push(
-      numberFilter('rent', query.rent, 'min'),
-      numberFilter('rent', query.rent, 'max'),
-    );
-  }
-  if (query.income != null && query.income >= 0) {
-    innerfilters.push(
-      numberFilter('income', query.income, 'min'),
-      numberFilter('income', query.income, 'max'),
-    );
-  }
+  ['rent', 'income', 'parentAge'].forEach((key: string) => {
+    if (query[key] != null && query[key] >= 0) {
+      innerfilters.push(...minMaxNumberFilter(key, query[key]));
+    }
+  })
   if (query.childrenCount != null && query.childrenCount > 0) {
     innerfilters.push(
-      numberFilter('childrenCount', query.childrenCount, 'min'),
-      numberFilter('childrenCount', query.childrenCount, 'max'),
+      ...minMaxNumberFilter('childrenCount', query.childrenCount),
     );
     if (query.childrenAgeGroups && query.childrenAgeGroups.length > 0) {
       innerfilters.push(
-        numberFilter(
+        ...minMaxNumberFilter(
           'childrenAge',
           Math.max(...(<number[]>query.childrenAgeGroups)),
-          'min',
-        ),
-        numberFilter(
-          'childrenAge',
-          Math.min(...(<number[]>query.childrenAgeGroups)),
-          'max',
         ),
       );
     }
   }
-  if (query.parentAge && query.parentAge >= 0) {
-    innerfilters.push(
-      numberFilter('parentAge', query.parentAge, 'min'),
-      numberFilter('parentAge', query.parentAge, 'max'),
-    );
-  }
   if (regions) {
     const ids = regions.map((r) => new mongoose.Types.ObjectId(r));
-    innerfilters.push({
-      $or: [
-        { ['variations.filters.regions']: { $size: 0 } },
-        { ['variations.filters.regions']: { $in: ids } },
-      ],
-    });
+    innerfilters.push(createSetFilter('regions', ids))
   }
   if (query.parentGender) {
-    innerfilters.push({
-      $or: [
-        { ['variations.filters.parentGender']: { $size: 0 } },
-        {
-          ['variations.filters.parentGender']: {
-            $in: [`${query.parentGender}`],
-          },
-        },
-      ],
-    });
+    innerfilters.push(createSetFilter('parentGender', [query.parentGender]))
   }
   if (query.insurance) {
-    innerfilters.push({
-      $or: [
-        { ['variations.filters.insurances']: { $size: 0 } },
-        { ['variations.filters.insurances']: { $in: [query.insurance] } },
-      ],
-    });
+    innerfilters.push(createSetFilter('insurances', [query.insurance]))
   }
   if (query.jobRelatedSituation != undefined) {
-    innerfilters.push({
-      $or: [
-        { ['variations.filters.jobRelatedSituations']: { $size: 0 } },
-        {
-          ['variations.filters.jobRelatedSituations']: {
-            $in: [query.jobRelatedSituation],
-          },
-        },
-      ],
-    });
+    innerfilters.push(createSetFilter('jobRelatedSituations', [query.jobRelatedSituation]))
   }
 
   if (query.relationship != undefined) {
+    innerfilters.push(createSetFilter('relationships', [query.relationship]))
+  }
+  if (query.isPregnant === false) {
+    innerfilters.push({ [`variations.filters.isPregnant`]: { $eq: false } });
+  }
+  if (query.isVictimOfViolence === false) {
     innerfilters.push({
-      $or: [
-        { ['variations.filters.relationships']: { $size: 0 } },
-        { ['variations.filters.relationships']: { $in: [query.relationship] } },
-      ],
+      [`variations.filters.isVictimOfViolence`]: { $eq: false },
     });
-  }
-  if(query.isPregnant === false) {
-    innerfilters.push({ [`variations.filters.isPregnant`]: { $eq: false } })
-  }
-  if(query.isVictimOfViolence === false) {
-    innerfilters.push({ [`variations.filters.isVictimOfViolence`]: { $eq: false } })
   }
 
   if (innerfilters.length == 0 && outerfilters.length == 0) {
@@ -153,23 +102,38 @@ export async function mongoDBFiltersFromQueryFilter(
   };
 }
 
-export function numberFilter(key: string, value: number, type: 'min' | 'max') {
-  if (type === 'min') {
-    return {
-      $or: [
-        { [`variations.filters.${key}.${type}`]: { $eq: null } },
-        { [`variations.filters.${key}.${type}`]: { $lte: value } },
-      ],
-    };
-  } else {
-    return {
-      $or: [
-        { [`variations.filters.${key}.${type}`]: { $eq: null } },
-        { [`variations.filters.${key}.${type}`]: { $gte: value } },
-      ],
-    };
-  }
+/**
+ * MATCH Filter Generators
+ */
+
+export function createSetFilter(key: string, value: any[]) {
+  const objectKey = `variations.filters.${key}`;
+  return {
+    $or: [{ [objectKey]: { $size: 0 } }, { [objectKey]: { $in: value } }],
+  };
 }
+export function minMaxNumberFilter(key: string, value: number) {
+  return [
+    singleNumberFilter(key, value, 'min'),
+    singleNumberFilter(key, value, 'max'),
+  ];
+}
+export function singleNumberFilter(
+  key: string,
+  value: number,
+  type: 'min' | 'max',
+) {
+  const objectKey = `variations.filters.${key}.${type}`;
+  const comparator = type === 'min' ? { $lte: value } : { $gte: value };
+  return {
+    $or: [{ [objectKey]: { $eq: null } }, { [objectKey]: comparator }],
+  };
+}
+
+/**
+ * PROJECTION Generators
+ */
+
 const FILTER_KEYS = [
   'rent',
   'income',
@@ -208,6 +172,11 @@ export function getVariationProjection(min?: 'min') {
   });
   return fields;
 }
+
+/**
+ * Functions to generate other Stages for MongoDB Aggregations
+ */
+
 export function unwind(path: string): { $unwind: { path: string } } {
   return { $unwind: { path: path } };
 }

@@ -8,7 +8,6 @@ import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 import { MinResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
 import {
-  // filterResultLanguage,
   getVariationProjection,
   lookUpInVariation,
   mongoDBFiltersFromQueryFilter,
@@ -32,23 +31,21 @@ export class ResultsService {
     return regions;
   }
   async getMongoDBFilters(query: QueryFilterDTO) {
-    return await mongoDBFiltersFromQueryFilter(
-      query,
-      query.zip
-        ? (
-            await this.getRegionsByZip(query.zip)
-          ).map(
-            (region: Region) =>
-              new mongoose.Types.ObjectId(region._id.toString()),
-          )
-        : null,
-    );
+    let regions: mongoose.Types.ObjectId[] = null;
+    if (query.zip) {
+      regions = (await this.getRegionsByZip(query.zip)).map(
+        (region: Region) => new mongoose.Types.ObjectId(region._id.toString()),
+      );
+    }
+    return mongoDBFiltersFromQueryFilter(query, regions);
   }
   async getResultFromId(
     id: string | number,
     language?: string,
   ): Promise<ResultDTO | undefined> {
-    const idMatch = isNaN(+id) ? {_id: new mongoose.Types.ObjectId(id)}:{id: +id}
+    const idMatch = isNaN(+id)
+      ? { _id: new mongoose.Types.ObjectId(id) }
+      : { id: +id };
     const request: PipelineStage[] = [
       {
         $match: idMatch,
@@ -299,8 +296,8 @@ export class ResultsService {
       {
         $count: 'total',
       },
-    ]);    
-    return total.length ? total[0] : {total: 0};
+    ]);
+    return total.length ? total[0] : { total: 0 };
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
     const filters = await this.getMongoDBFilters(query);
