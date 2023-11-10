@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 
+const EQ_NULL = { $eq: null };
 export function mongoDBFiltersFromQueryFilter(
   query: QueryFilterDTO,
   regions?: mongoose.Types.ObjectId[],
@@ -30,13 +31,13 @@ export function mongoDBFiltersFromQueryFilter(
     const now = new Date();
     innerfilters.push({
       $or: [
-        { [`variations.timespan.from`]: { $eq: null } },
+        { [`variations.timespan.from`]: EQ_NULL },
         { [`variations.timespan.from`]: { $lte: now } },
       ],
     });
     innerfilters.push({
       $or: [
-        { [`variations.timespan.to`]: { $eq: null } },
+        { [`variations.timespan.to`]: EQ_NULL },
         { [`variations.timespan.to`]: { $gte: now } },
       ],
     });
@@ -45,7 +46,7 @@ export function mongoDBFiltersFromQueryFilter(
     if (query[key] != null && query[key] >= 0) {
       innerfilters.push(...minMaxNumberFilter(key, query[key]));
     }
-  })
+  });
   if (query.childrenCount != null && query.childrenCount > 0) {
     innerfilters.push(
       ...minMaxNumberFilter('childrenCount', query.childrenCount),
@@ -58,23 +59,30 @@ export function mongoDBFiltersFromQueryFilter(
         ),
       );
     }
+  } else if (query.childrenCount == 0) {
+    innerfilters.push({ 'variations.filters.childrenCount.min': EQ_NULL });
+    innerfilters.push({ 'variations.filters.childrenCount.max': EQ_NULL });
+    innerfilters.push({ 'variations.filters.childrenAge.min': EQ_NULL });
+    innerfilters.push({ 'variations.filters.childrenAge.max': EQ_NULL });
   }
   if (regions) {
     const ids = regions.map((r) => new mongoose.Types.ObjectId(r));
-    innerfilters.push(createSetFilter('regions', ids))
+    innerfilters.push(createSetFilter('regions', ids));
   }
   if (query.parentGender) {
-    innerfilters.push(createSetFilter('parentGender', [query.parentGender]))
+    innerfilters.push(createSetFilter('parentGender', [query.parentGender]));
   }
   if (query.insurance) {
-    innerfilters.push(createSetFilter('insurances', [query.insurance]))
+    innerfilters.push(createSetFilter('insurances', [query.insurance]));
   }
   if (query.jobRelatedSituation != undefined) {
-    innerfilters.push(createSetFilter('jobRelatedSituations', [query.jobRelatedSituation]))
+    innerfilters.push(
+      createSetFilter('jobRelatedSituations', [query.jobRelatedSituation]),
+    );
   }
 
   if (query.relationship != undefined) {
-    innerfilters.push(createSetFilter('relationships', [query.relationship]))
+    innerfilters.push(createSetFilter('relationships', [query.relationship]));
   }
   if (query.isPregnant === false) {
     innerfilters.push({ [`variations.filters.isPregnant`]: { $eq: false } });
@@ -126,7 +134,7 @@ export function singleNumberFilter(
   const objectKey = `variations.filters.${key}.${type}`;
   const comparator = type === 'min' ? { $lte: value } : { $gte: value };
   return {
-    $or: [{ [objectKey]: { $eq: null } }, { [objectKey]: comparator }],
+    $or: [{ [objectKey]: EQ_NULL }, { [objectKey]: comparator }],
   };
 }
 
