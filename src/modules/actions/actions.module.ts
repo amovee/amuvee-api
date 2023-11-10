@@ -5,12 +5,14 @@ import { CountersModule } from '../counters/counters.module';
 import { ActionsController } from './actions.controller';
 import { ActionsService } from './actions.service';
 import { Action, ActionSchema } from 'src/shared/schemas/action.schema';
+import { Result, ResultSchema } from 'src/shared/schemas/result.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Action.name, schema: ActionSchema },
       { name: User.name, schema: UserSchema },
+      { name: Result.name, schema: ResultSchema },
     ]),
     CountersModule
   ],

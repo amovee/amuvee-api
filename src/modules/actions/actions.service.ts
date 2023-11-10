@@ -8,21 +8,26 @@ import { CounterService } from '../counters/counters.service';
 import { ActionDocument } from 'src/shared/schemas/action.schema';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
 import { migrateRoles } from 'src/shared/dtos/roles.dto';
+import { ActionDTO } from 'src/shared/dtos/actions.dto';
+import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
+import { ResultDTO } from 'src/shared/dtos/results.dto';
 
 @Injectable()
 export class ActionsService {
   constructor(
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
+    @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly counter: CounterService,
   ) {}
   async migrate(): Promise<void> {
-    await this.counter.deleteSequenzDocument('actions')
+    await this.counter.deleteSequenzDocument('actions');
     await this.actionModel.deleteMany().exec();
     const users: User[] = await this.userModel.find().exec();
     const counter = (
       await axios.get(
-        process.env.DIRECTUS_URL + 'items/action?fields=*&limit=0&meta=filter_count'
+        process.env.DIRECTUS_URL +
+          'items/action?fields=*&limit=0&meta=filter_count',
       )
     ).data.meta.filter_count;
 
@@ -30,7 +35,7 @@ export class ActionsService {
       await axios.get(
         process.env.DIRECTUS_URL +
           'items/action?fields=*,russian.*,ukrainian.*&sort=id&limit=' +
-          counter
+          counter,
       )
     ).data.data;
     for (let i = 0; i < actions.length; i++) {
@@ -63,5 +68,19 @@ export class ActionsService {
       new this.actionModel(a).save();
     }
     return;
+  }
+  async getMentions(id: number, limit: number, skip: number) {
+    const action = await this.actionModel.findOne<ActionDTO>({ id });
+    if (action != null) {
+      const results = await this.resultModel.find<ResultDTO>({
+        variations: {
+          $elemMatch: {
+            actions: action._id,
+          },
+        },
+      }).skip(skip).limit(limit);
+      return results.map((r) => ({ name: r.name, id: r.id }));
+    }
+    return [];
   }
 }
