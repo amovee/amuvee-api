@@ -18,8 +18,8 @@ import { MiddlewareConsumer } from '@nestjs/common/interfaces/middleware';
 import { ConfigModule } from '@nestjs/config';
 import { CountersModule } from './modules/counters/counters.module';
 import { EventsModule } from './modules/events/events.module';
-import { MailerController } from './mailer/mailer.controller';
-import { MailerModule } from './mailer/mailer.module';
+import { MailerController } from './modules/mailer/mailer.controller';
+import { MailerModule } from './modules/mailer/mailer.module';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
