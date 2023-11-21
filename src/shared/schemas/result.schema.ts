@@ -60,6 +60,8 @@ export class ResultFilters {
   relationships: number[];
   @Prop()
   jobRelatedSituations: number[];
+  @Prop()
+  isRefugee: boolean;
 }
 
 @Schema()

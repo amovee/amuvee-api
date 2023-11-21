@@ -167,6 +167,7 @@ export class MigrationService {
         regions: await this.getRegion(result),
         isPregnant: result.is_pregnant,
         isVictimOfViolence: result.victim_of_violence,
+        isRefugee: result.hide_german,
         insurances,
         relationships,
         jobRelatedSituations,
