@@ -80,12 +80,14 @@ export function mongoDBFiltersFromQueryFilter(
       createSetFilter('jobRelatedSituations', [query.jobRelatedSituation]),
     );
   }
-
   if (query.relationship != undefined) {
     innerfilters.push(createSetFilter('relationships', [query.relationship]));
   }
   if (query.isPregnant === false) {
     innerfilters.push({ [`variations.filters.isPregnant`]: { $eq: false } });
+  }
+  if (query.isRefugee === false) {
+    innerfilters.push({ [`variations.filters.isRefugee`]: { $eq: false } });
   }
   if (query.isVictimOfViolence === false) {
     innerfilters.push({

@@ -62,6 +62,7 @@ export interface ResultFilters {
   insurances?: string[]; // _id[]
   relationship?: number[];
   jobRelatedSituation?: number[];
+  isRefugee?: boolean;
 }
 
 // ???

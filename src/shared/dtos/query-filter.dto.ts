@@ -17,6 +17,7 @@ export interface QueryFilterDTO {
   filterByDate?: boolean;
   isPregnant?: boolean;
   isVictimOfViolence?: boolean;
+  isRefugee?: boolean;
 }
 
 export function queryFilterParser(input: any): QueryFilterDTO {
@@ -50,6 +51,9 @@ export function queryFilterParser(input: any): QueryFilterDTO {
   }
   if (input.isPregnant != undefined) {
     query.isPregnant = input.isPregnant == 'true' ? true : false;
+  }
+  if (input.isRefugee != undefined) {
+    query.isRefugee = input.isRefugee == 'true' ? true : false;
   }
   if (input.isVictimOfViolence != undefined) {
     query.isVictimOfViolence = input.isVictimOfViolence == 'true' ? true : false;
