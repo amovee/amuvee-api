@@ -1,5 +1,9 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {Controller, Delete, Get, Param, Post,Put, Query, UseGuards} from '@nestjs/common';
 import { RegionService } from './region.service';
+import {Right} from "../auth/rights/rights.decorator";
+import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
+import {RightsGuard} from "../auth/rights/rights.guard";
+import {Region} from "../../shared/schemas/region.schema";
 
 @Controller('regions')
 export class RegionController {
@@ -12,7 +16,32 @@ export class RegionController {
     return this.regionService.migrate();
   }
 
-  // No Auth
+  @Right('REGIONS_READ')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Get()
+  async getAll(@Query('limit') limit: number = 20, @Query('skip') skip: number = 0) {
+
+    return this.regionService.getAll(limit, skip);
+  }
+  @Right('REGIONS_DELETE')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Delete(':id')
+  async deleteById(@Param('id') id: string) {
+    return this.regionService.deleteById(id);
+  }
+
+  @Right('REGIONS_UPDATE')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Put(':id')
+  async updateById(@Param('id') id: string, @Query('Region') region: Region) {
+    return this.regionService.updateById(id, region);
+  }
+  @Right('REGIONS_CREATE')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Post()
+  async createRegion(@Query('region') region: Region) {
+    return this.regionService.createRegion(region);
+  }
   @Get('search/:text')
   async searchString(@Param('text') text: string, @Query('limit') limit: number = 20, @Query('skip') skip: number = 20) {
     return this.regionService.searchString(text, limit, skip);
