@@ -3,7 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { CounterService } from '../counters/counters.service';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { regions } from './regions';
+import {createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
 import axios from 'axios';
 
 @Injectable()
@@ -16,15 +18,20 @@ export class RegionService {
     return this.regionModel.findById(id);
   }
   async deleteById(id: string) {
-    return this.regionModel.findByIdAndDelete(id);
+    if (this.regionModel.findById(id)) {
+      this.regionModel.findByIdAndDelete(id)
+      return 'Region deleted successfully';
+    } else {
+      throw new HttpException('Region not found', HttpStatus.BAD_REQUEST);
+    }
   }
-  async updateById(id: string, region: Region) {
-      return this.regionModel.findByIdAndUpdate(id, region);
+  async updateById(id: string, region: updateRegionDTO) {
+      return this.regionModel.findByIdAndUpdate(id, region, {new: true});
   }
-  async createRegion(region: Region) {
+  async createRegion(region: createRegionDTO) {
     const regionFromDB = await this.regionModel.findOne({ name: region.name });
     if (regionFromDB) {
-      return 'Region with the same name already exists';
+      throw new HttpException('Region with the same name already exists', HttpStatus.BAD_REQUEST);
     }
     else {
       return new this.regionModel(region).save();
