@@ -18,8 +18,9 @@ export class RegionService {
     return this.regionModel.findById(id);
   }
   async deleteById(id: string) {
-    if (this.regionModel.findById(id)) {
-      this.regionModel.findByIdAndDelete(id)
+    const regionFromDB = await this.regionModel.findById(id);
+    if (regionFromDB) {
+      await this.regionModel.findByIdAndDelete(id)
       return 'Region deleted successfully';
     } else {
       throw new HttpException('Region not found', HttpStatus.BAD_REQUEST);
