@@ -47,6 +47,10 @@ export class RegionController {
   async searchString(@Param('text') text: string, @Query('limit') limit: number = 20, @Query('skip') skip: number = 20) {
     return this.regionService.searchString(text, limit, skip);
   }
+  @Get('count')
+  async count() {
+    return this.regionService.count();
+  }
   @Get(':id')
   async getById(@Param('id') id){
     return this.regionService.getById(id)
