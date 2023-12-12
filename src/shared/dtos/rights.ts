@@ -1,3 +1,3 @@
 export type rightNames = 'READ' | 'CREATE' | 'UPDATE' | 'DELETE' | 'PUBLISH';
-export type documentNames = 'EVENTS' | 'RESULTS' | 'LOCATIONS' | 'USERS';
+export type documentNames = 'EVENTS' | 'RESULTS' | 'LOCATIONS' | 'USERS' | 'INSURANCES';
 export type right = `${documentNames}_${rightNames}`;
