@@ -8,13 +8,15 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Insurance, InsuranceSchema } from 'src/shared/schemas/insurance.schema';
 import { CountersModule } from '../counters/counters.module';
+import {UsersModule} from "../users/users.module";
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Insurance.name, schema: InsuranceSchema }
     ]),
-    CountersModule
+    CountersModule,
+    UsersModule
   ],
   controllers: [InsurancesController],
   providers: [InsurancesService],
