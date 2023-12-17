@@ -4,8 +4,7 @@ import { Ref } from './ref';
 import { CategoryDTO } from './categories.dto';
 import { RolesDTO } from './roles.dto';
 import { NumberRange, StateType, Variables } from './types.dto';
-import { Region } from '../schemas/region.schema';
-
+import { RegionDTO } from './region.dto';
 export type ResultTypeDTO = {
   _id?: string;
   name: {
@@ -56,7 +55,7 @@ export interface ResultFilters {
   childrenAge?: NumberRange;
   parentAge?: NumberRange;
   parentGender?: ('FEMALE' | 'MALE' | 'DIVERSE')[];
-  regions?: Ref<Region>[];
+  regions?: Ref<RegionDTO>[];
   isPregnant?: boolean;
   isVictimOfViolence?: boolean;
   insurances?: string[]; // _id[]

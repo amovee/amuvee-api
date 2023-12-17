@@ -7,6 +7,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { regions } from './regions';
 import {createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
 import axios from 'axios';
+import { State } from 'src/shared/dtos/types.dto';
 
 @Injectable()
 export class RegionService {
@@ -61,7 +62,7 @@ export class RegionService {
     for (let i = 0; i < regions.length; i++) {
       new this.regionModel({
         id: await this.counter.setMaxSequenceValue('regions', +regions[i].id),
-        status: 'published',
+        status: State.published,
         zips: regions[i].postalCodes.join(', '),
         name: regions[i].name,
       }).save();
@@ -81,7 +82,7 @@ export class RegionService {
       const res = results[i];
       new this.regionModel({
         id: await this.counter.getNextSequenceValue('regions'),
-        status: 'published',
+        status: State.published,
         zips: res,
         name: `Temporäre Region ${i}`,
       }).save();

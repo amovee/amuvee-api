@@ -1,10 +1,5 @@
 import { right } from './rights';
 
-export interface Region {
-  id: number;
-  name: string;
-  zips: string;
-}
 export const State = {
   archived: 'ARCHIVED',
   standby: 'STANDBY',
@@ -12,6 +7,7 @@ export const State = {
   toReview: 'TO_REVIEW',
   reviewed: 'REVIEWED',
   published: 'PUBLISHED',
+  toTranslate: 'TO_TRANSLATE',
 } as const;
 export type StateType = typeof State[keyof typeof State];
 export const mappingStateType = (status: string): StateType => {
@@ -23,6 +19,7 @@ export const mappingStateType = (status: string): StateType => {
     case 'in progress': return State.draft;
     case 'ready for review': return State.toReview;
     case 'todo': return State.draft;
+    case 'ready for translation': return State.toTranslate;
   }
   return State.standby;
 }
