@@ -20,6 +20,10 @@ export class InsurancesController {
   async getAll(): Promise<Insurance[]> {
     return this.insurancesService.getAll();
   }
+  @Get('count')
+  async getCount(): Promise<number> {
+    return this.insurancesService.getCount();
+  }
 
   // Auth
   @Right('INSURANCES_READ')
@@ -54,4 +58,7 @@ export class InsurancesController {
   async getInsurance(@Param('id') id: string): Promise<Insurance> {
     return this.insurancesService.getById(id);
   }
+
+
+
 }
