@@ -36,7 +36,10 @@ export class RegionService {
       throw new HttpException('Region with the same name already exists', HttpStatus.BAD_REQUEST);
     }
     else {
-      return new this.regionModel(region).save();
+      region.id = await this.counter.getNextSequenceValue('regions');
+      return new this.regionModel(
+        region
+      ).save();
     }
   }
   async searchString(text: string, limit: number, skip: number): Promise<any> {
