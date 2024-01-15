@@ -1,16 +1,19 @@
 import {Controller, Delete, Get, Param, Post, Query,Body, UseGuards} from '@nestjs/common';
 import { Insurance } from 'src/shared/schemas/insurance.schema';
 import { InsurancesService } from './insurances.service';
+import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 import {Right} from "../auth/rights/rights.decorator";
 import {RightsGuard} from "../auth/rights/rights.guard";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 import {createInsurance, updateInsurance} from "../../shared/dtos/insurances.dto";
 import {request} from "express";
 
+@ApiTags('Insurances')
 @Controller('insurance')
 export class InsurancesController {
   constructor(private readonly insurancesService: InsurancesService) {}
   // No Auth but filtered
+  @ApiBearerAuth('jwt')
   @Post('migrate')
   async migrate(): Promise<string> {
     await this.insurancesService.migrate();

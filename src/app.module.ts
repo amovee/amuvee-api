@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {forwardRef, Module} from '@nestjs/common';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -37,7 +37,7 @@ export class LoggerMiddleware implements NestMiddleware {
     InsurancesModule,
     LocationsModule,
     AuthModule,
-    UsersModule,
+    forwardRef(()=>UsersModule),
     CategoriesModule,
     ResultsModule,
     MigrationModule,

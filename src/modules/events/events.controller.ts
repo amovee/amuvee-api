@@ -8,7 +8,9 @@ import {
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { EventDTO } from 'src/shared/dtos/events.dto';
+import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 
+@ApiTags('Events')
 @Controller('events')
 export class ResultsController {
   constructor(private readonly eventsService: EventsService) {}
@@ -26,6 +28,7 @@ export class ResultsController {
     const events = await this.eventsService.getNextTwoDistinctTypeEvents(currentTimestamp);
     return events;
   }
+  @ApiBearerAuth('jwt')
   @Post('migrate')
   async migrate(): Promise<void> {
     await this.eventsService.migrate();

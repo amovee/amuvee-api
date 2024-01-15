@@ -1,4 +1,5 @@
 import { right } from './rights';
+import { ApiProperty } from '@nestjs/swagger';
 
 export interface Region {
   id: number;
@@ -64,4 +65,18 @@ export type Variables = { [variableName: string]: { [language: string]: string }
 export type NumberRange = {
   min?: number;
   max?: number;
+}
+
+export class LoginDTO {
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'Email of the user',
+  })
+  email: string;
+
+  @ApiProperty({
+    example: 'password123',
+    description: 'Password of the user',
+  })
+  password: string;
 }

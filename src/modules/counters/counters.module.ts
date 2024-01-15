@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {forwardRef, Module} from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Counter, CounterSchema as CounterSchema } from 'src/shared/schemas/counters.schema';
 import { ResultsModule } from '../results/results.module';
@@ -9,7 +9,7 @@ import { CounterService } from './counters.service';
     MongooseModule.forFeature([
       { name: Counter.name, schema: CounterSchema },
     ]),
-    ResultsModule,
+    forwardRef(()=> ResultsModule),
   ],
   providers: [CounterService],
   exports: [CounterService],

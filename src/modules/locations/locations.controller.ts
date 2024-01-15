@@ -10,7 +10,9 @@ import {
 import { Location } from 'src/shared/schemas/location.schema';
 import { LocationsService } from './locations.service';
 import { LocationDTO } from 'src/shared/dtos/locations.dto';
+import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 
+@ApiTags('Locations')
 @Controller('locations')
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
@@ -23,6 +25,7 @@ export class LocationsController {
       query.skip ? query.skip : 0,
     );
   }
+  @ApiBearerAuth('jwt')
   @Post('migrate')
   async migrate(): Promise<string> {
     await this.locationsService.migrate();
