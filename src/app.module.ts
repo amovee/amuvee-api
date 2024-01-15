@@ -20,6 +20,9 @@ import { CountersModule } from './modules/counters/counters.module';
 import { EventsModule } from './modules/events/events.module';
 import { MailerController } from './modules/mailer/mailer.controller';
 import { MailerModule } from './modules/mailer/mailer.module';
+import { ResultTypeController } from './modules/result-type/result-type.controller';
+import { ResultTypeService } from './modules/result-type/result-type.service';
+import { ResultTypeModule } from './modules/result-type/result-type.module';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -55,9 +58,10 @@ export class LoggerMiddleware implements NestMiddleware {
         : process.env.MONGODB_DOCKER_URL,
     ),
     MailerModule,
+    ResultTypeModule,
   ],
-  controllers: [AppController, MailerController],
-  providers: [AppService],
+  controllers: [AppController, MailerController, ResultTypeController],
+  providers: [AppService, ResultTypeService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
