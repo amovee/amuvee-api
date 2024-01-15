@@ -6,7 +6,10 @@ import { LocationsService } from '../locations/locations.service';
 import { RegionService } from '../region/region.service';
 import { UsersService } from '../users/users.service';
 import { MigrationService } from './migration.service';
+import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 
+@ApiTags('Migrations')
+@ApiBearerAuth('JWT-auth')
 @Controller('migration')
 export class MigrationController {
   constructor(

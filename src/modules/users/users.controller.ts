@@ -17,17 +17,21 @@ import { Right } from '../auth/rights/rights.decorator';
 import { RightsGuard } from '../auth/rights/rights.guard';
 import { UsersService } from './users.service';
 import { UpdatePasswordDTO, createUserDTO, updateUserDTO } from 'src/shared/dtos/user.dto';
+import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Right('USERS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Post()
   async createUser(@Body() body: createUserDTO): Promise<{ password: string }> {
     return { password: await this.usersService.createUser(body) };
   }
+  @ApiBearerAuth('jwt')
   @Post('migrate')
   async migrate(): Promise<string> {
     await this.usersService.migrate();
@@ -41,6 +45,7 @@ export class UsersController {
   // }
   @Right('USERS_UPDATE') // TODO auch für eigenen account erlauben
   @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Put(':id/password')
   async generateNewPassword(
     @Param('id') id: string,
@@ -48,7 +53,7 @@ export class UsersController {
     return { password: await this.usersService.regeneratePassword(id) };
   }
   @Right('USERS_READ')
-  @UseGuards(JwtAuthGuard, RightsGuard)
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getAllUsers(): Promise<User[]> {
     return this.usersService.findAll();
@@ -77,6 +82,7 @@ export class UsersController {
   //   return null;
   // }
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
   @Put('password')
   async updateUserPassword(
     @Query() query: UpdatePasswordDTO,
@@ -87,6 +93,7 @@ export class UsersController {
 
   @Right('USERS_UPDATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Put(':id')
   async updateUser(
     @Param('id') id: string,
@@ -96,6 +103,7 @@ export class UsersController {
   }
 
   @Right('USERS_DELETE')
+  @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @Delete(':id')
   async deleteUser(@Request() req, @Param('id') id: string): Promise<void> {

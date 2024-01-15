@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ResultsService } from './results.service';
 import {
@@ -12,7 +13,10 @@ import {
   queryFilterParser,
 } from 'src/shared/dtos/query-filter.dto';
 import { ResultDTO } from 'src/shared/dtos/results.dto';
+import { ApiTags} from '@nestjs/swagger';
+import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 
+@ApiTags('Results')
 @Controller('results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
@@ -72,6 +76,8 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
+  // add baerer auth
+  @UseGuards(JwtAuthGuard)
   @Get('counter')
   async getCounter(
     @Query() query: QueryFilterDTO,

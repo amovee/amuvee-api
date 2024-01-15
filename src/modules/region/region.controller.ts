@@ -1,12 +1,15 @@
 import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { RegionService } from './region.service';
+import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 
+@ApiTags('Regions')
 @Controller('regions')
 export class RegionController {
   constructor(
     private readonly regionService: RegionService
   ) {}
   // Auth
+  @ApiBearerAuth('jwt')
   @Post('migrate')
   async migration(): Promise<string> {
     return this.regionService.migrate();
