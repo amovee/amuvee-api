@@ -6,7 +6,10 @@ import {Right} from "../auth/rights/rights.decorator";
 import {RightsGuard} from "../auth/rights/rights.guard";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 import {createInsurance, updateInsurance} from "../../shared/dtos/insurances.dto";
+<<<<<<< HEAD
 import {request} from "express";
+=======
+>>>>>>> 647dde1 (add the requests to the backend and tested them)
 
 @ApiTags('Insurances')
 @Controller('insurance')
@@ -23,10 +26,13 @@ export class InsurancesController {
   async getAll(): Promise<Insurance[]> {
     return this.insurancesService.getAll();
   }
+<<<<<<< HEAD
   @Get('count')
   async getCount(): Promise<number> {
     return this.insurancesService.getCount();
   }
+=======
+>>>>>>> 647dde1 (add the requests to the backend and tested them)
 
   // Auth
   @Right('INSURANCES_READ')
@@ -61,7 +67,10 @@ export class InsurancesController {
   async getInsurance(@Param('id') id: string): Promise<Insurance> {
     return this.insurancesService.getById(id);
   }
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 647dde1 (add the requests to the backend and tested them)
 }
