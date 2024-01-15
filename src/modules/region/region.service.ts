@@ -15,6 +15,21 @@ export class RegionService {
   async getById(id: string) {
     return this.regionModel.findById(id);
   }
+  async deleteById(id: string) {
+    return this.regionModel.findByIdAndDelete(id);
+  }
+  async updateById(id: string, region: Region) {
+      return this.regionModel.findByIdAndUpdate(id, region);
+  }
+  async createRegion(region: Region) {
+    const regionFromDB = await this.regionModel.findOne({ name: region.name });
+    if (regionFromDB) {
+      return 'Region with the same name already exists';
+    }
+    else {
+      return new this.regionModel(region).save();
+    }
+  }
   async searchString(text: string, limit: number, skip: number): Promise<any> {
     return await this.regionModel
       .find({
@@ -25,6 +40,9 @@ export class RegionService {
       })
       .limit(limit)
       .skip(skip);
+  }
+  async getAll(limit: number, skip: number): Promise<any> {
+    return await this.regionModel.find().limit(limit).skip(skip);
   }
   async migrate(): Promise<any> {
     await this.counter.deleteSequenzDocument('regions');
