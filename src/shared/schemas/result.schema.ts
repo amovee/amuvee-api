@@ -20,7 +20,9 @@ export class ResultType {
     [key: string]: string;
   };
   @Prop()
-  weight: number
+  weight: number;
+  @Prop({ unique: true })
+  id: number;
 }
 
 export type ResultTypeDocument = ResultType & Document;

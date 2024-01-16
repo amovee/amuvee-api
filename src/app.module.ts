@@ -61,7 +61,7 @@ export class LoggerMiddleware implements NestMiddleware {
     ResultTypeModule,
   ],
   controllers: [AppController, MailerController, ResultTypeController],
-  providers: [AppService, ResultTypeService],
+  providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

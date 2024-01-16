@@ -45,6 +45,7 @@ export class MigrationService {
     result_types.forEach((resultType) => {
       new this.resultTypeModel({
         _id: new mongoose.Types.ObjectId(),
+        id: this.counter.setMaxSequenceValue('resultTypes', +resultType.id),
         name: resultType.name,
         weight: resultType.weight,
       }).save();

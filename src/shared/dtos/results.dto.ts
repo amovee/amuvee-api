@@ -7,6 +7,22 @@ import { NumberRange, StateType, Variables } from './types.dto';
 import { RegionDTO } from './region.dto';
 export type ResultTypeDTO = {
   _id?: string;
+  id?: number;
+  name: {
+    [language: string]: string
+  };
+  weight: number;
+
+};
+
+export interface UpdateResultTypeDTO {
+  name?: {
+    [language: string]: string
+  };
+  weight?: number;
+}
+
+export interface CreateResultTypeDTO {
   name: {
     [language: string]: string
   };

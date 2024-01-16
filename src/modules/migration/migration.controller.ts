@@ -9,7 +9,7 @@ import { MigrationService } from './migration.service';
 import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 
 @ApiTags('Migrations')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('jwt')
 @Controller('migration')
 export class MigrationController {
   constructor(

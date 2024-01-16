@@ -24,6 +24,7 @@ async function bootstrap() {
     .addTag('Locations')
     .addTag('Migrations')
     .addTag('Regions')
+    .addTag('ResultType')
     .addTag('Results')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

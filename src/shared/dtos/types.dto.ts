@@ -77,3 +77,22 @@ export class LoginDTO {
   })
   password: string;
 }
+export class CreateResultTypeDTOAPI {
+  @ApiProperty({
+    example: {
+      "de": "example",
+      "uk": "example",
+      "ru": "example",
+    },
+    description: 'Name of the result type',
+  })
+  name: {
+    [language: string]: string
+  };
+
+  @ApiProperty({
+    example: 1,
+    description: 'Weight of the result type',
+  })
+  weight: number;
+}
