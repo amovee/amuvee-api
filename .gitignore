@@ -40,3 +40,4 @@ secrets/amuvee.de_private_key.key
 secrets/amuvee.de_ssl_certificate.cer
 .env
 .vscode/settings.json
+package-lock.json
