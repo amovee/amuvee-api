@@ -43,7 +43,7 @@ export class ResultTypeService {
     return newResultType.save();
   }
   async getCount(): Promise<{TotalCount: number}> {
-    return {TotalCount: await this.resultTypeModel.count()};
+    return {TotalCount: await this.resultTypeModel.countDocuments()};
   }
 
   async getUsedResultTypes(id: string): Promise<{TotalUsageCount: number}> {

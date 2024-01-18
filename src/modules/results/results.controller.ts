@@ -77,7 +77,6 @@ export class ResultsController {
     }
   }
   // add baerer auth
-  @UseGuards(JwtAuthGuard)
   @Get('counter')
   async getCounter(
     @Query() query: QueryFilterDTO,

@@ -14,7 +14,7 @@ import {
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {
-    this.userModel.count().then((count) => {
+    this.userModel.countDocuments().then((count) => {
       if (!count) this.initAdmin();
     });
   }

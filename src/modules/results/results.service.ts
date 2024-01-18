@@ -301,7 +301,7 @@ export class ResultsService {
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
     const filters = await this.getMongoDBFilters(query);
-    return await this.resultModel.count(filters).exec();
+    return await this.resultModel.countDocuments(filters).exec();
   }
 
   parseAction(action: any, language?: string) {

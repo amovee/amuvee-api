@@ -93,7 +93,7 @@ export class EventsService {
     return events;
   }
   async countEvents(): Promise<number> {    
-    return await this.eventModel.count()
+    return await this.eventModel.countDocuments()
   }
   async getListByLimitAndSkip(skip: number, limit: number) {    
     return await this.eventModel.find().skip(skip).limit(limit).exec()
