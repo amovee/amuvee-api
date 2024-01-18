@@ -7,6 +7,7 @@ import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
 import { migrateRoles } from 'src/shared/dtos/roles.dto';
 import { LocationDTO } from 'src/shared/dtos/locations.dto';
+import { State } from 'src/shared/dtos/types.dto';
 
 @Injectable()
 export class LocationsService {
@@ -20,14 +21,22 @@ export class LocationsService {
     return await this.locationModel.find().sort( { "id": 1 } ).limit(limit).skip(skip);
   }
 
+  async getNumberOfAllResults() {
+    return (
+      await axios.get(
+        `${process.env.DIRECTUS_URL}items/result?fields=*&limit=0&meta=filter_count`,
+      )
+    ).data.meta.filter_count;
+  }
   async migrate(): Promise<void> {
     await this.counter.deleteSequenzDocument('locations')
     await this.locationModel.deleteMany().exec();
     const users: User[] = await this.userModel.find().exec();
 
+    const counter = await this.getNumberOfAllResults();
     const locations = (
-      await axios.get(process.env.DIRECTUS_URL + 'items/location')
-    ).data.data;
+      await axios.get(process.env.DIRECTUS_URL + 'items/location?sort=id&limit='+counter)
+      ).data.data;
     if (!locations) return;
     for (let i = 0; i < locations.length; i++) {
       const location = locations[i];
@@ -43,7 +52,7 @@ export class LocationsService {
         name: location.name,
         id: await this.counter.setMaxSequenceValue('locations', +location.id),
         roles: migrateRoles(location, users),
-        status: "published",
+        status: State.published,
       };
 
       const userUpdated: User = users.find((user) => {

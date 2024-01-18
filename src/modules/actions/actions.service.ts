@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Action } from 'rxjs/internal/scheduler/Action';
 import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
-import { ActionDocument } from 'src/shared/schemas/action.schema';
+import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
 import { migrateRoles } from 'src/shared/dtos/roles.dto';
 import { ActionDTO } from 'src/shared/dtos/actions.dto';
