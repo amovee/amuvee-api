@@ -20,10 +20,10 @@ export class RegionController {
     return this.regionService.migrate();
   }
 
-  @Right('REGIONS_READ')
-  @UseGuards(JwtAuthGuard, RightsGuard)
+  // @Right('REGIONS_READ')
+  // @UseGuards(JwtAuthGuard, RightsGuard)
   @Get()
-  async getAll(@Query('limit') limit: number = 20, @Query('skip') skip: number = 0) {
+  async getAll(@Query('limit') limit = 20, @Query('skip') skip = 0) {
 
     return this.regionService.getAll(limit, skip);
   }
@@ -47,7 +47,7 @@ export class RegionController {
     return this.regionService.createRegion(region);
   }
   @Get('search/:text')
-  async searchString(@Param('text') text: string, @Query('limit') limit: number = 20, @Query('skip') skip: number = 20) {
+  async searchString(@Param('text') text: string, @Query('limit') limit = 20, @Query('skip') skip = 20) {
     return this.regionService.searchString(text, limit, skip);
   }
   @Get('count')
