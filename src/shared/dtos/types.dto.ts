@@ -66,13 +66,13 @@ export type NumberRange = {
 
 export class LoginDTO {
   @ApiProperty({
-    example: 'user@example.com',
+    example: process.env.SWAGGER_EMAIL?process.env.SWAGGER_EMAIL:'user@example.com',
     description: 'Email of the user',
   })
   email: string;
 
   @ApiProperty({
-    example: 'password123',
+    example: process.env.SWAGGER_PASSWORD?process.env.SWAGGER_PASSWORD:'password1234',
     description: 'Password of the user',
   })
   password: string;
