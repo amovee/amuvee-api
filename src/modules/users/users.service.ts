@@ -39,11 +39,8 @@ export class UsersService {
   async updateToken(_id: ObjectId, token: string) {
     await this.userModel.findByIdAndUpdate({ _id: _id }, { token: token });
   }
-  // async findOneById(id: string): Promise<User> {
-  //   return this.userModel.findOne({ _id: id }, publicUserFields).exec();
-  // }
-  async checkUserHasRight(right: right, email: string): Promise<boolean> {
-    const user = await this.findOneByEmail(email);
+  async checkUserHasRight(right: right, _id: string): Promise<boolean> {
+    const user = await this.userModel.findById(_id).exec()
     return user.isAdmin || user.rights.includes(right);
   }
   async createUser(user: createUserDTO): Promise<string> {

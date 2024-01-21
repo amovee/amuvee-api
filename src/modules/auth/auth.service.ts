@@ -41,7 +41,7 @@ export class AuthService {
     const compare = await bcrypt.compare(password, user.password);
     if (!compare) throw new UnauthorizedException();
     const token = this.jwtService.sign({
-      email: user.email,
+      _id: user._id,
       password: user.password,
     });
     await this.usersService.updateToken(user._id, token);

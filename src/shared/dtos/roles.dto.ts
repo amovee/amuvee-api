@@ -2,19 +2,15 @@ import { User } from 'src/shared/schemas/user.schema';
 import { UserDTO } from './types.dto';
 import { Ref } from 'src/shared/dtos/ref';
 
-export interface RolesDTO {
-  author?: RoleDetail;
-  reviewer?: RoleDetail;
-  history: [RoleDetail];
+export class RolesDTO {
+  author?: Ref<UserDTO>;
+  reviewer?: Ref<UserDTO>;
 }
 
-interface RoleDetail {
+export class HistoryDTO {
   by: Ref<UserDTO>;
-  date: Date;
-}
-
-interface History extends RoleDetail {
-  type: string;
+  date: Date | string;
+  eventType: HistoryEventTypeType;
   value?: string;
 }
 
@@ -56,3 +52,10 @@ export function migrateRoles(obj: any, users) {
   }
   return roles;
 }
+
+export const HistoryEventType = {
+  created: 'CREATED',
+  updated: 'UPDATED',
+  migrated: 'MIGRATED',
+} as const;
+export type HistoryEventTypeType = typeof HistoryEventType[keyof typeof HistoryEventType];

@@ -18,7 +18,7 @@ export class RightsGuard implements CanActivate {
       return true;
     }
     const request = context.switchToHttp().getRequest();    
-    const user = request.user;    
-    return await this.usersService.checkUserHasRight(requiredRight, user.email);
+    const user = request.user;
+    return await this.usersService.checkUserHasRight(requiredRight, user._id);
   }
 }

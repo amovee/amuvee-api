@@ -6,6 +6,7 @@ import { LocationSchema, Location } from 'src/shared/schemas/location.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/shared/schemas/user.schema';
 import { CountersModule } from '../counters/counters.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { CountersModule } from '../counters/counters.module';
       { name: Location.name, schema: LocationSchema },
       { name: User.name, schema: UserSchema },
     ]),
-    CountersModule
+    CountersModule,
+    UsersModule,
   ],
   controllers: [LocationsController],
   providers: [LocationsService],
