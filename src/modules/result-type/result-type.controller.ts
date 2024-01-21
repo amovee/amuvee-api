@@ -19,7 +19,7 @@ export class ResultTypeController {
   }
 
   @Get('counter')
-  async getCount(): Promise<{TotalCount: number}> {
+  async getCount(): Promise<{totalCount: number}> {
     return await this.resultTypeService.getCount() ;
   }
 

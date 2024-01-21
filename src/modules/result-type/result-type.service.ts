@@ -42,8 +42,8 @@ export class ResultTypeService {
     newResultType._id = new mongoose.Types.ObjectId();
     return newResultType.save();
   }
-  async getCount(): Promise<{TotalCount: number}> {
-    return {TotalCount: await this.resultTypeModel.countDocuments()};
+  async getCount(): Promise<{totalCount: number}> {
+    return {totalCount: await this.resultTypeModel.countDocuments()};
   }
 
   async getUsedResultTypes(id: string): Promise<{TotalUsageCount: number}> {
