@@ -7,7 +7,7 @@ import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
 import { CategoryDTO, MinCategoryDTO } from 'src/shared/dtos/categories.dto';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
-import { migrateRoles } from 'src/shared/dtos/roles.dto';
+import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -65,13 +65,19 @@ export class CategoriesService {
     ).data.data;
     if (!categories) return;
     for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      const admin = await this.userModel.findOne({ name: 'admin' }).exec();
       const c: any = {
         _id: new mongoose.Types.ObjectId(),
         id: await this.counter.setMaxSequenceValue('categories', +categories[i].id),
         icon: categories[i].icon,
         status: mappingStateType(categories[i].status),
         sort: categories[i].sort,
-        roles: migrateRoles(categories[i], users),
+        roles: {
+          author: undefined,
+          reviewer: undefined,
+        },
+        history: [],
         content: {
           de: {
             description: categories[i].description,
@@ -94,6 +100,36 @@ export class CategoriesService {
           shortDescription: categories[i].ukrainian.short_description,
         };
       }
+      if (category.user_created) {
+        let userCreated = await this.userModel.findOne({ oldId: category.user_created }).exec();
+        if (!userCreated) {
+          userCreated = admin;
+        }
+        c.roles.author = userCreated._id;
+        c.history.push({
+          by: userCreated._id,
+          date: category.date_created,
+          eventType: HistoryEventType.created,
+        });
+      }
+      if (category.user_updated) {
+        const userUpdated = await this.userModel.findOne({ oldId: category.user_updated }).exec();
+        if (userUpdated) {
+          c.roles.author = userUpdated._id;
+          c.history.push({
+            by: userUpdated._id,
+            date: category.date_updated,
+            eventType: HistoryEventType.updated,
+            value: 'Last update by Directus UI',
+          });
+        }
+      }
+      c.history.push({
+        by: admin._id,
+        date: new Date().toISOString(),
+        eventType: HistoryEventType.migrated,
+        value: 'Migrated from Directus',
+      });
       new this.categoryModel(c).save();
     }
   }

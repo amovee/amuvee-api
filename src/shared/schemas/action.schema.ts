@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Roles } from 'src/shared/schemas/meta.schema';
-import { StateType } from '../dtos/types.dto';
+import { StateType, UserDTO } from '../dtos/types.dto';
 export type ActionDocument = Action & Document;
 export type ActionTypeDocument = Action & Document;
 @Schema({collection: 'actions'})
@@ -18,15 +18,15 @@ export class Action {
   @Prop({ _id: false, type: Roles })
   roles: Roles;
   @Prop({
-    type: mongoose.Schema.Types.Map,
-    of: { _id: false, name: String, description: String },
+    _id: false, 
+    type: [{
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      date: Date,
+      eventType: String,
+      value: String
+    }],
   })
-  content: {
-    [key: string]: {
-      description: string;
-      name: string;
-    };
-  };
+  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
 }
 
 export const ActionSchema = SchemaFactory.createForClass(Action);

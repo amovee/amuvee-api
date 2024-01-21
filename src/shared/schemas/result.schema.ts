@@ -5,6 +5,7 @@ import { Category } from './category.schema';
 import { Location } from './location.schema';
 import { Region } from './region.schema';
 import { Roles } from 'src/shared/schemas/meta.schema';
+import { UserDTO } from '../dtos/types.dto';
 
 export type ResultDocument = Result & Document;
 
@@ -72,6 +73,16 @@ export class Variation {
   status: string;
   @Prop({ _id: false, type: Roles })
   roles: Roles;
+  @Prop({
+    _id: false, 
+    type: [{
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      date: Date,
+      eventType: String,
+      value: String
+    }],
+  })
+  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
   @Prop()
   name: string;
   @Prop({ type: { from: Date, to: Date, _id: false } })
@@ -112,6 +123,16 @@ export class Result {
   id: number;
   @Prop({ _id: false, type: Roles })
   roles: Roles;
+  @Prop({
+    _id: false, 
+    type: [{
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      date: Date,
+      eventType: String,
+      value: String
+    }],
+  })
+  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
   @Prop()
   specific: string;
   @Prop()
@@ -120,7 +141,6 @@ export class Result {
   categories: Category[];
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ResultType' })
   type: ResultType;
-
   @Prop([{ type: Variation }])
   variations: Variation[];
 }

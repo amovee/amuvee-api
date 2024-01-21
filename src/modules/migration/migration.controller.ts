@@ -63,11 +63,11 @@ export class MigrationController {
   }
 
   @Post('resulttypes')
-  async migrateResulttypes(): Promise<void> {
-    await this.migraionService.migrateResulttypes();
+  async migrateResulttypes(): Promise<void> {    
+    await this.migraionService.migrateResulttypes();    
   }
   @Post('results')
-  async migrateAllResultsFromAllCategories(): Promise<void> {
+  async migrateAllResultsFromAllCategories(): Promise<void> {  
     await this.migraionService.migrateResultsFromAllCategories();
   }
 }

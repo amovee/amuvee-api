@@ -1,4 +1,4 @@
-import { RolesDTO } from './roles.dto';
+import { HistoryDTO, RolesDTO } from './roles.dto';
 import { StateType } from './types.dto';
 
 export interface EventDTO {
@@ -11,6 +11,7 @@ export interface EventDTO {
   image: string;
   timespan: { from: Date | null; to: Date | null };
   roles: RolesDTO;
+  history: HistoryDTO[];
   content?: {
     [language: string]: {
       name: string;

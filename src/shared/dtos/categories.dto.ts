@@ -1,4 +1,4 @@
-import { RolesDTO } from './roles.dto';
+import { HistoryDTO, RolesDTO } from './roles.dto';
 import { StateType } from './types.dto';
 
 // Gibt es Kategorien, die nur für Geflüchtete sind
@@ -16,6 +16,7 @@ export interface CategoryDTO {
     };
   };
   roles: RolesDTO;
+  history: HistoryDTO[];
 }
 export interface MinCategoryDTO {
   _id: string;

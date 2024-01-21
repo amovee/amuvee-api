@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { NewRoles, Roles } from 'src/shared/schemas/meta.schema';
+import { Roles } from 'src/shared/schemas/meta.schema';
 import { UserDTO } from '../dtos/types.dto';
 export type LocationDocument = Location & Document;
 @Schema()
@@ -19,8 +19,8 @@ export class Location {
   id: number;
   @Prop()
   status: string;
-  @Prop({ _id: false, type: NewRoles })
-  roles: NewRoles;
+  @Prop({ _id: false, type: Roles })
+  roles: Roles;
   @Prop({
     _id: false, 
     type: [{

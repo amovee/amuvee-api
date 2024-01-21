@@ -22,7 +22,7 @@ import mongoose from 'mongoose';
 import { CounterService } from '../counters/counters.service';
 import getType, { result_types } from '../results/result.migration';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
-import { migrateRoles } from 'src/shared/dtos/roles.dto';
+import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 
 @Injectable()
 export class MigrationService {
@@ -38,18 +38,20 @@ export class MigrationService {
     private insuranceModel: Model<InsuranceDocument>,
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     private readonly counter: CounterService,
-  ) {}
+  ) { }
 
   async migrateResulttypes() {
     await this.resultTypeModel.deleteMany().exec();
-    result_types.forEach((resultType) => {
+    for (let i = 0; i < result_types.length; i++) {
+      const resultType = result_types[i];
+      const counter = await this.counter.setMaxSequenceValue('resultTypes', +resultType.id)
       new this.resultTypeModel({
         _id: new mongoose.Types.ObjectId(),
-        id: this.counter.setMaxSequenceValue('resultTypes', +resultType.id),
+        id: counter,
         name: resultType.name,
         weight: resultType.weight,
       }).save();
-    });
+    }
   }
 
   transformPostalCodes(result: any): string[] {
@@ -134,11 +136,6 @@ export class MigrationService {
     result: any,
     insurances: any,
     locationIds: any,
-    roles: {
-      author: any;
-      reviewer: any;
-      history: any[];
-    },
   ) {
     const relationships = result.has_relationship.map(
       (i) => i.relationship_types_id,
@@ -150,7 +147,6 @@ export class MigrationService {
     return {
       name: 'Variation 1',
       status: mappingStateType(result.status),
-      roles,
       timespan: { from: result.start_date, to: result.end_date },
       filters: {
         rent: this.generateMinMaxFilter(result.min_rent, result.max_rent),
@@ -218,6 +214,7 @@ export class MigrationService {
     resultTypes.forEach((type) => {
       resultTypeMap[type.weight] = type._id;
     });
+    
     // console.log(resultTypes.filter((rt)=>rt.weight == 700));
 
     const fields = [
@@ -238,24 +235,60 @@ export class MigrationService {
         `${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"category":{"_eq":${category.id}}}`,
       )
     ).data.data;
+    const admin = await this.userModel.findOne({ name: 'admin' }).exec();
     for (let j = 0; j < results.length; j++) {
       const result = results[j];
-      const roles = migrateRoles(result, users);
-      const filter = await this.createFilter(
+      const variation = await this.createFilter(
         result,
         result.has_insurance.map((i) => insuranceIds[i.insurance_id]),
         locationIds,
-        roles,
       );
+      const roles = {
+        author: undefined,
+        reviewer: undefined,
+      };
+      const history = [];
+      if (result.user_created) {
+        let userCreated = await this.userModel.findOne({ oldId: result.user_created }).exec();
+        if (!userCreated) {
+          userCreated = admin;
+        }
+        roles.author = userCreated._id;
+        history.push({
+          by: userCreated._id,
+          date: result.date_created,
+          eventType: HistoryEventType.created,
+        });
+
+      }
+      if (result.user_updated) {
+        const userUpdated = await this.userModel.findOne({ oldId: result.user_updated }).exec();
+        if (userUpdated) {
+          roles.author = userUpdated._id;
+          history.push({
+            by: userUpdated._id,
+            date: result.date_updated,
+            eventType: HistoryEventType.updated,
+            value: 'Last update by Directus UI',
+          });
+        }
+      }
+      history.push({
+        by: admin._id,
+        date: new Date().toISOString(),
+        eventType: HistoryEventType.migrated,
+        value: 'Migrated from Directus',
+      });
       new this.resultModel({
         _id: new mongoose.Types.ObjectId(),
         name: result.name.replaceAll('&shy;', ''),
         id: await this.counter.setMaxSequenceValue('results', +result.id),
         specific: result.specific,
         categories: [category._id],
-        variations: [filter],
-        sort: result.sort,
+        variations: [{ ...variation, roles, history }],
         roles,
+        history,
+        sort: result.sort,
         type: resultTypeMap[result.type.weight],
       }).save();
     }

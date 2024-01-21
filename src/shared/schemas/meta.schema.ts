@@ -28,28 +28,4 @@ export class Roles {
     type: mongoose.Schema.Types.ObjectId, ref: 'Users'
   })
   reviewer: UserDTO;
-  @Prop({
-    _id: false, 
-    type: [{
-      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      date: Date,
-      eventType: String,
-      value: String
-    }],
-  })
-  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
-}
-
-@Schema()
-export class NewRoles {
-  @Prop({
-    _id: false, 
-    type: mongoose.Schema.Types.ObjectId, ref: 'Users'
-  })
-  author: UserDTO;
-  @Prop({
-    _id: false, 
-    type: mongoose.Schema.Types.ObjectId, ref: 'Users'
-  })
-  reviewer: UserDTO;
 }

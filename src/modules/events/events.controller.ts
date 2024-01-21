@@ -14,14 +14,14 @@ import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 @Controller('events')
 export class ResultsController {
   constructor(private readonly eventsService: EventsService) {}
-  @Get()
-  async getEvents(filter: { month: number; year: number }): Promise<EventDTO[]> {
-    try {
-      return this.eventsService.getEvents(filter);
-    } catch (error) {
-      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
-    }
-  }
+  // @Get()
+  // async getEvents(filter: { month: number; year: number }): Promise<EventDTO[]> {
+  //   try {
+  //     return this.eventsService.getEvents(filter);
+  //   } catch (error) {
+  //     throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+  //   }
+  // }
   @Get('nextTwoDistinct')
   async getNextTwoDistinctTypeEvents(): Promise<EventDTO[]> {
     const currentTimestamp = new Date();

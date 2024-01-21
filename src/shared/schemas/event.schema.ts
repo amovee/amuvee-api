@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import mongoose, { Document } from 'mongoose';
 import { Roles } from 'src/shared/schemas/meta.schema';
-import { StateType } from '../dtos/types.dto';
+import { StateType, UserDTO } from '../dtos/types.dto';
 export type EventDocument = Event & Document;
 
 @Schema()
@@ -25,6 +25,16 @@ export class Event {
   timespan: { from: Date; to: Date };
   @Prop({ _id: false, type: Roles })
   roles: Roles;
+  @Prop({
+    _id: false, 
+    type: [{
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      date: Date,
+      eventType: String,
+      value: String
+    }],
+  })
+  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
   @Prop({
     type: mongoose.Schema.Types.Map,
     of: {

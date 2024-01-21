@@ -7,10 +7,10 @@ import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
 import { ActionDocument } from 'src/shared/schemas/action.schema';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
-import { migrateRoles } from 'src/shared/dtos/roles.dto';
 import { ActionDTO } from 'src/shared/dtos/actions.dto';
 import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
 import { ResultDTO } from 'src/shared/dtos/results.dto';
+import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 
 @Injectable()
 export class ActionsService {
@@ -38,33 +38,70 @@ export class ActionsService {
           counter,
       )
     ).data.data;
+    
+    const admin = await this.userModel.findOne({ name: 'admin' }).exec();
     for (let i = 0; i < actions.length; i++) {
+      const action = actions[i];
       const a: any = {
         _id: new mongoose.Types.ObjectId(),
-        id: await this.counter.setMaxSequenceValue('actions', +actions[i].id),
-        status: mappingStateType(actions[i].status),
-        specific: actions[i].specific,
-        sort: actions[i].weight,
-        roles: migrateRoles(actions[i], users),
+        id: await this.counter.setMaxSequenceValue('actions', +action.id),
+        status: mappingStateType(action.status),
+        specific: action.specific,
+        sort: action.weight,
+        roles: {
+          author: undefined,
+          reviewer: undefined,
+        },
+        history: [],
         content: {
           de: {
-            name: actions[i].name,
-            description: actions[i].description,
+            name: action.name,
+            description: action.description,
           },
         },
       };
-      if (actions[i].russian != null) {
+      if (action.russian != null) {
         a.content['ru'] = {
-          name: actions[i].russian.name,
-          description: actions[i].russian.description,
+          name: action.russian.name,
+          description: action.russian.description,
         };
       }
-      if (actions[i].ukrainian != null) {
+      if (action.ukrainian != null) {
         a.content['uk'] = {
-          name: actions[i].ukrainian.name,
-          description: actions[i].ukrainian.description,
+          name: action.ukrainian.name,
+          description: action.ukrainian.description,
         };
       }
+      if (action.user_created) {
+        let userCreated = await this.userModel.findOne({ oldId: action.user_created }).exec();
+        if (!userCreated) {
+          userCreated = admin;
+        }
+        a.roles.author = userCreated._id;
+        a.history.push({
+          by: userCreated._id,
+          date: action.date_created,
+          eventType: HistoryEventType.created,
+        });
+      }
+      if (action.user_updated) {
+        const userUpdated = await this.userModel.findOne({ oldId: action.user_updated }).exec();
+        if (userUpdated) {
+          a.roles.author = userUpdated._id;
+          a.history.push({
+            by: userUpdated._id,
+            date: action.date_updated,
+            eventType: HistoryEventType.updated,
+            value: 'Last update by Directus UI',
+          });
+        }
+      }
+      a.history.push({
+        by: admin._id,
+        date: new Date().toISOString(),
+        eventType: HistoryEventType.migrated,
+        value: 'Migrated from Directus',
+      });
       new this.actionModel(a).save();
     }
     return;

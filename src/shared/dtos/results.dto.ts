@@ -2,7 +2,7 @@ import { ActionDTO, MinActionDTO } from 'src/shared/dtos/actions.dto';
 import { LocationDTO } from './locations.dto';
 import { Ref } from './ref';
 import { CategoryDTO } from './categories.dto';
-import { RolesDTO } from './roles.dto';
+import { HistoryDTO, RolesDTO } from './roles.dto';
 import { NumberRange, StateType, Variables } from './types.dto';
 import { RegionDTO } from './region.dto';
 export type ResultTypeDTO = {
@@ -12,7 +12,6 @@ export type ResultTypeDTO = {
     [language: string]: string
   };
   weight: number;
-
 };
 
 export interface UpdateResultTypeDTO {
@@ -33,11 +32,12 @@ export interface ResultDTO {
   _id?: string;
   id?: number;
   specific?: string;
-  roles?: RolesDTO;
   name?: string;
   categories: Ref<CategoryDTO>[];
   type?: Ref<ResultTypeDTO>;
   variations?: VariationDTO[];
+  roles: RolesDTO;
+  history: HistoryDTO[];
 }
 
 export interface VariationDTO {
@@ -106,5 +106,6 @@ export interface ResultTableRowDTO {
   name: string;
   timespan: { start: Date | null; end: Date | null };
   type: Ref<ResultTypeDTO>;
-  roles?: RolesDTO;
+  roles: RolesDTO;
+  history: HistoryDTO[];
 }

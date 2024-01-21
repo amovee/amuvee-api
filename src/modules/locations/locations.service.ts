@@ -5,7 +5,7 @@ import { LocationDocument, Location } from 'src/shared/schemas/location.schema';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
-import { HistoryEventType, migrateRoles } from 'src/shared/dtos/roles.dto';
+import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { CreateLocationDTO, LocationDTO, UpdateLocationDTO } from 'src/shared/dtos/locations.dto';
 import { UsersService } from '../users/users.service';
 import { State, StateType } from 'src/shared/dtos/types.dto';

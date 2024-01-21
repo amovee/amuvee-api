@@ -1,4 +1,4 @@
-import { RolesDTO } from './roles.dto';
+import { HistoryDTO, RolesDTO } from './roles.dto';
 import { StateType } from './types.dto';
 
 // Gibt es Aktionen, die nur für Geflüchtete sind
@@ -14,6 +14,7 @@ export interface ActionDTO {
     };
   };
   roles: RolesDTO;
+  history: HistoryDTO[];
 }
 
 export interface MinActionDTO {
