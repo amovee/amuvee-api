@@ -6,6 +6,7 @@ import axios from 'axios';
 import { Insurance } from 'src/shared/schemas/insurance.schema';
 import { CounterService } from '../counters/counters.service';
 import {createInsurance, updateInsurance} from 'src/shared/dtos/insurances.dto';
+import { State } from 'src/shared/dtos/types.dto';
 
 @Injectable()
 export class InsurancesService {    
@@ -22,7 +23,7 @@ export class InsurancesService {
       async (insurance) => {
         new this.insuranceModel({
           id: await this.counter.setMaxSequenceValue('insurances', insurance.id),
-          status: 'published',
+          status: State.published,
           sort: insurance.weight,
           isPublic: insurance.type == '1',
           name: insurance.name,

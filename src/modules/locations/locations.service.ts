@@ -8,7 +8,7 @@ import { CounterService } from '../counters/counters.service';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { CreateLocationDTO, LocationDTO, UpdateLocationDTO } from 'src/shared/dtos/locations.dto';
 import { UsersService } from '../users/users.service';
-import { State, StateType } from 'src/shared/dtos/types.dto';
+import { State } from 'src/shared/dtos/types.dto';
 
 @Injectable()
 export class LocationsService {
