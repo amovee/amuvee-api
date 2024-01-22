@@ -125,28 +125,40 @@ export class ActionsService {
     const actions = await this.actionModel.find().skip(skip).limit(limit);
     return actions;
   }
-  async deleteAction(id: number) {
-    const action = await this.actionModel.findOne<ActionDTO>({ id });
+  async deleteAction(id: string) {
+    const action = await this.actionModel.findById(id);
     if (action != null) {
-      await this.actionModel.deleteOne({ id });
+      await this.actionModel.findByIdAndDelete(id);
       return 'Action deleted';
     }
     return 'Action not found';
   }
-  async getAction(id: number) {
-    const action = await this.actionModel.findOne<ActionDTO>({ id });
+  async getAction(id: string) {
+    const action = await this.actionModel.findById(id)
+    console.log(action)
     if (action != null) {
       return action;
     }
     return 'Action not found';
   }
-  async updateAction(id: number, name: string) {
-    const action = await this.actionModel.findOne<ActionDTO>({ id });
+  async updateAction(id: string, newName: string) {
+    const action = await this.actionModel.findById(id);
     if (action != null) {
-      action.content.de.name = name;
-      await this.actionModel.updateOne({ id }, action);
-      return 'Action updated';
+      // Check if the 'content' is a Map and if it has the 'de' key
+      if (action.content instanceof Map && action.content.has('de')) {
+        let deContent = action.content.get('de');
+        deContent.name = newName;
+        action.content.set('de', deContent);
+      } else {
+        // Handle the case where 'de' key doesn't exist
+        return 'Action not updated: "de" key not found';
+      }
+
+      const updatedAction = await this.actionModel.findByIdAndUpdate(id, { content: action.content }, { new: true });
+
+      return 'Action updated: ' + JSON.stringify(updatedAction);
     }
+
     return 'Action not found';
   }
   async createAction(name: string) {
@@ -166,16 +178,15 @@ export class ActionsService {
           },
         }
       });
-      console.log(newAction);
-      //await newAction.save();
+      await newAction.save();
 
       return 'Action created: ' + newAction;
 
     }
     return 'Action already exists';
   }
-  async getCount() {
-    return this.actionModel.countDocuments();
+  async getCount(): Promise<{totalCount: number}> {
+    return {totalCount: await this.actionModel.countDocuments()};
   }
 
 }
