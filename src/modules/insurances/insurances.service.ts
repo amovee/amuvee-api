@@ -40,6 +40,7 @@ export class InsurancesService {
   }
   async createInsurance(insurance: createInsurance): Promise<Insurance> {
     const newInsurance = new this.insuranceModel(insurance);
+    newInsurance.id = await this.counter.getNextSequenceValue('insurances');
     const savedInsurance = await newInsurance.save();
     return savedInsurance.toObject() as Insurance;
   }
