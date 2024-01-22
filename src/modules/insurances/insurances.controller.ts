@@ -1,11 +1,12 @@
 import {Controller, Delete, Get, Param, Post, Query,Body, UseGuards} from '@nestjs/common';
 import { Insurance } from 'src/shared/schemas/insurance.schema';
 import { InsurancesService } from './insurances.service';
-import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiBody, ApiTags} from '@nestjs/swagger';
 import {Right} from "../auth/rights/rights.decorator";
 import {RightsGuard} from "../auth/rights/rights.guard";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 import {createInsurance, updateInsurance} from "../../shared/dtos/insurances.dto";
+import {CreateResultTypeDTOAPI} from "../../shared/dtos/types.dto";
 @ApiTags('Insurances')
 @Controller('insurance')
 export class InsurancesController {
@@ -48,12 +49,14 @@ export class InsurancesController {
   }
   @Right('INSURANCES_DELETE')
   @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Delete(':id')
   async deleteInsurance(@Param('id') id: string): Promise<string> {
     return this.insurancesService.deleteInsurance(id);
   }
   @Right('INSURANCES_READ')
   @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Get(':id')
   async getInsurance(@Param('id') id: string): Promise<Insurance> {
     return this.insurancesService.getById(id);

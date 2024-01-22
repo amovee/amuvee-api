@@ -120,4 +120,62 @@ export class ActionsService {
     }
     return [];
   }
+
+  async getAll(limit: number, skip: number) {
+    const actions = await this.actionModel.find().skip(skip).limit(limit);
+    return actions;
+  }
+  async deleteAction(id: number) {
+    const action = await this.actionModel.findOne<ActionDTO>({ id });
+    if (action != null) {
+      await this.actionModel.deleteOne({ id });
+      return 'Action deleted';
+    }
+    return 'Action not found';
+  }
+  async getAction(id: number) {
+    const action = await this.actionModel.findOne<ActionDTO>({ id });
+    if (action != null) {
+      return action;
+    }
+    return 'Action not found';
+  }
+  async updateAction(id: number, name: string) {
+    const action = await this.actionModel.findOne<ActionDTO>({ id });
+    if (action != null) {
+      action.content.de.name = name;
+      await this.actionModel.updateOne({ id }, action);
+      return 'Action updated';
+    }
+    return 'Action not found';
+  }
+  async createAction(name: string) {
+    const action = await this.actionModel.findOne<ActionDTO>({'content.de.name': name});
+    if (action == null) {
+      const newAction = new this.actionModel({
+        _id: new mongoose.Types.ObjectId(),
+        id: await this.counter.getNextSequenceValue('actions'),
+        status: 'published',
+        specific: '',
+        sort: 0,
+        roles: {},
+        content: {
+          de: {
+            name,
+            description: '',
+          },
+        }
+      });
+      console.log(newAction);
+      //await newAction.save();
+
+      return 'Action created: ' + newAction;
+
+    }
+    return 'Action already exists';
+  }
+  async getCount() {
+    return this.actionModel.countDocuments();
+  }
+
 }
