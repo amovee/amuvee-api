@@ -59,6 +59,9 @@ export class LocationsService {
         history: [],
         status: State.published,
       };
+      if(location.longitude && location.latitude) {
+        loc.position = {lon: location.longitude, lat: location.latitude};
+      }
       if (location.user_created) {
         let userCreated = await this.userModel.findOne({ oldId: location.user_created }).exec();
         if (!userCreated) {

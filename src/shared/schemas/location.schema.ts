@@ -11,6 +11,11 @@ export class Location {
     _id: false
   })
   address: { street: string; houseNr: string; zip: string; place: string };
+  @Prop({
+    type: { lon: Number, lat: Number },
+    _id: false
+  })
+  position: { lon: number; lat: number };
   @Prop()
   link: string;
   @Prop()
