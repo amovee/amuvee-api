@@ -2,12 +2,19 @@ import {Controller, Get, Delete, Param, Post, Query, Put} from '@nestjs/common';
 import { ActionsService } from './actions.service';
 import {ApiBearerAuth, ApiBody, ApiTags} from '@nestjs/swagger';
 import {createActionsDTO} from "../../shared/dtos/actions.dto";
+import {Right} from "../auth/rights/rights.decorator";
+import {RightsGuard} from "../auth/rights/rights.guard";
+import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
+import {UseGuards} from "@nestjs/common";
 
 @ApiTags('Actions')
 @Controller('actions')
 export class ActionsController {
   constructor(public readonly actionsService: ActionsService) {}
-  @ApiBearerAuth('JWT-auth')
+
+  @Right('ACTIONS_READ')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Post('migrate')
   migrate() {
     this.actionsService.migrate();
@@ -33,6 +40,10 @@ export class ActionsController {
   async getCount(): Promise<{totalCount: number}> {
     return await this.actionsService.getCount() ;
   }
+
+  @Right('ACTIONS_READ')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Delete(':id')
   deleteAction(@Param('id') id: string) {
     return this.actionsService.deleteAction(id);
@@ -41,14 +52,17 @@ export class ActionsController {
   getAction(@Param('id') id: string) {
     return this.actionsService.getAction(id);
   }
-
+  @Right('ACTIONS_READ')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @ApiBody({type: createActionsDTO})
   @Put(':id')
   updateAction(@Param('id') id: string, @Query('name') name: string) {
-
     return this.actionsService.updateAction(id, name);
   }
-
+  @Right('ACTIONS_READ')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @ApiBody({type: createActionsDTO})
   @Post()
   createAction(@Query('name') name: string) {

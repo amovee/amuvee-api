@@ -135,7 +135,6 @@ export class ActionsService {
   }
   async getAction(id: string) {
     const action = await this.actionModel.findById(id)
-    console.log(action)
     if (action != null) {
       return action;
     }
