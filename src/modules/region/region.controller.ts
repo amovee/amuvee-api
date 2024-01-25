@@ -1,6 +1,6 @@
 import {Controller, Delete, Get, Param, Post,Put, Query, Body, UseGuards} from '@nestjs/common';
 import { RegionService } from './region.service';
-import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiQuery, ApiTags} from '@nestjs/swagger';
 import {Right} from "../auth/rights/rights.decorator";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 import {RightsGuard} from "../auth/rights/rights.guard";
@@ -23,6 +23,8 @@ export class RegionController {
   // @Right('REGIONS_READ')
   // @UseGuards(JwtAuthGuard, RightsGuard)
   @Get()
+  @ApiQuery({ name: 'limit', required: false, type: Number})
+  @ApiQuery({ name: 'skip', required: false, type: Number })
   async getAll(@Query('limit') limit = 20, @Query('skip') skip = 0) {
 
     return this.regionService.getAll(limit, skip);

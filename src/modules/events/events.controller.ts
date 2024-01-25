@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { EventDTO } from 'src/shared/dtos/events.dto';
-import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiQuery, ApiTags} from '@nestjs/swagger';
 
 @ApiTags('Events')
 @Controller('events')
@@ -34,6 +34,8 @@ export class ResultsController {
     await this.eventsService.migrate();
   }
   @Get('list')
+  @ApiQuery({ name: 'limit', required: false, type: Number})
+  @ApiQuery({ name: 'skip', required: false, type: Number })
   async getEventList(
     @Query() query: { limit: number; skip: number },
   ): Promise<any[]> {

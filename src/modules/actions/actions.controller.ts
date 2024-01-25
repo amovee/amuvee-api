@@ -1,6 +1,6 @@
 import {Controller, Get, Delete, Param, Post, Query, Put} from '@nestjs/common';
 import { ActionsService } from './actions.service';
-import {ApiBearerAuth, ApiBody, ApiTags} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiBody, ApiQuery, ApiTags} from '@nestjs/swagger';
 import {createActionsDTO} from "../../shared/dtos/actions.dto";
 import {Right} from "../auth/rights/rights.decorator";
 import {RightsGuard} from "../auth/rights/rights.guard";
@@ -21,6 +21,8 @@ export class ActionsController {
     return 'done';
   }
   @Get(':id/results')
+  @ApiQuery({ name: 'limit', required: false, type: Number})
+  @ApiQuery({ name: 'skip', required: false, type: Number })
   getMentions(
     @Param('id') id: number,
     @Query('limit') limit?: number,
@@ -33,6 +35,8 @@ export class ActionsController {
     );
   }
   @Get()
+  @ApiQuery({ name: 'limit', required: false, type: Number})
+  @ApiQuery({ name: 'skip', required: false, type: Number })
   getAll(@Query('limit') limit?: number, @Query('skip') skip?: number) {
     return this.actionsService.getAll(+limit ? +limit : 1000, +skip ? +skip : 0);
   }

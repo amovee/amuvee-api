@@ -1,7 +1,7 @@
-import {Controller, Get, Delete, Put, Body, Param, Post, UseGuards} from '@nestjs/common';
+import {Controller, Get, Delete, Put, Body, Param, Post, UseGuards, Query} from '@nestjs/common';
 import { ResultTypeService } from './result-type.service';
 import {CreateResultTypeDTO, UpdateResultTypeDTO} from "../../shared/dtos/results.dto";
-import {ApiBearerAuth, ApiParam, ApiTags, ApiBody} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiParam, ApiTags, ApiBody, ApiQuery} from "@nestjs/swagger";
 import {Right} from "../auth/rights/rights.decorator";
 import {RightsGuard} from "../auth/rights/rights.guard";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
@@ -14,7 +14,9 @@ export class ResultTypeController {
   constructor(private readonly resultTypeService: ResultTypeService) {}
 
   @Get()
-  async getAllResultTypes(limit= 10, skip= 0) {
+  @ApiQuery({ name: 'limit', required: false, type: Number})
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  async getAllResultTypes(@Query('limit') limit = 10, @Query('skip') skip = 0) {
     return this.resultTypeService.getAllResultTypes(limit, skip);
   }
 
