@@ -27,9 +27,7 @@ export class InsurancesController {
     return this.insurancesService.getCount();
   }
 
-  @Right('INSURANCES_READ')
-  @UseGuards(JwtAuthGuard, RightsGuard)
-  @Get('paginated')
+  @Get()
   async getAllInsurances(@Query('limit') limit = 20, @Query('skip') skip = 20): Promise<Insurance[]> {
     return this.insurancesService.getAllInsurances(limit, skip);
   }
