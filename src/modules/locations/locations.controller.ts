@@ -15,7 +15,7 @@ import {
 import { Location } from 'src/shared/schemas/location.schema';
 import { LocationsService } from './locations.service';
 import { CreateLocationDTO, LocationDTO, UpdateLocationDTO } from 'src/shared/dtos/locations.dto';
-import { ApiBearerAuth, ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { RightsGuard } from '../auth/rights/rights.guard';
 import { Right } from '../auth/rights/rights.decorator';
@@ -25,6 +25,8 @@ import { Right } from '../auth/rights/rights.decorator';
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) { }
   @Get()
+  @ApiQuery({ name: 'limit', required: false, type: Number})
+  @ApiQuery({ name: 'skip', required: false, type: Number })
   async getAll(
     @Query() query: { limit?: number; skip?: number },
   ): Promise<Location[]> {
