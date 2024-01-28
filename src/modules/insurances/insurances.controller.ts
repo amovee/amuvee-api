@@ -21,7 +21,7 @@ export class InsurancesController {
   async getAll(): Promise<Insurance[]> {
     return this.insurancesService.getAll();
   }
-  @Get('count')
+  @Get('counter')
   async getCount(): Promise<number> {
     return this.insurancesService.getCount();
   }

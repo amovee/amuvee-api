@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, UseGuards, } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, Request, UseGuards, } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CategoryDTO, CreateCategoryDTO, UpdateCategoryDTO } from 'src/shared/dtos/categories.dto';
 import {ApiBearerAuth, ApiBody, ApiParam, ApiTags} from '@nestjs/swagger';
@@ -18,6 +18,17 @@ export class CategoriesController {
   async migrate(): Promise<void> {
     await this.categoriesService.migrate();
   }
+
+  
+  @Get('counter')
+  async getCount(): Promise<number> {
+    try {
+      return await this.categoriesService.countEvents();
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Get() async getAll(@Query('language') language?: string): Promise<CategoryDTO[]> {
     return  await this.categoriesService.getCategories(language);
   }

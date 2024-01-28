@@ -52,7 +52,7 @@ export class RegionController {
   async searchString(@Param('text') text: string, @Query('limit') limit = 20, @Query('skip') skip = 20) {
     return this.regionService.searchString(text, limit, skip);
   }
-  @Get('count')
+  @Get('counter')
   async count() {
     return this.regionService.count();
   }
