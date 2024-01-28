@@ -5,6 +5,7 @@ import { EventsService } from './events.service';
 import { CountersModule } from '../counters/counters.module';
 import { Event, EventSchema } from 'src/shared/schemas/event.schema';
 import { User, UserSchema } from 'src/shared/schemas/user.schema';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { User, UserSchema } from 'src/shared/schemas/user.schema';
       { name: Event.name, schema: EventSchema },
       { name: User.name, schema: UserSchema },
     ]),
-    CountersModule
+    CountersModule,
+    UsersModule,
   ],
   controllers: [EventsController],
   providers: [EventsService],

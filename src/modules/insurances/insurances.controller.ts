@@ -1,12 +1,11 @@
 import {Controller, Delete, Get, Param, Post, Query,Body, UseGuards} from '@nestjs/common';
 import { Insurance } from 'src/shared/schemas/insurance.schema';
 import { InsurancesService } from './insurances.service';
-import {ApiBearerAuth, ApiBody, ApiTags} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
 import {Right} from "../auth/rights/rights.decorator";
 import {RightsGuard} from "../auth/rights/rights.guard";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 import {createInsurance, updateInsurance} from "../../shared/dtos/insurances.dto";
-import {CreateResultTypeDTOAPI} from "../../shared/dtos/types.dto";
 @ApiTags('Insurances')
 @Controller('insurance')
 export class InsurancesController {

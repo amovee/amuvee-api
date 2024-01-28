@@ -23,18 +23,6 @@ export class Event {
   image: string;
   @Prop({ type: { from: Date, to: Date, _id: false } })
   timespan: { from: Date; to: Date };
-  @Prop({ _id: false, type: Roles })
-  roles: Roles;
-  @Prop({
-    _id: false, 
-    type: [{
-      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      date: Date,
-      eventType: String,
-      value: String
-    }],
-  })
-  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
   @Prop({
     type: mongoose.Schema.Types.Map,
     of: {
@@ -49,6 +37,19 @@ export class Event {
       shortDescription: string;
     };
   };
+  
+  @Prop({ _id: false, type: Roles })
+  roles: Roles;
+  @Prop({
+    _id: false, 
+    type: [{
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      date: Date,
+      eventType: String,
+      value: String
+    }],
+  })
+  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

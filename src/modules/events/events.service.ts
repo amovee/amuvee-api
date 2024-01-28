@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { CounterService } from '../counters/counters.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Event, EventDocument } from 'src/shared/schemas/event.schema';
@@ -6,8 +6,12 @@ import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
-import { EventDTO } from 'src/shared/dtos/events.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
+import { CreateEventDTO, EventDTO, UpdateEventDTO } from 'src/shared/dtos/events.dto';
+import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { RightsGuard } from '../auth/rights/rights.guard';
+import { Right } from '../auth/rights/rights.decorator';
 
 @Injectable()
 export class EventsService {
@@ -26,7 +30,8 @@ export class EventsService {
         process.env.DIRECTUS_URL + 'items//event',
       )
     ).data.data;
-    const combineDate = (date: string, time: string) => new Date(date + 'T' + time);
+    const combineDate = (date: string, time: string) =>
+      new Date(date + 'T' + time);
     const admin = await this.userModel.findOne({ name: 'admin' }).exec();
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
@@ -39,8 +44,14 @@ export class EventsService {
         type: event.type,
         image: event.image,
         timespan: {
-          from: event.start_date && event.start_time? combineDate(event.start_date, event.start_time): null,
-          to: event.end_date && event.end_time? combineDate(event.end_date, event.end_time): null
+          from:
+            event.start_date && event.start_time
+              ? combineDate(event.start_date, event.start_time)
+              : null,
+          to:
+            event.end_date && event.end_time
+              ? combineDate(event.end_date, event.end_time)
+              : null,
         },
         roles: {
           author: undefined,
@@ -55,7 +66,9 @@ export class EventsService {
         },
       };
       if (event.user_created) {
-        let userCreated = await this.userModel.findOne({ oldId: event.user_created }).exec();
+        let userCreated = await this.userModel
+          .findOne({ oldId: event.user_created })
+          .exec();
         if (!userCreated) {
           userCreated = admin;
         }
@@ -67,7 +80,9 @@ export class EventsService {
         });
       }
       if (event.user_updated) {
-        const userUpdated = await this.userModel.findOne({ oldId: event.user_updated }).exec();
+        const userUpdated = await this.userModel
+          .findOne({ oldId: event.user_updated })
+          .exec();
         if (userUpdated) {
           e.roles.author = userUpdated._id;
           e.history.push({
@@ -87,18 +102,18 @@ export class EventsService {
       new this.eventModel(e).save();
     }
   }
-  // async getEvents(filter: {month: number, year: number}): Promise<EventDTO[]> {
-  //     const startOfMonth = new Date(filter.year, filter.month - 1, 1);
-  //     const endOfMonth = new Date(filter.year, filter.month, 0, 23, 59, 59, 999);
-  //     const events = await this.eventModel
-  //       .find({
-  //         'timespan.from': { $lte: endOfMonth },
-  //         'timespan.to': { $gte: startOfMonth },
-  //       })
-  //       .exec();
-  //     return events;
-  // }
-  async getNextTwoDistinctTypeEvents(currentTimestamp: Date): Promise<EventDTO[]> {
+  async getEvents(filter: { month: number; year: number }): Promise<Event[]> {
+    const startOfMonth = new Date(filter.year, filter.month - 1, 1);
+    const endOfMonth = new Date(filter.year, filter.month, 0, 23, 59, 59, 999);
+    const events = await this.eventModel
+      .find({
+        'timespan.from': { $lte: endOfMonth },
+        'timespan.to': { $gte: startOfMonth },
+      })
+      .exec();
+    return events;
+  }
+  async getNextTwoDistinctTypeEvents(currentTimestamp: Date): Promise<Event[]> {
     // Find the next two distinct type events after the current timestamp
     const events = await this.eventModel
       .aggregate([
@@ -124,11 +139,63 @@ export class EventsService {
 
     return events;
   }
-  async countEvents(): Promise<number> {    
-    return await this.eventModel.countDocuments()
+  async countEvents(): Promise<number> {
+    return await this.eventModel.countDocuments();
   }
-  async getListByLimitAndSkip(skip: number, limit: number) {    
-    return await this.eventModel.find().skip(skip).limit(limit).exec()
+  async getListByLimitAndSkip(skip: number, limit: number) {
+    return await this.eventModel.find().skip(skip).limit(limit).exec();
   }
   
+  async create(event: CreateEventDTO, userId: string): Promise<Event> {
+    const id = await this.counter.getNextSequenceValue('events');
+    const roles = { roles: { author: userId } };
+    const history = {
+      by: userId,
+      date: new Date().toISOString(),
+      eventType: HistoryEventType.created,
+    };
+    return new this.eventModel({
+      _id: new mongoose.Types.ObjectId(),
+      ...event,
+      ...roles,
+      id,
+      history,
+    }).save();
+  }
+
+  async getOneFromId(
+    id: string,
+  ): Promise<EventDTO | undefined> {
+    if (isNaN(+id)) {
+      return await this.eventModel.findById(new mongoose.Types.ObjectId(id))
+    }
+    return await this.eventModel.findOne({ id: +id })
+  }
+
+  async update(_id: string, changes: UpdateEventDTO, userId: string) {
+    const event = await this.getOneFromId(_id)
+    if(event) {
+      event.history.push({
+      by: userId,
+      date: new Date().toISOString(),
+      eventType: HistoryEventType.updated,
+    })
+      return await this.eventModel.findByIdAndUpdate({ _id }, {...changes, history: [...event.history]});
+    }
+
+    return null;
+  }
+
+  async delete(id: string): Promise<any> {
+    let event;
+    if (isNaN(+id)) {
+      event = await this.eventModel.findById(new mongoose.Types.ObjectId(id))
+    } else {
+      event = await this.eventModel.findOne({ id: +id });
+    }
+    if (!event) {
+      throw new Error('Event not found');
+    }
+    return this.eventModel.findByIdAndDelete(event._id);
+  }
 }

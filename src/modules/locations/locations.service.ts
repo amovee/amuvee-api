@@ -146,12 +146,12 @@ export class LocationsService {
       location = await this.locationModel.findOne({ id: +id });
     }
     if (!location) {
-      throw new Error('Result type not found');
+      throw new Error('Location not found');
     }
     // TODO: check if location is used
     // const isTypeExist =  await this.resultsModel.findOne({type: _id})
     // if (isTypeExist) {
-    //   throw new Error('Result type is used in results');
+    //   throw new Error('Location is used in results');
     // }
     return this.locationModel.findByIdAndDelete(location._id);
   }
