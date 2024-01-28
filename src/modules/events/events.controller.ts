@@ -107,7 +107,7 @@ export class ResultsController {
   @ApiBearerAuth('jwt')
   @ApiBody({ type: UpdateEventDTO })
   @Put('/:id')
-  async updateLocation(
+  async updateEvent(
     @Body() body: UpdateEventDTO,
     @Param('id') id: string,
     @Request() req,
@@ -121,12 +121,10 @@ export class ResultsController {
   @ApiParam({
     name: 'id',
     required: true,
-    description:
-      'Die ID der Location, entweder eine MongoDB ObjectId oder eine numerische ID',
     type: String,
   })
   @Delete('/:id')
-  async deleteLocation(@Param('id') id: string) {
+  async deleteEvent(@Param('id') id: string) {
     return this.eventsService.delete(id);
   }
 }

@@ -5,40 +5,22 @@ import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
-import { CategoryDTO, MinCategoryDTO } from 'src/shared/dtos/categories.dto';
+import { CategoryDTO, CreateCategoryDTO, UpdateCategoryDTO } from 'src/shared/dtos/categories.dto';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
+import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     private readonly counter: CounterService,
   ) {}
 
-  async getCategoriesMin(language?: string): Promise<MinCategoryDTO[]> {
-    const categories = <MinCategoryDTO[]>(
-      await this.categoryModel.find().select('_id icon content')
-    );
-    if (language) {
-      for (let i = 0; i < categories.length; i++) {
-        const c = <MinCategoryDTO>new this.categoryModel(categories[i]).toJSON();
-        if (c.content.hasOwnProperty(language))
-          c.content = { [language]: c.content[language] };
-        else if (c.content.hasOwnProperty('de'))
-          c.content = { de: c.content.de };
-        else c.content = {};
-        categories[i] = c;
-      }
-    }
-    return categories;
-  }
-
   async getCategories(language?: string): Promise<CategoryDTO[]> {
-    const categories = <CategoryDTO[]>(
-      await this.categoryModel.find()
-    );
+    const categories = <CategoryDTO[]>await this.categoryModel.find();
     if (language) {
       for (let i = 0; i < categories.length; i++) {
         const c = <CategoryDTO>new this.categoryModel(categories[i]).toJSON();
@@ -54,7 +36,7 @@ export class CategoriesService {
   }
 
   async migrate(): Promise<void> {
-    await this.counter.deleteSequenzDocument('categories')
+    await this.counter.deleteSequenzDocument('categories');
     await this.categoryModel.deleteMany().exec();
     const users: User[] = await this.userModel.find().exec();
     const categories = (
@@ -69,7 +51,10 @@ export class CategoriesService {
       const admin = await this.userModel.findOne({ name: 'admin' }).exec();
       const c: any = {
         _id: new mongoose.Types.ObjectId(),
-        id: await this.counter.setMaxSequenceValue('categories', +categories[i].id),
+        id: await this.counter.setMaxSequenceValue(
+          'categories',
+          +categories[i].id,
+        ),
         icon: categories[i].icon,
         status: mappingStateType(categories[i].status),
         sort: categories[i].sort,
@@ -101,7 +86,9 @@ export class CategoriesService {
         };
       }
       if (category.user_created) {
-        let userCreated = await this.userModel.findOne({ oldId: category.user_created }).exec();
+        let userCreated = await this.userModel
+          .findOne({ oldId: category.user_created })
+          .exec();
         if (!userCreated) {
           userCreated = admin;
         }
@@ -113,7 +100,9 @@ export class CategoriesService {
         });
       }
       if (category.user_updated) {
-        const userUpdated = await this.userModel.findOne({ oldId: category.user_updated }).exec();
+        const userUpdated = await this.userModel
+          .findOne({ oldId: category.user_updated })
+          .exec();
         if (userUpdated) {
           c.roles.author = userUpdated._id;
           c.history.push({
@@ -132,5 +121,72 @@ export class CategoriesService {
       });
       new this.categoryModel(c).save();
     }
+  }
+
+  async countEvents(): Promise<number> {
+    return await this.categoryModel.countDocuments();
+  }
+  async getListByLimitAndSkip(skip: number, limit: number) {
+    return await this.categoryModel.find().skip(skip).limit(limit).exec();
+  }
+
+  async create(category: CreateCategoryDTO, userId: string): Promise<Category> {
+    const id = await this.counter.getNextSequenceValue('events');
+    const roles = { roles: { author: userId } };
+    const history = {
+      by: userId,
+      date: new Date().toISOString(),
+      eventType: HistoryEventType.created,
+    };
+    return new this.categoryModel({
+      _id: new mongoose.Types.ObjectId(),
+      ...category,
+      ...roles,
+      id,
+      history,
+    }).save();
+  }
+
+  async getOneFromId(id: string): Promise<CategoryDTO | undefined> {
+    if (isNaN(+id)) {
+      return await this.categoryModel.findById(new mongoose.Types.ObjectId(id));
+    }
+    return await this.categoryModel.findOne({ id: +id });
+  }
+
+  async update(_id: string, changes: UpdateCategoryDTO, userId: string) {
+    const category = await this.getOneFromId(_id);
+    if (category) {
+      category.history.push({
+        by: userId,
+        date: new Date().toISOString(),
+        eventType: HistoryEventType.updated,
+      });
+      return await this.categoryModel.findByIdAndUpdate(
+        { _id },
+        { ...changes, history: [...category.history] },
+      );
+    }
+
+    return null;
+  }
+
+  async delete(id: string): Promise<any> {
+    let category;
+    if (isNaN(+id)) {
+      category = await this.categoryModel.findById(
+        new mongoose.Types.ObjectId(id),
+      );
+    } else {
+      category = await this.categoryModel.findOne({ id: +id });
+    }
+    if (!category) {
+      throw new Error('Category not found');
+    }
+    const referenceCount = await this.resultModel.countDocuments({ categories: category._id });
+    if (referenceCount > 0) {
+      throw new Error('Cannot delete category because it is referenced in '+referenceCount+' results');
+    }
+    return this.categoryModel.findByIdAndDelete(category._id);
   }
 }
