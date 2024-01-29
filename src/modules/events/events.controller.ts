@@ -35,11 +35,14 @@ import { RightsGuard } from '../auth/rights/rights.guard';
 export class ResultsController {
   constructor(private readonly eventsService: EventsService) {}
   @Get('for_month')
+  @ApiQuery({ name: 'month', type: Number})
+  @ApiQuery({ name: 'year', type: Number})
   async getEvents(
-    @Query() filter: { month: number; year: number },
+    @Query('month') month: number,
+    @Query('year') year: number,
   ): Promise<Event[]> {
     try {
-      return this.eventsService.getEvents(filter);
+      return this.eventsService.getEvents({month, year});
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
