@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, Request, UseGuards, } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CategoryDTO, CreateCategoryDTO, UpdateCategoryDTO } from 'src/shared/dtos/categories.dto';
-import {ApiBearerAuth, ApiBody, ApiParam, ApiTags} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags} from '@nestjs/swagger';
 import { Right } from '../auth/rights/rights.decorator';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { RightsGuard } from '../auth/rights/rights.guard';
@@ -29,7 +29,9 @@ export class CategoriesController {
     }
   }
 
-  @Get() async getAll(@Query('language') language?: string): Promise<CategoryDTO[]> {
+  @Get()
+  @ApiQuery({ name: 'language', required: false, type: String})
+  async getAll(@Query('language') language?: string): Promise<CategoryDTO[]> {
     return  await this.categoriesService.getCategories(language);
   }
   @Right('CATEGORY_CREATE')

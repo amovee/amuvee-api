@@ -13,7 +13,7 @@ import {
   queryFilterParser,
 } from 'src/shared/dtos/query-filter.dto';
 import { ResultDTO } from 'src/shared/dtos/results.dto';
-import { ApiTags} from '@nestjs/swagger';
+import { ApiQuery, ApiTags} from '@nestjs/swagger';
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 
 @ApiTags('Results')
@@ -102,7 +102,9 @@ export class ResultsController {
     }
   }
 
-  @Get('/:id') async getOne(
+  @Get('/:id')
+  @ApiQuery({ name: 'language', required: false, type: String})
+  async getOne(
     @Param('id') id: string,
     @Query('language') language?: string,
   ): Promise<ResultDTO | undefined> {
