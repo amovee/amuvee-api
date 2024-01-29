@@ -11,16 +11,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {
-    // console.log(jwtService.sign({test: 'test'}));
-    // bcrypt.hash('test', 10).then(res=>{
-    //   console.log(res);
-    //   bcrypt.compare('bla', res).then((res: any) => {
-    //     console.log(res);
-    //   })
-    // })
-    // console.log(jwtService.sign({test: 'bla'}));
-  }
+  ) { }
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findOneByEmail(email);
