@@ -42,7 +42,7 @@ export class LocationsController {
     return 'done';
   }
   @Get('counter')
-  async getCounter(): Promise<{ filtered?: number; total: number }> {
+  async getCounter(): Promise<{ totalCount: number }> {
     try {
       return await this.locationsService.getCounter();
     } catch (error) {

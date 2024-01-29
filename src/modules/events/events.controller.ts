@@ -74,7 +74,7 @@ export class ResultsController {
     }
   }
   @Get('counter')
-  async getCount(): Promise<number> {
+  async getCount(): Promise<{totalCount: number}> {
     try {
       return await this.eventsService.countEvents();
     } catch (error) {

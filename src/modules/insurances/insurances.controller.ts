@@ -22,7 +22,7 @@ export class InsurancesController {
     return this.insurancesService.getAll();
   }
   @Get('counter')
-  async getCount(): Promise<number> {
+  async getCount(): Promise<{totalCount: number}> {
     return this.insurancesService.getCount();
   }
 

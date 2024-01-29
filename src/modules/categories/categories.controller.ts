@@ -21,7 +21,7 @@ export class CategoriesController {
 
   
   @Get('counter')
-  async getCount(): Promise<number> {
+  async getCount(): Promise<{totalCount: number}> {
     try {
       return await this.categoriesService.countEvents();
     } catch (error) {

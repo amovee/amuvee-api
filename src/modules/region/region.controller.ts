@@ -53,7 +53,7 @@ export class RegionController {
     return this.regionService.searchString(text, limit, skip);
   }
   @Get('counter')
-  async count() {
+  async count(): Promise<{totalCount: number}> {
     return this.regionService.count();
   }
   @Get(':id')

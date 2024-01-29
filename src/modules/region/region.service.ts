@@ -56,8 +56,8 @@ export class RegionService {
   async getAll(limit: number, skip: number): Promise<any> {
     return await this.regionModel.find().limit(limit).skip(skip);
   }
-  async count(): Promise<any> {
-    return await this.regionModel.countDocuments();
+  async count(): Promise<{totalCount: number}> {
+    return {totalCount: await this.regionModel.countDocuments()};
   }
   async migrate(): Promise<any> {
     await this.counter.deleteSequenzDocument('regions');

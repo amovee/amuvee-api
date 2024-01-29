@@ -97,7 +97,7 @@ export class LocationsService {
     }
   }
   async getCounter(
-  ): Promise<any> {
+  ): Promise<{totalCount: number}> {
     const totalCount = await this.locationModel.countDocuments();
     return { totalCount };
   }

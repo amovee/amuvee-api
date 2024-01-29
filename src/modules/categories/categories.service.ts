@@ -123,8 +123,8 @@ export class CategoriesService {
     }
   }
 
-  async countEvents(): Promise<number> {
-    return await this.categoryModel.countDocuments();
+  async countEvents(): Promise<{totalCount: number}> {
+    return { totalCount: await this.categoryModel.countDocuments()};
   }
   async getListByLimitAndSkip(skip: number, limit: number) {
     return await this.categoryModel.find().skip(skip).limit(limit).exec();

@@ -68,8 +68,8 @@ export class InsurancesService {
     await this.insuranceModel.deleteOne({_id: id});
     return 'Insurance deleted';
   }
-  async getCount(): Promise<number> {
-    return this.insuranceModel.countDocuments();
+  async getCount(): Promise<{totalCount: number}> {
+    return {totalCount: await this.insuranceModel.countDocuments()};
   }
 
 }
