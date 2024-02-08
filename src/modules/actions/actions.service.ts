@@ -7,7 +7,7 @@ import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { CounterService } from '../counters/counters.service';
 import { ActionDocument } from 'src/shared/schemas/action.schema';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
-import { ActionDTO } from 'src/shared/dtos/actions.dto';
+import { ActionDTO, CreateActionsDTO } from 'src/shared/dtos/actions.dto';
 import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
 import { ResultDTO } from 'src/shared/dtos/results.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
@@ -106,8 +106,8 @@ export class ActionsService {
     }
     return;
   }
-  async getMentions(id: number, limit: number, skip: number) {
-    const action = await this.actionModel.findOne<ActionDTO>({ id });
+  async getMentions(id: string, limit: number, skip: number) {
+    const action = await this.actionModel.findById<ActionDTO>(id);
     if (action != null) {
       const results = await this.resultModel.find<ResultDTO>({
         variations: {
@@ -116,9 +116,22 @@ export class ActionsService {
           },
         },
       }).skip(skip).limit(limit);
-      return results.map((r) => ({ name: r.name, id: r.id }));
+      return results.map((r) => ({ name: r.name, id: r.id, _id: r._id }));
     }
     return [];
+  }
+  async getMentionsCounter(id: string): Promise<{totalCount: number}> {
+    const action = await this.actionModel.findById<ActionDTO>(id);
+    if (action != null) {
+      return {totalCount: await this.resultModel.countDocuments({
+        variations: {
+          $elemMatch: {
+            actions: action._id,
+          },
+        },
+      })};
+    }
+    return {totalCount: 0};
   }
 
   async getAll(limit: number, skip: number) {
@@ -133,59 +146,38 @@ export class ActionsService {
     }
     return 'Action not found';
   }
-  async getAction(id: string) {
-    const action = await this.actionModel.findById(id)
-    if (action != null) {
-      return action;
+  async getAction(id: string): Promise<ActionDTO | undefined> {
+   return await this.actionModel.findById(id)
+  }
+  
+  async update(_id: string, changes: CreateActionsDTO, userId: string) {
+    const action = await this.getAction(_id)
+    if(action) {
+        action.history.push({
+        by: userId,
+        date: new Date().toISOString(),
+        eventType: HistoryEventType.updated,
+      })
+      return await this.actionModel.findByIdAndUpdate({ _id }, {...changes});
     }
-    return 'Action not found';
+    return null; //TODO: Error
   }
-  async updateAction(id: string, newName: string) {
-    const action = await this.actionModel.findById(id);
-    if (action != null) {
-      // Check if the 'content' is a Map and if it has the 'de' key
-      if (action.content instanceof Map && action.content.has('de')) {
-        let deContent = action.content.get('de');
-        deContent.name = newName;
-        action.content.set('de', deContent);
-      } else {
-        // Handle the case where 'de' key doesn't exist
-        return 'Action not updated: "de" key not found';
-      }
-
-      const updatedAction = await this.actionModel.findByIdAndUpdate(id, { content: action.content }, { new: true });
-
-      return 'Action updated: ' + JSON.stringify(updatedAction);
+  async create(action: CreateActionsDTO, userId: string) {
+    const id = await this.counter.getNextSequenceValue('actions');
+    const roles = { roles: { author: userId } }
+    const history = {
+      by: userId,
+      date: new Date().toISOString(),
+      eventType: HistoryEventType.created,
     }
-
-    return 'Action not found';
+    const newAction = new this.actionModel({ ...action, ...roles, id, history });
+    newAction._id = new mongoose.Types.ObjectId();
+    return newAction.save();
   }
-  async createAction(name: string) {
-    const action = await this.actionModel.findOne<ActionDTO>({'content.de.name': name});
-    if (action == null) {
-      const newAction = new this.actionModel({
-        _id: new mongoose.Types.ObjectId(),
-        id: await this.counter.getNextSequenceValue('actions'),
-        status: 'published',
-        specific: '',
-        sort: 0,
-        roles: {},
-        content: {
-          de: {
-            name,
-            description: '',
-          },
-        }
-      });
-      await newAction.save();
-
-      return 'Action created: ' + newAction;
-
+  async getCount(
+    ): Promise<{totalCount: number}> {
+      const totalCount = await this.actionModel.countDocuments();
+      return { totalCount };
     }
-    return 'Action already exists';
-  }
-  async getCount(): Promise<{totalCount: number}> {
-    return {totalCount: await this.actionModel.countDocuments()};
-  }
 
 }

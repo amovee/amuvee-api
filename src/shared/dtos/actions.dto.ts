@@ -17,9 +17,7 @@ export interface ActionDTO {
   roles: RolesDTO;
   history: HistoryDTO[];
 }
-export class createActionsDTO {
-  @ApiProperty()
-  readonly id: number;
+export class CreateActionsDTO {
   @ApiProperty()
   readonly status: StateType;
   @ApiProperty()

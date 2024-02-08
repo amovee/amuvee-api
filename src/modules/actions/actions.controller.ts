@@ -1,7 +1,7 @@
-import {Controller, Get, Delete, Param, Post, Query, Put} from '@nestjs/common';
+import {Controller, Get, Delete, Param, Post, Query, Put, Body, Request, HttpException, HttpStatus} from '@nestjs/common';
 import { ActionsService } from './actions.service';
 import {ApiBearerAuth, ApiBody, ApiQuery, ApiTags} from '@nestjs/swagger';
-import {createActionsDTO} from "../../shared/dtos/actions.dto";
+import {CreateActionsDTO} from "../../shared/dtos/actions.dto";
 import {Right} from "../auth/rights/rights.decorator";
 import {RightsGuard} from "../auth/rights/rights.guard";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
@@ -12,7 +12,7 @@ import {UseGuards} from "@nestjs/common";
 export class ActionsController {
   constructor(public readonly actionsService: ActionsService) {}
 
-  @Right('ACTIONS_READ')
+  @Right('ACTIONS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
   @Post('migrate')
@@ -20,57 +20,74 @@ export class ActionsController {
     this.actionsService.migrate();
     return 'done';
   }
-  @Get(':id/results')
+  @Get('counter')
+  async getCounter(): Promise<{ totalCount: number }> {
+    try {
+      return await this.actionsService.getCount();
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+  @Get(':id/results/counter') //TODO: move to results
+  getMentionsCounter(
+    @Param('id') id: string,
+  ) {
+    return this.actionsService.getMentionsCounter(
+      id
+    );
+  }
+  @Get(':id/results') //TODO: move to results
   @ApiQuery({ name: 'limit', required: false, type: Number})
   @ApiQuery({ name: 'skip', required: false, type: Number })
   getMentions(
-    @Param('id') id: number,
-    @Query('limit') limit?: number,
-    @Query('skip') skip?: number,
+    @Param('id') id: string,
+    @Query('limit') limit = 20,
+    @Query('skip') skip = 0,
   ) {
     return this.actionsService.getMentions(
       id,
-      +limit ? +limit : 1000,
-      +skip ? +skip : 0,
+      limit,
+      skip
     );
+  }  
+  @Get(':id')
+  getAction(@Param('id') id: string) {
+    return this.actionsService.getAction(id);
   }
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number})
   @ApiQuery({ name: 'skip', required: false, type: Number })
-  getAll(@Query('limit') limit?: number, @Query('skip') skip?: number) {
-    return this.actionsService.getAll(+limit ? +limit : 1000, +skip ? +skip : 0);
+  getAll(@Query('limit') limit = 20, @Query('skip') skip = 0) {
+    return this.actionsService.getAll(limit, skip);
   }
-  @Get('count')
-  async getCount(): Promise<{totalCount: number}> {
-    return await this.actionsService.getCount() ;
-  }
-
-  @Right('ACTIONS_READ')
+  @Right('ACTIONS_DELETE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
   @Delete(':id')
   deleteAction(@Param('id') id: string) {
     return this.actionsService.deleteAction(id);
   }
-  @Get(':id')
-  getAction(@Param('id') id: string) {
-    return this.actionsService.getAction(id);
-  }
-  @Right('ACTIONS_READ')
+  @Right('ACTIONS_UPDATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
-  @ApiBody({type: createActionsDTO})
+  @ApiBody({ type: CreateActionsDTO })
   @Put(':id')
-  updateAction(@Param('id') id: string, @Query('name') name: string) {
-    return this.actionsService.updateAction(id, name);
+  updateAction(
+    @Body() body: CreateActionsDTO,
+    @Param('id') id: string,
+    @Request() req
+  ) {
+    return this.actionsService.update(id, body, req.user._id);
   }
-  @Right('ACTIONS_READ')
+  @Right('ACTIONS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
-  @ApiBody({type: createActionsDTO})
+  @ApiBody({ type: CreateActionsDTO })
   @Post()
-  createAction(@Query('name') name: string) {
-    return this.actionsService.createAction(name);
+  createAction(
+    @Body() body: CreateActionsDTO,
+    @Request() req) {
+    return this.actionsService.create(body, req.user._id);
   }
 
 }
