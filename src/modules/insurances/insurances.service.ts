@@ -60,13 +60,12 @@ export class InsurancesService {
     }
     return insurance.toObject() as Insurance;
   }
-  async deleteInsurance(id: string): Promise<string> {
+  async deleteInsurance(id: string) {
     const insuranceToDelete = await this.insuranceModel.findOne({_id: id});
     if (!insuranceToDelete) {
       throw new NotFoundException('Insurance not found');
     }
-    await this.insuranceModel.deleteOne({_id: id});
-    return 'Insurance deleted';
+    return await this.insuranceModel.deleteOne({_id: id});
   }
   async getCount(): Promise<{totalCount: number}> {
     return {totalCount: await this.insuranceModel.countDocuments()};

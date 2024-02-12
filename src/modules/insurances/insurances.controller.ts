@@ -48,7 +48,7 @@ export class InsurancesController {
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
   @Delete(':id')
-  async deleteInsurance(@Param('id') id: string): Promise<string> {
+  async deleteInsurance(@Param('id') id: string) {
     return this.insurancesService.deleteInsurance(id);
   }
   @Right('INSURANCES_READ')

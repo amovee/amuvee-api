@@ -5,7 +5,7 @@ import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { CounterService } from '../counters/counters.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { regions } from './regions';
-import {createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
+import {RegionDTO, createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
 import axios from 'axios';
 import { State } from 'src/shared/dtos/types.dto';
 
@@ -18,11 +18,10 @@ export class RegionService {
   async getById(id: string) {
     return this.regionModel.findById(id);
   }
-  async deleteById(id: string) {
+  async deleteById(id: string): Promise<RegionDTO> {
     const regionFromDB = await this.regionModel.findById(id);
     if (regionFromDB) {
-      await this.regionModel.findByIdAndDelete(id)
-      return 'Region deleted successfully';
+      return await this.regionModel.findByIdAndDelete<RegionDTO>(id)
     } else {
       throw new HttpException('Region not found', HttpStatus.BAD_REQUEST);
     }

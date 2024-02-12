@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Action } from 'rxjs/internal/scheduler/Action';
 import mongoose, { Model } from 'mongoose';
@@ -141,10 +141,9 @@ export class ActionsService {
   async deleteAction(id: string) {
     const action = await this.actionModel.findById(id);
     if (action != null) {
-      await this.actionModel.findByIdAndDelete(id);
-      return 'Action deleted';
+      return await this.actionModel.findByIdAndDelete(id);
     }
-    return 'Action not found';
+    throw new NotFoundException('Action not found');
   }
   async getAction(id: string): Promise<ActionDTO | undefined> {
    return await this.actionModel.findById(id)

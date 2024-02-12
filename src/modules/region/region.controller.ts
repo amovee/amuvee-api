@@ -4,7 +4,7 @@ import {ApiBearerAuth, ApiQuery, ApiTags} from '@nestjs/swagger';
 import {Right} from "../auth/rights/rights.decorator";
 import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
 import {RightsGuard} from "../auth/rights/rights.guard";
-import {createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
+import {RegionDTO, createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
 
 
 @ApiTags('Regions')
@@ -20,8 +20,6 @@ export class RegionController {
     return this.regionService.migrate();
   }
 
-  // @Right('REGIONS_READ')
-  // @UseGuards(JwtAuthGuard, RightsGuard)
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number})
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -32,7 +30,7 @@ export class RegionController {
   @Right('REGIONS_DELETE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @Delete(':id')
-  async deleteById(@Param('id') id: string) {
+  async deleteById(@Param('id') id: string): Promise<RegionDTO> {
     return this.regionService.deleteById(id);
   }
 
