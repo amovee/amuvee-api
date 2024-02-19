@@ -111,6 +111,115 @@ export function mongoDBFiltersFromQueryFilter(
     ],
   };
 }
+export function mongoDBMinFiltersFromQueryFilter(
+  query: QueryFilterDTO,
+  regions?: mongoose.Types.ObjectId[],
+) {
+  const outerfilters = [];
+  if (query.category) {
+    outerfilters.push({
+      $or: [
+        {
+          categories: new mongoose.Types.ObjectId(query.category),
+        },
+        {
+          categories: { $size: 0 },
+        },
+      ],
+    });
+  }
+  const innerfilters = [];
+  if (query.status) {
+    if (Array.isArray(query.status)) {
+      innerfilters.push({ ['status']: { $in: query.status } });
+    } else {
+      innerfilters.push({ ['status']: query.status });
+    }
+  }
+  if (query.filterByDate) {
+    const now = new Date();
+    innerfilters.push({
+      $or: [
+        { [`timespan.from`]: EQ_NULL },
+        { [`timespan.from`]: { $lte: now } },
+      ],
+    });
+    innerfilters.push({
+      $or: [
+        { [`timespan.to`]: EQ_NULL },
+        { [`timespan.to`]: { $gte: now } },
+      ],
+    });
+  }
+  ['rent', 'income', 'parentAge'].forEach((key: string) => {
+    if (query[key] != null && query[key] >= 0) {
+      innerfilters.push(...minMaxNumberFilter(key, query[key]));
+    }
+  });
+  if (query.childrenCount != null && query.childrenCount > 0) {
+    innerfilters.push(
+      ...minMaxNumberFilter('childrenCount', query.childrenCount),
+    );
+    if (query.childrenAgeGroups && query.childrenAgeGroups.length > 0) {
+      innerfilters.push(
+        ...minMaxNumberFilter(
+          'childrenAge',
+          Math.max(...(<number[]>query.childrenAgeGroups)),
+        ),
+      );
+    }
+  } else if (query.childrenCount == 0) {
+    innerfilters.push({ 'filters.childrenCount.min': EQ_NULL });
+    innerfilters.push({ 'filters.childrenCount.max': EQ_NULL });
+    innerfilters.push({ 'filters.childrenAge.min': EQ_NULL });
+    innerfilters.push({ 'filters.childrenAge.max': EQ_NULL });
+  }
+  if (regions) {
+    const ids = regions.map((r) => new mongoose.Types.ObjectId(r));
+    innerfilters.push(createSetFilter('regions', ids));
+  }
+  if (query.parentGender) {
+    innerfilters.push(createSetFilter('parentGender', [query.parentGender]));
+  }
+  if (query.insurance) {
+    innerfilters.push(createSetFilter('insurances', [query.insurance]));
+  }
+  if (query.jobRelatedSituation != undefined) {
+    innerfilters.push(
+      createSetFilter('jobRelatedSituations', [query.jobRelatedSituation]),
+    );
+  }
+  if (query.relationship != undefined) {
+    innerfilters.push(createSetFilter('relationships', [query.relationship]));
+  }
+  if (query.isPregnant === false) {
+    innerfilters.push({ [`filters.isPregnant`]: { $eq: false } });
+  }
+  if (query.isRefugee === false) {
+    innerfilters.push({ [`filters.isRefugee`]: { $eq: false } });
+  }
+  if (query.isVictimOfViolence === false) {
+    innerfilters.push({
+      [`filters.isVictimOfViolence`]: { $eq: false },
+    });
+  }
+
+  if (innerfilters.length == 0 && outerfilters.length == 0) {
+    return { _id: { $ne: '' } };
+  }
+  return {
+    $and: [
+      ...outerfilters,
+      ...(innerfilters.length > 0
+        ? [
+            {
+              $and: innerfilters,
+            },
+          ]
+        : []),
+    ],
+  };
+}
 
 /**
  * MATCH Filter Generators

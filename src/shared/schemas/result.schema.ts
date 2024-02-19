@@ -8,6 +8,7 @@ import { Roles } from 'src/shared/schemas/meta.schema';
 import { UserDTO } from '../dtos/types.dto';
 
 export type ResultDocument = Result & Document;
+export type MinResultDocument = MinResult & Document;
 
 @Schema()
 export class ResultType {
@@ -34,7 +35,7 @@ export class NumberFilter {
   @Prop()
   min: number;
   @Prop()
-  max: number
+  max: number;
 }
 
 @Schema()
@@ -71,18 +72,10 @@ export class ResultFilters {
 export class Variation {
   @Prop()
   status: string;
-  @Prop({ _id: false, type: Roles })
-  roles: Roles;
-  @Prop({
-    _id: false, 
-    type: [{
-      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      date: Date,
-      eventType: String,
-      value: String
-    }],
-  })
-  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
+  @Prop()
+  createdAt: Date;
+  @Prop()
+  updatedAt: Date;
   @Prop()
   name: string;
   @Prop({ type: { from: Date, to: Date, _id: false } })
@@ -91,22 +84,12 @@ export class Variation {
   filters: ResultFilters[];
   @Prop({ _id: false, type: NumberFilter })
   amountOfMoney: NumberFilter;
-  @Prop({
-    type: mongoose.Schema.Types.Map,
-    of: {
-      _id: false,
-      title: String,
-      description: String,
-      shortDescription: String,
-    },
-  })
-  content: {
-    [key: string]: {
-      title: string;
-      shortDescription: string;
-      description: string;
-    };
-  };
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  title: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  shortDescription: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  description: {[key: string]: string;};
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Action' }] })
   actions: Action[];
   @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }])
@@ -121,18 +104,24 @@ export class Result {
   _id: mongoose.Schema.Types.ObjectId;
   @Prop()
   id: number;
+  @Prop()
+  createdAt: Date;
+  @Prop()
+  updatedAt: Date;
   @Prop({ _id: false, type: Roles })
   roles: Roles;
   @Prop({
-    _id: false, 
-    type: [{
-      by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      date: Date,
-      eventType: String,
-      value: String
-    }],
+    _id: false,
+    type: [
+      {
+        by: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+        date: Date,
+        eventType: String,
+        value: String,
+      },
+    ],
   })
-  history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
+  history: [{ by: UserDTO; date: Date; eventType: string; value: string }];
   @Prop()
   specific: string;
   @Prop()
@@ -145,3 +134,46 @@ export class Result {
   variations: Variation[];
 }
 export const ResultSchema = SchemaFactory.createForClass(Result);
+
+@Schema()
+export class MinResult {
+  @Prop()
+  _id: mongoose.Schema.Types.ObjectId;
+  @Prop()
+  vid: number;
+  @Prop()
+  rid: number;
+  @Prop()
+  v_id: mongoose.Schema.Types.ObjectId;
+  @Prop()
+  r_id: mongoose.Schema.Types.ObjectId;
+  
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  title: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  shortDescription: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  description: {[key: string]: string;};
+  
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Action' }] })
+  actions: Action[];
+  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }])
+  locations: Location[];
+  @Prop([{ type: ResultFilters }])
+  filters: ResultFilters[];
+  @Prop({ _id: false, type: NumberFilter })
+  amountOfMoney: NumberFilter;
+  @Prop({ type: { from: Date, to: Date, _id: false } })
+  timespan: { from: Date; to: Date };
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ResultType' })
+  type: ResultType;
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }] })
+  categories: Category[];
+  @Prop()
+  status: string;
+  @Prop()
+  createdAt: Date;
+  @Prop()
+  updatedAt: Date;
+}
+export const MinResultSchema = SchemaFactory.createForClass(MinResult);

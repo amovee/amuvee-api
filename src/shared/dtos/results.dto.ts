@@ -5,30 +5,31 @@ import { CategoryDTO } from './categories.dto';
 import { HistoryDTO, RolesDTO } from './roles.dto';
 import { NumberRange, StateType, Variables } from './types.dto';
 import { RegionDTO } from './region.dto';
+import { ApiProperty } from '@nestjs/swagger';
 export type ResultTypeDTO = {
   _id?: string;
   id?: number;
   name: {
-    [language: string]: string
+    [language: string]: string;
   };
   weight: number;
 };
 
 export interface UpdateResultTypeDTO {
   name?: {
-    [language: string]: string
+    [language: string]: string;
   };
   weight?: number;
 }
 
 export interface CreateResultTypeDTO {
   name: {
-    [language: string]: string
+    [language: string]: string;
   };
   weight: number;
-};
+}
 
-export interface ResultDTO {
+export class ResultDTO {
   _id?: string;
   id?: number;
   specific?: string;
@@ -38,33 +39,35 @@ export interface ResultDTO {
   variations?: VariationDTO[];
   roles: RolesDTO;
   history: HistoryDTO[];
+  updatedAt: Date;
+  createdAt: Date;
 }
 
-export interface VariationDTO {
+export class VariationDTO {
+  _id: string;
   status?: StateType;
   roles?: RolesDTO;
+  history?: HistoryDTO[];
   name?: string;
   timespan?: Timespan;
   amountOfMoney?: NumberRange;
-  content?: {
-    [language: string]: {
-      title: string;
-      shortDescription: string;
-      description: string;
-    };
-  };
+  title: { [language: string]: string };
+  shortDescription: { [language: string]: string };
+  description: { [language: string]: string };
   actions?: Ref<ActionDTO>[];
   locations?: Ref<LocationDTO>[];
   variables: Variables;
-  filters: ResultFilters;
+  filters: ResultFilters[];
+  updatedAt: Date;
+  createdAt: Date;
 }
 
-interface Timespan {
+class Timespan {
   from: null | Date;
   to: null | Date;
 }
 
-export interface ResultFilters {
+export class ResultFilters {
   rent?: NumberRange;
   income?: NumberRange;
   childrenCount?: NumberRange;
@@ -83,29 +86,61 @@ export interface ResultFilters {
 // ???
 export interface MinResultDTO {
   _id: string;
-  v_id: string;
-  id: number;
-  language: string;
-  content?: {
+  vid?: number;
+  rid?: number;
+  v_id?: string;
+  r_id?: string;
+  title: { [language: string]: string };
+  shortDescription: { [language: string]: string };
+  description: { [language: string]: string };
+  actions: Ref<MinActionDTO>[];
+  locations: Ref<LocationDTO>[];
+  filters: ResultFilters[];
+  amountOfMoney: NumberRange;
+  timespan: { start: Date | null; end: Date | null };
+  type: Ref<ResultTypeDTO>;
+  categories: Ref<CategoryDTO>[];
+  status?: StateType;
+  updatedAt: Date;
+  createdAt: Date;
+}
+//CREATE
+export class CreateResultDTO {
+  specific?: string;
+  name: string;
+  categories: Ref<CategoryDTO>[];
+  type: Ref<ResultTypeDTO>;
+  variations: VariationDTO[];
+}
+export class CreateResultFilters {
+  rent?: NumberRange;
+  income?: NumberRange;
+  childrenCount?: NumberRange;
+  childrenAge?: NumberRange;
+  parentAge?: NumberRange;
+  parentGender?: ('FEMALE' | 'MALE' | 'DIVERSE')[];
+  regions?: Ref<RegionDTO>[];
+  isPregnant?: boolean;
+  isVictimOfViolence?: boolean;
+  insurances?: string[]; // _id[]
+  relationship?: number[];
+  jobRelatedSituation?: number[];
+  isRefugee?: boolean;
+}
+export class CreateVariationDTO {
+  status: StateType;
+  name: string;
+  timespan: Timespan;
+  amountOfMoney: NumberRange;
+  content: {
     [language: string]: {
       title: string;
       shortDescription: string;
       description: string;
     };
   };
-  actions: Ref<MinActionDTO>[];
-  locations: Ref<LocationDTO>[];
-  amountOfMoney: NumberRange;
-  timespan: { start: Date | null; end: Date | null };
-  type: Ref<ResultTypeDTO>;
-}
-// ???
-export interface ResultTableRowDTO {
-  _id: string;
-  id: number;
-  name: string;
-  timespan: { start: Date | null; end: Date | null };
-  type: Ref<ResultTypeDTO>;
-  roles: RolesDTO;
-  history: HistoryDTO[];
+  actions: string[];
+  locations: string[];
+  variables: Variables;
+  filters: CreateResultFilters[];
 }

@@ -1,10 +1,15 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
   Param,
+  Post,
+  Put,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { ResultsService } from './results.service';
@@ -12,9 +17,11 @@ import {
   QueryFilterDTO,
   queryFilterParser,
 } from 'src/shared/dtos/query-filter.dto';
-import { ResultDTO } from 'src/shared/dtos/results.dto';
-import { ApiQuery, ApiTags} from '@nestjs/swagger';
-import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
+import { CreateResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
+import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { RightsGuard } from '../auth/rights/rights.guard';
+import { Right } from '../auth/rights/rights.decorator';
 
 @ApiTags('Results')
 @Controller('results')
@@ -51,6 +58,7 @@ export class ResultsController {
     }
   }
   @Get('min')
+  @ApiQuery({ name: 'query', required: false, type: QueryFilterDTO })
   async getMininmalResults(@Query() query: QueryFilterDTO): Promise<any[]> {
     query = queryFilterParser(query);
     try {
@@ -64,6 +72,8 @@ export class ResultsController {
     }
   }
   @Get('favorites')
+  @ApiQuery({ name: 'language', required: false, type: String })
+  @ApiQuery({ name: 'ids', required: true, type: String, isArray: true })
   async getMininmalResultsFromIdList(
     @Query() query: { language: string; ids: string[] | string },
   ): Promise<any[]> {
@@ -76,12 +86,12 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
-  // add baerer auth
+
   @Get('counter')
   async getCounter(
     @Query() query: QueryFilterDTO,
   ): Promise<{ filtered?: number; total: number }> {
-    query = queryFilterParser(query); 
+    query = queryFilterParser(query);
     try {
       return await this.resultsService.getCounter(query);
     } catch (error) {
@@ -103,11 +113,45 @@ export class ResultsController {
   }
 
   @Get('/:id')
-  @ApiQuery({ name: 'language', required: false, type: String})
+  @ApiQuery({ name: 'language', required: false, type: String })
   async getOne(
     @Param('id') id: string,
     @Query('language') language?: string,
   ): Promise<ResultDTO | undefined> {
     return this.resultsService.getResultFromId(id, language);
+  }
+  @Post('results/min')
+  async minifyAllResults(): Promise<void> {
+    await this.resultsService.minifyAllResults();
+  }
+
+  @Right('RESULTS_CREATE')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
+  @Post()
+  @ApiBody({ type: CreateResultDTO })
+  async createResult(@Body() result: CreateResultDTO, @Request() req) {
+    return this.resultsService.create(result, req.user._id);
+  }
+  @Right('LOCATIONS_UPDATE')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
+  @ApiBody({ type: CreateResultDTO })
+  @Put('/:id')
+  async updateResult(
+    @Body() body: CreateResultDTO,
+    @Param('id') id: string,
+    @Request() req
+  ) {
+    return this.resultsService.update(id, body, req.user._id);
+  }
+
+  @Right('RESULTS_DELETE')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
+  //TODO: optional auch Referenzen löschen
+  @Delete('/:id')
+  async deleteResult(@Param('id') id: string, @Request() req) {
+    this.resultsService.deleteResult(id);
   }
 }

@@ -20,9 +20,10 @@ import {
 } from 'src/shared/schemas/insurance.schema';
 import mongoose from 'mongoose';
 import { CounterService } from '../counters/counters.service';
-import getType, { result_types } from '../results/result.migration';
+import { result_types } from '../results/result.migration';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
+import { ResultsService } from '../results/results.service';
 
 @Injectable()
 export class MigrationService {
@@ -38,13 +39,17 @@ export class MigrationService {
     private insuranceModel: Model<InsuranceDocument>,
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     private readonly counter: CounterService,
-  ) { }
+    private readonly resultService: ResultsService,
+  ) {}
 
   async migrateResulttypes() {
     await this.resultTypeModel.deleteMany().exec();
     for (let i = 0; i < result_types.length; i++) {
       const resultType = result_types[i];
-      const counter = await this.counter.setMaxSequenceValue('resultTypes', +resultType.id)
+      const counter = await this.counter.setMaxSequenceValue(
+        'resultTypes',
+        +resultType.id,
+      );
       new this.resultTypeModel({
         _id: new mongoose.Types.ObjectId(),
         id: counter,
@@ -132,11 +137,7 @@ export class MigrationService {
     }
     return actions;
   }
-  async createFilter(
-    result: any,
-    insurances: any,
-    locationIds: any,
-  ) {
+  async createFilter(result: any, insurances: any, locationIds: any, createdAt: Date, updatedAt: Date) {
     const relationships = result.has_relationship.map(
       (i) => i.relationship_types_id,
     );
@@ -144,9 +145,11 @@ export class MigrationService {
       (i) => i.job_related_situations_id,
     );
     const parentGender = result.parent_gender ? [result.parent_gender] : [];
-    return {
+    const variation = {
       name: 'Variation 1',
       status: mappingStateType(result.status),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       timespan: { from: result.start_date, to: result.end_date },
       filters: {
         rent: this.generateMinMaxFilter(result.min_rent, result.max_rent),
@@ -173,37 +176,26 @@ export class MigrationService {
         result.min_amount_of_money,
         result.max_amount_of_money,
       ),
-      content: this.getContent(result),
+      title: { de: result.name },
+      description: { de: result.description },
+      shortDescription: { de: result.short_description },
       actions: await this.getActionList(result),
       locations: locationIds[result.location]
         ? [locationIds[result.location]]
         : [],
       variables: [],
     };
-  }
-  getContent(result: any) {
-    const content = {
-      de: {
-        title: result.name,
-        description: result.description,
-        shortDescription: result.short_description,
-      },
-    };
     if (!!result.russian) {
-      content['ru'] = {
-        title: result.russian.name,
-        description: result.russian.description,
-        shortDescription: result.russian.short_description,
-      };
+      variation.title['ru'] = result.russian.name;
+      variation.description['ru'] = result.russian.description;
+      variation.shortDescription['ru'] = result.russian.short_description;
     }
     if (!!result.ukrainian) {
-      content['uk'] = {
-        title: result.ukrainian.name,
-        description: result.ukrainian.description,
-        shortDescription: result.ukrainian.short_description,
-      };
+      variation.title['uk'] = result.ukrainian.name;
+      variation.description['uk'] = result.ukrainian.description;
+      variation.shortDescription['uk'] = result.ukrainian.short_description;
     }
-    return content;
+    return variation;
   }
   async migrateResults(category: Category): Promise<any> {
     const locationIds: any = await this.getlocationIDs();
@@ -214,9 +206,6 @@ export class MigrationService {
     resultTypes.forEach((type) => {
       resultTypeMap[type.weight] = type._id;
     });
-    
-    // console.log(resultTypes.filter((rt)=>rt.weight == 700));
-
     const fields = [
       '*',
       'has_insurance.*',
@@ -238,18 +227,15 @@ export class MigrationService {
     const admin = await this.userModel.findOne({ name: 'admin' }).exec();
     for (let j = 0; j < results.length; j++) {
       const result = results[j];
-      const variation = await this.createFilter(
-        result,
-        result.has_insurance.map((i) => insuranceIds[i.insurance_id]),
-        locationIds,
-      );
       const roles = {
         author: undefined,
         reviewer: undefined,
       };
       const history = [];
       if (result.user_created) {
-        let userCreated = await this.userModel.findOne({ oldId: result.user_created }).exec();
+        let userCreated = await this.userModel
+          .findOne({ oldId: result.user_created })
+          .exec();
         if (!userCreated) {
           userCreated = admin;
         }
@@ -259,10 +245,11 @@ export class MigrationService {
           date: result.date_created,
           eventType: HistoryEventType.created,
         });
-
       }
       if (result.user_updated) {
-        const userUpdated = await this.userModel.findOne({ oldId: result.user_updated }).exec();
+        const userUpdated = await this.userModel
+          .findOne({ oldId: result.user_updated })
+          .exec();
         if (userUpdated) {
           roles.author = userUpdated._id;
           history.push({
@@ -279,9 +266,19 @@ export class MigrationService {
         eventType: HistoryEventType.migrated,
         value: 'Migrated from Directus',
       });
+      const variation = await this.createFilter(
+        result,
+        result.has_insurance.map((i) => insuranceIds[i.insurance_id]),
+        locationIds,
+        history[0].date,
+        history[history.length-1].date
+      );
       new this.resultModel({
         _id: new mongoose.Types.ObjectId(),
         name: result.name.replaceAll('&shy;', ''),
+        status: mappingStateType(result.status),
+        createdAt: history[0].date,
+        updatedAt: history[history.length-1].date,
         id: await this.counter.setMaxSequenceValue('results', +result.id),
         specific: result.specific,
         categories: [category._id],
@@ -292,6 +289,7 @@ export class MigrationService {
         type: resultTypeMap[result.type.weight],
       }).save();
     }
+    this.resultService.minifyAllResults();
     return results;
   }
 }

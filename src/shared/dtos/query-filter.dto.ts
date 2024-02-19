@@ -1,22 +1,43 @@
-export interface QueryFilterDTO {
+import { ApiProperty } from "@nestjs/swagger";
+
+export class QueryFilterDTO {
+  @ApiProperty({ required: false })
   limit?: number;
+  @ApiProperty({ required: false })
   skip?: number;
+  @ApiProperty({ required: false })
   language?: string;
+  @ApiProperty({ required: false })
   category?: string;
+  @ApiProperty({ required: false })
   rent?: number;
+  @ApiProperty({ required: false })
   income?: number;
+  @ApiProperty({ required: false })
   childrenCount?: number;
+  @ApiProperty({ required: false })
   childrenAgeGroups?: number[];
+  @ApiProperty({ required: false })
   parentAge?: number;
+  @ApiProperty({ required: false })
   parentGender?: string;
+  @ApiProperty({ required: false })
   zip?: string;
+  @ApiProperty({ required: false })
   insurance?: string;
+  @ApiProperty({ required: false })
   jobRelatedSituation?: number | undefined;
+  @ApiProperty({ required: false })
   relationship?: number | undefined;
+  @ApiProperty({ required: false })
   status?: string | string[];
+  @ApiProperty({ required: false })
   filterByDate?: boolean;
+  @ApiProperty({ required: false })
   isPregnant?: boolean;
+  @ApiProperty({ required: false })
   isVictimOfViolence?: boolean;
+  @ApiProperty({ required: false })
   isRefugee?: boolean;
 }
 

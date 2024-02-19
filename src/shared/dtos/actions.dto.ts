@@ -33,6 +33,8 @@ export class CreateActionsDTO {
 
 export interface MinActionDTO {
   _id: string;
+  id: number;
+  status: StateType,
   content: {
     [languageKey: string]: {
       name: string;
