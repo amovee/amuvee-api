@@ -15,20 +15,10 @@ export class Action {
   status: StateType;
   @Prop()
   sort: number;
-  @Prop({
-    type: mongoose.Schema.Types.Map,
-    of: {
-      _id: false,
-      name: String,
-      description: String,
-    },
-  })
-  content: {
-    [key: string]: {
-      name: string;
-      description: string;
-    };
-  };
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  name: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  description: {[key: string]: string;};
   @Prop({ _id: false, type: Roles })
   roles: Roles;
   @Prop({

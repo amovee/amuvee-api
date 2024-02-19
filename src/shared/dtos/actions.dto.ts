@@ -8,12 +8,8 @@ export interface ActionDTO {
   id: number;
   status: StateType,
   specific: string | null;
-  content: {
-    [languageKey: string]: {
-      name: string;
-      description?: string;
-    };
-  };
+  name: {[language: string]: string};
+  description: {[language: string]: string};
   roles: RolesDTO;
   history: HistoryDTO[];
 }
@@ -23,22 +19,15 @@ export class CreateActionsDTO {
   @ApiProperty()
   readonly specific: string | null;
   @ApiProperty()
-  readonly content: {
-    [languageKey: string]: {
-      name: string;
-      description?: string;
-    };
-  };
+  readonly name: {[language: string]: string};
+  @ApiProperty()
+  readonly description: {[language: string]: string};
 }
 
 export interface MinActionDTO {
   _id: string;
   id: number;
   status: StateType,
-  content: {
-    [languageKey: string]: {
-      name: string;
-      description: string;
-    };
-  };
+  name: {[language: string]: string};
+  description: {[language: string]: string};
 }

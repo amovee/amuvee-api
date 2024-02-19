@@ -132,13 +132,9 @@ export class CreateVariationDTO {
   name: string;
   timespan: Timespan;
   amountOfMoney: NumberRange;
-  content: {
-    [language: string]: {
-      title: string;
-      shortDescription: string;
-      description: string;
-    };
-  };
+  title: {[language: string]: string};
+  shortDescription: {[language: string]: string};
+  description: {[language: string]: string};
   actions: string[];
   locations: string[];
   variables: Variables;

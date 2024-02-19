@@ -20,7 +20,7 @@ export class ActionsService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly counter: CounterService,
   ) {}
-  async migrate(): Promise<void> {
+  async migrate(): Promise<void> {    
     await this.counter.deleteSequenzDocument('actions');
     await this.actionModel.deleteMany().exec();
     const users: User[] = await this.userModel.find().exec();
@@ -30,7 +30,6 @@ export class ActionsService {
           'items/action?fields=*&limit=0&meta=filter_count',
       )
     ).data.meta.filter_count;
-
     const actions = (
       await axios.get(
         process.env.DIRECTUS_URL +
@@ -53,24 +52,17 @@ export class ActionsService {
           reviewer: undefined,
         },
         history: [],
-        content: {
-          de: {
-            name: action.name,
-            description: action.description,
-          },
-        },
+        name: { de: action.name},
+        description: {de: action.description},
+        
       };
       if (action.russian != null) {
-        a.content['ru'] = {
-          name: action.russian.name,
-          description: action.russian.description,
-        };
+          a.name['ru'] = action.russian.name;
+          a.description['ru']= action.russian.description;
       }
       if (action.ukrainian != null) {
-        a.content['uk'] = {
-          name: action.ukrainian.name,
-          description: action.ukrainian.description,
-        };
+        a.name['uk'] = action.ukrainian.name;
+        a.description['uk']= action.ukrainian.description;
       }
       if (action.user_created) {
         let userCreated = await this.userModel.findOne({ oldId: action.user_created }).exec();
