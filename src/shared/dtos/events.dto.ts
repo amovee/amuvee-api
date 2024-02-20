@@ -11,12 +11,8 @@ export interface EventDTO {
   type: string;
   image: string;
   timespan: { from: Date | null; to: Date | null };
-  content?: {
-    [language: string]: {
-      name: string;
-      shortDescription: string;
-    };
-  };
+  name: {[language: string]: string};
+  shortDescription: {[language: string]: string};
   roles: RolesDTO;
   history: HistoryDTO[];
 }
@@ -53,12 +49,8 @@ export class CreateEventDTO {
       },
     },
   })
-  content: {
-    [language: string]: {
-      name: string;
-      shortDescription: string;
-    };
-  };
+  name: {[language: string]: string};
+  shortDescription: {[language: string]: string};
 }
 export class UpdateEventDTO {
   @ApiProperty({
@@ -87,10 +79,6 @@ export class UpdateEventDTO {
       },
     },
   })
-  content: {
-    [language: string]: {
-      name: string;
-      shortDescription: string;
-    };
-  };
+  name: {[language: string]: string};
+  shortDescription: {[language: string]: string};
 }

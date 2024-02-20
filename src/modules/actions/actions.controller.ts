@@ -12,6 +12,17 @@ import {UseGuards} from "@nestjs/common";
 export class ActionsController {
   constructor(public readonly actionsService: ActionsService) {}
 
+  @Get('search')
+  @ApiQuery({ name: 'query', required: true, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  searchActions(
+    @Query() query: { query: string; limit: number; skip: number },
+  ):  Promise<any[]> {
+    return this.actionsService.search(query.query, query.limit, query.skip);
+  }
+
+
   @Right('ACTIONS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
@@ -49,7 +60,8 @@ export class ActionsController {
       limit,
       skip
     );
-  }  
+  }
+
   @Get(':id')
   getAction(@Param('id') id: string) {
     return this.actionsService.getAction(id);
@@ -89,5 +101,7 @@ export class ActionsController {
     @Request() req) {
     return this.actionsService.create(body, req.user._id);
   }
+
+
 
 }

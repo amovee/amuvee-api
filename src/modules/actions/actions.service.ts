@@ -171,4 +171,18 @@ export class ActionsService {
       return { totalCount };
     }
 
+  async search(query: string, skip: number, limit: number) {
+    return this.actionModel.find({
+      $or: [
+        { 'name.de': { $regex: query, $options: 'i' } },
+        { 'shortDescription.de': { $regex: query, $options: 'i' } },
+        { 'name.ru': { $regex: query, $options: 'i' } },
+        { 'shortDescription.ru': { $regex: query, $options: 'i' } },
+        { 'name.uk': { $regex: query, $options: 'i' } },
+        { 'shortDescription.uk': { $regex: query, $options: 'i' } },
+      ],
+    }).skip(skip).limit(limit).exec();
+
+  }
+
 }

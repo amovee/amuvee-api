@@ -35,6 +35,18 @@ export class LocationsController {
       query.skip ? query.skip : 0,
     );
   }
+
+
+  @Get('search')
+  @ApiQuery({ name: 'query', required: true, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  async searchEvents(
+    @Query() query: { query: string; limit: number; skip: number },
+  ): Promise<Location[]> {
+    return this.locationsService.search(query.query, query.limit, query.skip);
+  }
+
   @ApiBearerAuth('jwt')
   @Post('migrate')
   async migrate(): Promise<string> {

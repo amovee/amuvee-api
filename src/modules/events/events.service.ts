@@ -58,12 +58,8 @@ export class EventsService {
           reviewer: undefined,
         },
         history: [],
-        content: {
-          de: {
-            name: event.name,
-            shortDescription: event.short_description,
-          },
-        },
+        name: {de: event.name},
+        shortDescription: {de: event.short_description},
       };
       if (event.user_created) {
         let userCreated = await this.userModel
@@ -197,5 +193,14 @@ export class EventsService {
       throw new Error('Event not found');
     }
     return this.eventModel.findByIdAndDelete(event._id);
+  }
+
+  async search(query: string, skip: number, limit: number): Promise<any[]> {
+    return await this.eventModel.find({
+      $or: [
+        { 'name.de': { $regex: query, $options: 'i' } },
+        { 'shortDescription.de': { $regex: query, $options: 'i' } },
+      ],
+    }).skip(skip).limit(limit).exec();
   }
 }

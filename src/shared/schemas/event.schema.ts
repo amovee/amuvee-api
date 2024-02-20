@@ -25,19 +25,15 @@ export class Event {
   timespan: { from: Date; to: Date };
   @Prop({
     type: mongoose.Schema.Types.Map,
-    of: {
-      _id: false,
-      name: String,
-      shortDescription: String,
-    },
+    of: String
   })
-  content: {
-    [key: string]: {
-      name: string;
-      shortDescription: string;
-    };
-  };
-  
+  name: {[key: string]: string}
+  @Prop({
+    type: mongoose.Schema.Types.Map,
+    of: String
+  })
+  shortDescription: {[key: string]: string}
+
   @Prop({ _id: false, type: Roles })
   roles: Roles;
   @Prop({

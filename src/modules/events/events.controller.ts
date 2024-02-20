@@ -84,6 +84,23 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
+  // search for events
+  @Get('search')
+  @ApiQuery({ name: 'query', required: true, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  async searchEvents(
+    @Query() query: { query: string; limit: number; skip: number },
+  ): Promise<any[]> {
+    if (query.limit > 40)
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    try {
+      return await this.eventsService.search(query.query, query.skip, query.limit);
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Right('EVENTS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
@@ -130,4 +147,6 @@ export class ResultsController {
   async deleteEvent(@Param('id') id: string) {
     return this.eventsService.delete(id);
   }
+
+
 }

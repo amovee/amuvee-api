@@ -41,17 +41,19 @@ export class RegionService {
       ).save();
     }
   }
+
   async searchString(text: string, limit: number, skip: number): Promise<any> {
-    return await this.regionModel
-      .find({
+    return await this.regionModel.find({
         $or: [
-          { name: { $regex: '^.*' + text + '.*$', $options: '-i' } },
-          { zips: { $elemMatch: { $regex: '^' + text + '.*$' } } },
+          { name: { $regex: '^.*' + text + '.*$', $options: 'i' } },
+          { zips: { $elemMatch: { $regex: '^' + text + '.*$', $options: 'i' } } },
         ],
       })
       .limit(limit)
-      .skip(skip);
+      .skip(skip)
+      .exec();
   }
+
   async getAll(limit: number, skip: number): Promise<any> {
     return await this.regionModel.find().limit(limit).skip(skip);
   }
