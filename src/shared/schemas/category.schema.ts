@@ -30,22 +30,13 @@ export class Category {
     }],
   })
   history: [{ by: UserDTO; date: Date, eventType: string, value: string }];
-  @Prop({
-    type: mongoose.Schema.Types.Map,
-    of: {
-      _id: false,
-      name: String,
-      description: String,
-      shortDescription: String,
-    },
-  })
-  content: {
-    [key: string]: {
-      description: string;
-      shortDescription: string;
-      name: string;
-    };
-  };
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  name: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  shortDescription: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  description: {[key: string]: string;};
+
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

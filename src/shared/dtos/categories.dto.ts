@@ -19,6 +19,17 @@ export interface CategoryDTO {
   roles: RolesDTO;
   history: HistoryDTO[];
 }
+
+export interface MinCategoryDTO {
+  _id: string;
+  id: number;
+  status: StateType;
+  icon: string;
+  sort: number;
+  name: {[language: string]: string},
+  description: {[language: string]: string},
+  shortDescription: {[language: string]: string}
+}
 export class CreateCategoryDTO {
   @ApiProperty({
     enum: Object.values(State),

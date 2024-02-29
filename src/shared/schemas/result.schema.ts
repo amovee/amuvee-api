@@ -5,7 +5,7 @@ import { Category } from './category.schema';
 import { Location } from './location.schema';
 import { Region } from './region.schema';
 import { Roles } from 'src/shared/schemas/meta.schema';
-import { UserDTO } from '../dtos/types.dto';
+import {StateType, UserDTO} from '../dtos/types.dto';
 
 export type ResultDocument = Result & Document;
 export type MinResultDocument = MinResult & Document;
@@ -23,7 +23,7 @@ export class ResultType {
   };
   @Prop()
   weight: number;
-  @Prop({ unique: true })
+  @Prop()
   id: number;
 }
 
@@ -136,6 +136,64 @@ export class Result {
 export const ResultSchema = SchemaFactory.createForClass(Result);
 
 @Schema()
+export class MinCategory {
+  @Prop()
+  _id: mongoose.Schema.Types.ObjectId;
+  @Prop()
+  id: number;
+  @Prop()
+  icon: string;
+  @Prop()
+  status: StateType;
+  @Prop()
+  sort: number;
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  name: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  shortDescription: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  description: {[key: string]: string;};
+}
+
+@Schema()
+export class MinAction {
+  _id: mongoose.Schema.Types.ObjectId;
+  @Prop()
+  id: number;
+  @Prop()
+  status: StateType;
+  @Prop()
+  sort: number;
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  name: {[key: string]: string;};
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  description: {[key: string]: string;};
+}
+
+@Schema()
+export class MinLocation {
+  _id: mongoose.Schema.Types.ObjectId;
+  @Prop({
+    type: { street: String, houseNr: String, zip: String, place: String },
+    _id: false
+  })
+  address: { street: string; houseNr: string; zip: string; place: string };
+  @Prop({
+    type: { lon: Number, lat: Number },
+    _id: false
+  })
+  position: { lon: number; lat: number };
+  @Prop()
+  link: string;
+  @Prop()
+  name: string;
+  @Prop()
+  id: number;
+  @Prop()
+  status: string;
+}
+
+@Schema()
 export class MinResult {
   @Prop()
   _id: mongoose.Schema.Types.ObjectId;
@@ -155,20 +213,20 @@ export class MinResult {
   @Prop({ type: mongoose.Schema.Types.Map, of: String})
   description: {[key: string]: string;};
   
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Action' }] })
-  actions: Action[];
-  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }])
-  locations: Location[];
+  @Prop({ type: [MinAction]})
+  actions: MinAction[];
+  @Prop({ type: [MinLocation]})
+  locations: MinLocation[];
   @Prop([{ type: ResultFilters }])
   filters: ResultFilters[];
   @Prop({ _id: false, type: NumberFilter })
   amountOfMoney: NumberFilter;
   @Prop({ type: { from: Date, to: Date, _id: false } })
   timespan: { from: Date; to: Date };
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ResultType' })
-  type: ResultType;
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }] })
-  categories: Category[];
+  @Prop({ type: [ResultType]})
+  type: ResultType[];
+  @Prop({ type: [MinCategory]})
+  categories: MinCategory[];
   @Prop()
   status: string;
   @Prop()
@@ -176,4 +234,6 @@ export class MinResult {
   @Prop()
   updatedAt: Date;
 }
+
+
 export const MinResultSchema = SchemaFactory.createForClass(MinResult);

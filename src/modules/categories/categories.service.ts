@@ -63,27 +63,19 @@ export class CategoriesService {
           reviewer: undefined,
         },
         history: [],
-        content: {
-          de: {
-            description: categories[i].description,
-            shortDescription: categories[i].short_description,
-            name: categories[i].name,
-          },
-        },
+        name: { de: categories[i].name},
+        description: {de: categories[i].description},
+        shortDescription: {de: categories[i].short_description},
       };
       if (categories[i].russian != null) {
-        c.content['ru'] = {
-          name: categories[i].russian.name,
-          description: categories[i].russian.description,
-          shortDescription: categories[i].russian.short_description,
-        };
+        c.name['ru'] = categories[i].russian.name,
+        c.description['ru'] = categories[i].russian.description,
+        c.shortDescription['ru']  = categories[i].russian.short_description
       }
       if (categories[i].ukrainian != null) {
-        c.content['uk'] = {
-          name: categories[i].ukrainian.name,
-          description: categories[i].ukrainian.description,
-          shortDescription: categories[i].ukrainian.short_description,
-        };
+        c.name['uk'] = categories[i].ukrainian.name,
+          c.description['uk'] = categories[i].ukrainian.description,
+          c.shortDescription['uk']  = categories[i].ukrainian.short_description
       }
       if (category.user_created) {
         let userCreated = await this.userModel

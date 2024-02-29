@@ -138,32 +138,7 @@ export class ResultsService {
     const filters = await this.getMinMongoDBFilters(query);
     return (
       await this.minResultModel
-        .aggregate<MinResultDTO>([
-          {
-            $match: filters,
-          },
-          {
-            $lookup: {
-              from: 'resulttypes',
-              localField: 'type',
-              foreignField: '_id',
-              as: 'type',
-            },
-          },
-          unwind('$type'),
-          lookUp('actions'),
-          lookUp('locations'),
-          {
-            $project: {
-              'actions.specific': 0,
-              'actions.status': 0,
-              'actions.roles': 0,
-              'locations.status': 0,
-              'locations.roles': 0,
-            },
-          },
-          { $sort: { ['type.weight']: -1 } },
-        ])
+        .find<MinResultDTO>( filters ) // TODO: sort by type weight
         .skip(skip)
         .limit(limit)
     ).map((res: MinResultDTO) => {
@@ -312,14 +287,60 @@ export class ResultsService {
     );
     return null;
   }
+
+
   async minifyAllResults() {
+    const Minifiyrequest: PipelineStage[] = [
+      {
+        $unwind: '$variations',
+      },
+      { $unwind: "$variations"},
+      lookUpInVariation('actions'),
+      lookUpInVariation('locations'),
+      {
+        $lookup: {
+          from: 'resulttypes',
+          localField: 'type',
+          foreignField: '_id',
+          as: 'type',
+        },
+      },
+      {$unwind: '$type'},
+      {
+        $lookup:{
+          from: 'categories',
+          localField: 'categories',
+          foreignField: '_id',
+          as: 'categories'
+        }
+      },
+      {
+       $group: {
+         _id: "$_id",
+         doc: { $first: "$$ROOT" },
+         variations: { $push: "$variations" }
+        }
+      },
+      {
+        $addFields: {
+          "doc.variations": "$variations",
+        }
+      },
+      {
+        $replaceRoot: {
+          newRoot: "$doc"
+        }
+      },
+    ];
     await this.minResultModel.deleteMany().exec();
-    const results = await this.resultModel.find<ResultDTO>();    
+    const results = await this.resultModel.aggregate<ResultDTO>(
+      Minifiyrequest,
+    );
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       for (let j = 0; j < result.variations.length; j++) {
-        const variation = result.variations[j];
-        new this.minResultModel({
+        const variation =result.variations[j];
+        await new this.minResultModel({
           _id: new mongoose.Types.ObjectId(),
           vid: j,
           v_id: variation._id,
