@@ -14,7 +14,6 @@ import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
 import { CreateResultDTO, MinResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
 import {
   getVariationProjection,
-  lookUp,
   lookUpInVariation,
   mongoDBFiltersFromQueryFilter,
   mongoDBMinFiltersFromQueryFilter,
@@ -243,10 +242,20 @@ export class ResultsService {
     const total = await this.resultModel.aggregate([
       { $match: filters },
       {
-        $count: 'total',
+        $count: 'totalCount',
       },
     ]);
-    return total.length ? total[0] : { total: 0 };
+    return total.length ? total[0] : { totalCount: 0 };
+  }
+  async getMinCounter(query: QueryFilterDTO): Promise<any> {
+    const filters = await this.getMinMongoDBFilters(query);
+    const total = await this.minResultModel.aggregate([
+      { $match: filters },
+      {
+        $count: 'totalCount',
+      },
+    ]);
+    return total.length ? total[0] : { totalCount: 0 };
   }
   async getFilteredResultCount(query: QueryFilterDTO): Promise<number> {
     const filters = await this.getMongoDBFilters(query);

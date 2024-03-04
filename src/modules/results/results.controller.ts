@@ -58,7 +58,6 @@ export class ResultsController {
     }
   }
   @Get('min')
-  @ApiQuery({ name: 'query', required: false, type: QueryFilterDTO })
   async getMininmalResults(@Query() query: QueryFilterDTO): Promise<any[]> {
     query = queryFilterParser(query);
     try {
@@ -67,6 +66,18 @@ export class ResultsController {
         query.skip ? query.skip : 0,
         query,
       );
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
+  
+  @Get('min/counter')
+  async getMinCounter(
+    @Query() query: QueryFilterDTO,
+  ): Promise<{ filtered?: number; total: number }> {
+    query = queryFilterParser(query);
+    try {
+      return await this.resultsService.getMinCounter(query);
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }

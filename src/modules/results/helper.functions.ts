@@ -205,7 +205,7 @@ export function mongoDBMinFiltersFromQueryFilter(
   }
 
   if (innerfilters.length == 0 && outerfilters.length == 0) {
-    return { _id: { $ne: '' } };
+    return {};
   }
   return {
     $and: [
