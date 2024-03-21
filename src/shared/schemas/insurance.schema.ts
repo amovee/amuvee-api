@@ -6,8 +6,8 @@ export class Insurance {
   _id: mongoose.Schema.Types.ObjectId;
   @Prop()
   id: number;
-  @Prop()
-  name: string;
+  @Prop({ type: mongoose.Schema.Types.Map, of: String})
+  name: {[key: string]: string;};
   @Prop()
   isPublic: boolean;
   @Prop()

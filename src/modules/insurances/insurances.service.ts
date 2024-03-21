@@ -19,17 +19,23 @@ export class InsurancesService {
   async migrate(): Promise<void> {
     await this.counter.deleteSequenzDocument('insurances')
     await this.insuranceModel.deleteMany().exec();
-    (await axios.get(process.env.DIRECTUS_URL + 'items/insurance')).data.data.forEach(
-      async (insurance) => {
-        new this.insuranceModel({
-          id: await this.counter.setMaxSequenceValue('insurances', insurance.id),
-          status: State.published,
-          sort: insurance.weight,
-          isPublic: insurance.type == '1',
-          name: insurance.name,
-        }).save();
+    const insurances =  (await axios.get(process.env.DIRECTUS_URL + 'items/insurance')).data.data
+    for (const insurance of insurances) {
+      const newInsurance = new this.insuranceModel({
+        id: await this.counter.setMaxSequenceValue('insurances', insurance.id),
+        status: State.published,
+        sort: insurance.weight,
+        isPublic: insurance.type == '1',
+        name: { de: insurance.name },
+      });
+      if (insurance.russian != null) {
+        name['ru'] = insurance.russian.name;
       }
-    );
+      if (insurance.ukrainian != null) {
+        name['uk'] = insurance.ukrainian.name;
+      }
+      await newInsurance.save();
+    }
   }
   async getAll(): Promise<Insurance[]> {
     return this.insuranceModel.find();

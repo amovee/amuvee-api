@@ -1,5 +1,6 @@
 import { right } from './rights';
 import { ApiProperty } from '@nestjs/swagger';
+import * as process from "node:process";
 
 export const State = {
   archived: 'ARCHIVED',
@@ -24,6 +25,8 @@ export const mappingStateType = (status: string): StateType => {
   }
   return State.standby;
 }
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 
 export const Gender = {
@@ -66,13 +69,13 @@ export type NumberRange = {
 
 export class LoginDTO {
   @ApiProperty({
-    example: process.env.SWAGGER_EMAIL?process.env.SWAGGER_EMAIL:'user@example.com',
+    example: process.env.MODE=='LOCAL'?process.env.SWAGGER_EMAIL:'user@example.com',
     description: 'Email of the user',
   })
   email: string;
 
   @ApiProperty({
-    example: process.env.SWAGGER_PASSWORD?process.env.SWAGGER_PASSWORD:'password1234',
+    example: process.env.MODE=='LOCAL'?process.env.SWAGGER_PASS:'password1234',
     description: 'Password of the user',
   })
   password: string;

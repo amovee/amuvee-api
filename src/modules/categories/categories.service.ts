@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {HttpException, Injectable, HttpStatus} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Category, CategoryDocument } from 'src/shared/schemas/category.schema';
 import mongoose, { Model } from 'mongoose';
@@ -9,6 +9,7 @@ import { CategoryDTO, CreateCategoryDTO, UpdateCategoryDTO } from 'src/shared/dt
 import { mappingStateType } from 'src/shared/dtos/types.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
+import { ResultsService } from 'src/modules/results/results.service';
 
 @Injectable()
 export class CategoriesService {
@@ -17,6 +18,7 @@ export class CategoriesService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     private readonly counter: CounterService,
+    private readonly resultsService: ResultsService,
   ) {}
 
   async getCategories(language?: string): Promise<CategoryDTO[]> {
@@ -130,13 +132,14 @@ export class CategoriesService {
       date: new Date().toISOString(),
       eventType: HistoryEventType.created,
     };
-    return new this.categoryModel({
+    const newCategory = new this.categoryModel({
       _id: new mongoose.Types.ObjectId(),
       ...category,
       ...roles,
       id,
       history,
     }).save();
+    return newCategory;
   }
 
   async getOneFromId(id: string): Promise<CategoryDTO | undefined> {
@@ -154,10 +157,17 @@ export class CategoriesService {
         date: new Date().toISOString(),
         eventType: HistoryEventType.updated,
       });
-      return await this.categoryModel.findByIdAndUpdate(
+      const updatedCategory =  await this.categoryModel.findByIdAndUpdate(
         { _id },
         { ...changes, history: [...category.history] },
+        { new: true },
       );
+      const resultsToUpdate = await this.resultModel.find(
+        { "categories": updatedCategory._id });
+      resultsToUpdate.map(async (r) => {
+        await this.resultsService.updateMinResult(r._id);
+      });
+      return updatedCategory;
     }
 
     return null;
@@ -175,10 +185,27 @@ export class CategoriesService {
     if (!category) {
       throw new Error('Category not found');
     }
+    /*
     const referenceCount = await this.resultModel.countDocuments({ categories: category._id });
     if (referenceCount > 0) {
       throw new Error('Cannot delete category because it is referenced in '+referenceCount+' results');
     }
-    return this.categoryModel.findByIdAndDelete(category._id);
+    */
+    try {
+      await this.categoryModel.findByIdAndDelete(category._id);
+      const resultsToUpdate = await this.resultModel.find({
+        "categories": category._id
+      });
+      resultsToUpdate.map(async (r) => {
+        r.categories = r.categories.filter((c) => c != category._id);
+        await r.save();
+      });
+      resultsToUpdate.map(async (r) => {
+        await this.resultsService.updateMinResult(r._id);
+      });
+      return `Category with id ${category.id} deleted`;
+    } catch (error){
+      throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+    }
   }
 }

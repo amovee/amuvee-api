@@ -7,6 +7,7 @@ import { ActionsService } from './actions.service';
 import { Action, ActionSchema } from 'src/shared/schemas/action.schema';
 import { Result, ResultSchema } from 'src/shared/schemas/result.schema';
 import {UsersModule} from "../users/users.module";
+import {ResultsModule} from "../results/results.module";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import {UsersModule} from "../users/users.module";
     ]),
     CountersModule,
     UsersModule,
+    ResultsModule
   ],
   controllers: [ActionsController],
   providers: [ActionsService],

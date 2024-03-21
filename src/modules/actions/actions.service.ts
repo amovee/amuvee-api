@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, NotFoundException} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Action } from 'rxjs/internal/scheduler/Action';
 import mongoose, { Model } from 'mongoose';
@@ -11,6 +11,7 @@ import { ActionDTO, CreateActionsDTO } from 'src/shared/dtos/actions.dto';
 import { Result, ResultDocument } from 'src/shared/schemas/result.schema';
 import { ResultDTO } from 'src/shared/dtos/results.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
+import { ResultsService } from 'src/modules/results/results.service';
 
 @Injectable()
 export class ActionsService {
@@ -19,6 +20,7 @@ export class ActionsService {
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly counter: CounterService,
+    private readonly resultsService: ResultsService,
   ) {}
   async migrate(): Promise<void> {    
     await this.counter.deleteSequenzDocument('actions');
@@ -131,11 +133,24 @@ export class ActionsService {
     return actions;
   }
   async deleteAction(id: string) {
-    const action = await this.actionModel.findById(id);
+    const action = await this.getAction(id)
     if (action != null) {
-      return await this.actionModel.findByIdAndDelete(id);
+      const action = await this.actionModel.findByIdAndDelete(id);
+      const resultsToUpdate = await this.resultModel.find({
+        "variations.actions": action._id
+      });
+      resultsToUpdate.map(async (r) => {
+        r.variations.map((v) => {
+          v.actions = v.actions.filter((a) => a != action._id);
+        });
+        await r.save();
+      });
+      resultsToUpdate.map(async (r) => {
+        await this.resultsService.updateMinResult(r._id);
+      });
+      return `Action with id ${action.id} deleted`;
     }
-    throw new NotFoundException('Action not found');
+    throw new HttpException('Action not found', HttpStatus.NOT_FOUND);
   }
   async getAction(id: string): Promise<ActionDTO | undefined> {
    return await this.actionModel.findById(id)
@@ -148,10 +163,17 @@ export class ActionsService {
         by: userId,
         date: new Date().toISOString(),
         eventType: HistoryEventType.updated,
-      })
-      return await this.actionModel.findByIdAndUpdate({ _id }, {...changes});
+      });
+      const updatedAction = await this.actionModel.findByIdAndUpdate({ _id }, {...changes}, { new: true });
+      const resultsToUpdate = await this.resultModel.find({
+          "variations.actions": updatedAction._id
+        });
+      resultsToUpdate.map(async (r) => {
+        await this.resultsService.updateMinResult(r._id);
+      });
+      return updatedAction;
     }
-    return null; //TODO: Error
+    throw new HttpException('Action not found', HttpStatus.NOT_FOUND);
   }
   async create(action: CreateActionsDTO, userId: string) {
     const id = await this.counter.getNextSequenceValue('actions');
@@ -163,7 +185,8 @@ export class ActionsService {
     }
     const newAction = new this.actionModel({ ...action, ...roles, id, history });
     newAction._id = new mongoose.Types.ObjectId();
-    return newAction.save();
+    await newAction.save();
+    return newAction;
   }
   async getCount(
     ): Promise<{totalCount: number}> {

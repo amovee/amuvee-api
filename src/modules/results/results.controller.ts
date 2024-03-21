@@ -144,7 +144,7 @@ export class ResultsController {
   async createResult(@Body() result: CreateResultDTO, @Request() req) {
     return this.resultsService.create(result, req.user._id);
   }
-  @Right('LOCATIONS_UPDATE')
+  @Right('RESULTS_UPDATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
   @ApiBody({ type: CreateResultDTO })

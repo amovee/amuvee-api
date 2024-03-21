@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {HttpException, HttpStatus,  Injectable} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId } from 'mongoose';
 import { LocationDocument, Location } from 'src/shared/schemas/location.schema';
@@ -9,14 +9,18 @@ import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { CreateLocationDTO, LocationDTO, UpdateLocationDTO } from 'src/shared/dtos/locations.dto';
 import { UsersService } from '../users/users.service';
 import { State } from 'src/shared/dtos/types.dto';
+import { ResultsService } from '../results/results.service';
+import {Result, ResultDocument} from "../../shared/schemas/result.schema";
 
 @Injectable()
 export class LocationsService {
   constructor(
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     public userService: UsersService,
-    private readonly counter: CounterService
+    private readonly counter: CounterService,
+    private readonly resultsService: ResultsService,
   ) {
   }
 
@@ -135,9 +139,15 @@ export class LocationsService {
         date: new Date().toISOString(),
         eventType: HistoryEventType.updated,
       })
-      return await this.locationModel.findByIdAndUpdate({_id}, {...changes, history: [...location.history]});
+      const updatedLocation = await this.locationModel.findByIdAndUpdate(
+        {_id}, {...changes, history: [...location.history]}, {new: true});
+      const resultsToUpdate = await this.resultModel.find(
+          {"variations.locations": updatedLocation._id});
+       resultsToUpdate.map(async (r) => {
+        await this.resultsService.updateMinResult(r._id);
+      });
+      return updatedLocation;
     }
-
     return null;
   }
 
@@ -156,7 +166,24 @@ export class LocationsService {
     // if (isTypeExist) {
     //   throw new Error('Location is used in results');
     // }
-    return this.locationModel.findByIdAndDelete(location._id);
+    try {
+      const deletedLocation =await this.locationModel.findByIdAndDelete(location._id);
+      const resultsToUpdate = await this.resultModel.find({
+        "variations.locations": deletedLocation._id
+      });
+      resultsToUpdate.map(async (r) => {
+        r.variations.map((v) => {
+          v.locations = v.locations.filter((a) => a != deletedLocation._id);
+        });
+        await r.save();
+      });
+      resultsToUpdate.map(async (r) => {
+        await this.resultsService.updateMinResult(r._id);
+      });
+      return `Location with id ${deletedLocation.id} deleted`;
+    } catch (error){
+      throw new HttpException('Location not found', HttpStatus.NOT_FOUND);
+    }
   }
 
   async search(query: string, skip: number, limit: number) {

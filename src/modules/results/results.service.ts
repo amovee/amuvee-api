@@ -11,7 +11,7 @@ import { Model } from 'mongoose';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
-import { CreateResultDTO, MinResultDTO, ResultDTO } from 'src/shared/dtos/results.dto';
+import {CreateResultDTO, MinResultDTO, ResultDTO} from 'src/shared/dtos/results.dto';
 import {
   getVariationProjection,
   lookUpInVariation,
@@ -373,8 +373,57 @@ export class ResultsService {
     }
   }
   async minifyResult(_id) {
+    const Minifiyrequest: PipelineStage[] = [
+      {
+        $unwind: '$variations',
+      },
+      { $unwind: "$variations"},
+      lookUpInVariation('actions'),
+      lookUpInVariation('locations'),
+      {
+        $lookup: {
+          from: 'resulttypes',
+          localField: 'type',
+          foreignField: '_id',
+          as: 'type',
+        },
+      },
+      {$unwind: '$type'},
+      {
+        $lookup:{
+          from: 'categories',
+          localField: 'categories',
+          foreignField: '_id',
+          as: 'categories'
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          doc: { $first: "$$ROOT" },
+          variations: { $push: "$variations" }
+        }
+      },
+      {
+        $addFields: {
+          "doc.variations": "$variations",
+        }
+      },
+      {
+        $replaceRoot: {
+          newRoot: "$doc"
+        }
+      },
+      {
+        $match: { _id:  new mongoose.Types.ObjectId(_id) },
+      },
+    ];
     await this.regionModel.deleteMany({ r_id: _id }).exec();
-    const result = await this.resultModel.findById<ResultDTO>(_id);
+    const results = await this.resultModel.aggregate<ResultDTO>(
+      Minifiyrequest,
+    );
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
       for (let j = 0; j < result.variations.length; j++) {
         const variation = result.variations[j];
         new this.minResultModel({
@@ -394,9 +443,10 @@ export class ResultsService {
           type: result.type,
           categories: result.categories,
           status: variation.status,
-          updatedAt: variation.history[variation.history.length - 1].date,
-          createdAt: variation.history[0].date,
+          updatedAt: variation.updatedAt,
+          createdAt: variation.createdAt,
         }).save();
+      }
     }
   }
   async create(result: CreateResultDTO, _id: string){
@@ -453,4 +503,19 @@ export class ResultsService {
     }
     throw new HttpException('Result not found', HttpStatus.NOT_FOUND);
   }
+
+  async updateMinResult(_id: string) {
+    const result = await this.resultModel.findById<CreateResultDTO>(_id);
+    if (!result) {
+      throw new HttpException('Result not found', HttpStatus.NOT_FOUND);
+    }
+    try {
+      await this.minResultModel.deleteMany({ r_id: _id });
+      await this.minifyResult(_id);
+      return { message: 'related Result has updated' };
+    } catch (error) {
+      throw new HttpException('min Results can not updated', HttpStatus.NOT_FOUND);
+    }
+  }
+
 }

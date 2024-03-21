@@ -150,13 +150,14 @@ export class EventsService {
       date: new Date().toISOString(),
       eventType: HistoryEventType.created,
     };
-    return new this.eventModel({
+    const newEvent =  new this.eventModel({
       _id: new mongoose.Types.ObjectId(),
       ...event,
       ...roles,
       id,
       history,
     }).save();
+    return newEvent;
   }
 
   async getOneFromId(
