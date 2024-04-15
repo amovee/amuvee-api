@@ -26,14 +26,8 @@ export class InsurancesService {
         status: State.published,
         sort: insurance.weight,
         isPublic: insurance.type == '1',
-        name: { de: insurance.name },
+        name: { de: insurance.name, ru: insurance.name, uk: insurance.name },
       });
-      if (insurance.russian != null) {
-        name['ru'] = insurance.russian.name;
-      }
-      if (insurance.ukrainian != null) {
-        name['uk'] = insurance.ukrainian.name;
-      }
       await newInsurance.save();
     }
   }
