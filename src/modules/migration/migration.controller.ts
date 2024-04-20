@@ -7,6 +7,7 @@ import { RegionService } from '../region/region.service';
 import { UsersService } from '../users/users.service';
 import { MigrationService } from './migration.service';
 import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
+import { EventsService } from '../events/events.service';
 
 @ApiTags('Migrations')
 @ApiBearerAuth('jwt')
@@ -20,6 +21,7 @@ export class MigrationController {
     private insuranceService: InsurancesService,
     private actionService: ActionsService,
     private userService: UsersService,
+    private eventService: EventsService,
   ) {}
   @Post('all')
   async migrateAll(): Promise<void> {
@@ -49,6 +51,10 @@ export class MigrationController {
   @Post('actions')
   async migrateActions(): Promise<void> {
     await this.actionService.migrate();
+  }
+  @Post('events')
+  async migrateEvents(): Promise<void> {
+    await this.eventService.migrate();
   }
 
   @Post('helpers')

@@ -26,6 +26,8 @@ import { ActionsModule } from '../actions/actions.module';
 import { User, UserSchema } from 'src/shared/schemas/user.schema';
 import { CountersModule } from '../counters/counters.module';
 import { ResultsModule } from '../results/results.module';
+import { Event, EventSchema } from 'src/shared/schemas/event.schema';
+import { EventsModule } from '../events/events.module';
 
 @Module({
   imports: [
@@ -34,6 +36,7 @@ import { ResultsModule } from '../results/results.module';
     LocationsModule,
     CategoriesModule,
     InsurancesModule,
+    EventsModule,
     ActionsModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
@@ -45,9 +48,10 @@ import { ResultsModule } from '../results/results.module';
       { name: Region.name, schema: RegionSchema },
       { name: Action.name, schema: ActionSchema },
       { name: User.name, schema: UserSchema },
+      { name: Event.name, schema: EventSchema },
     ]),
     CountersModule,
-    ResultsModule
+    ResultsModule,
   ],
   controllers: [MigrationController],
   providers: [MigrationService],
