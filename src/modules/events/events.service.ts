@@ -8,10 +8,6 @@ import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { mappingStateType } from 'src/shared/dtos/types.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { CreateEventDTO, EventDTO, UpdateEventDTO } from 'src/shared/dtos/events.dto';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { RightsGuard } from '../auth/rights/rights.guard';
-import { Right } from '../auth/rights/rights.decorator';
 
 @Injectable()
 export class EventsService {
@@ -138,8 +134,18 @@ export class EventsService {
   async countEvents(): Promise<{totalCount: number}> {
     return {totalCount: await this.eventModel.countDocuments()};
   }
-  async getListByLimitAndSkip(skip: number, limit: number) {
-    return await this.eventModel.find().skip(skip).limit(limit).exec();
+  async getListByLimitAndSkip(skip: number, limit: number, search?: string) {
+    
+    return await this.eventModel.find(search?{
+      $or: [
+        { 'name.de': { $regex: search, $options: 'i' } },
+        { 'name.uk': { $regex: search, $options: 'i' } },
+        { 'name.ru': { $regex: search, $options: 'i' } },
+        { 'shortDescription.de': { $regex: search, $options: 'i' } },
+        { 'shortDescription.uk': { $regex: search, $options: 'i' } },
+        { 'shortDescription.ru': { $regex: search, $options: 'i' } },
+      ],
+    }: {}).sort({"id": 1}).limit(limit).skip(skip);
   }
   
   async create(event: CreateEventDTO, userId: string): Promise<Event> {
@@ -196,6 +202,7 @@ export class EventsService {
     return this.eventModel.findByIdAndDelete(event._id);
   }
 
+  // DELETE
   async search(query: string, skip: number, limit: number): Promise<any[]> {
     return await this.eventModel.find({
       $or: [

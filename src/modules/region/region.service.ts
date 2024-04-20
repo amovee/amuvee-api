@@ -42,20 +42,13 @@ export class RegionService {
     }
   }
 
-  async searchString(text: string, limit: number, skip: number): Promise<any> {
-    return await this.regionModel.find({
-        $or: [
-          { name: { $regex: '^.*' + text + '.*$', $options: 'i' } },
-          { zips: { $elemMatch: { $regex: '^' + text + '.*$', $options: 'i' } } },
-        ],
-      })
-      .limit(limit)
-      .skip(skip)
-      .exec();
-  }
-
-  async getAll(limit: number, skip: number): Promise<any> {
-    return await this.regionModel.find().limit(limit).skip(skip);
+  async getAll(limit: number, skip: number, search?: string): Promise<any> {
+    return await this.regionModel.find(search?{
+      $or: [
+        { name: { $regex: search, $options: 'i' } },
+        { zips: { $regex: search, $options: 'i' } },
+      ],
+    }: {}).limit(limit).skip(skip);
   }
   async count(): Promise<{totalCount: number}> {
     return {totalCount: await this.regionModel.countDocuments()};

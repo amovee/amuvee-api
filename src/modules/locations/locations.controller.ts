@@ -25,26 +25,19 @@ import { Right } from '../auth/rights/rights.decorator';
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) { }
   @Get()
-  @ApiQuery({ name: 'limit', required: false, type: Number})
-  @ApiQuery({ name: 'skip', required: false, type: Number })
-  async getAll(
-    @Query() query: { limit?: number; skip?: number },
-  ): Promise<Location[]> {
-    return await this.locationsService.getAll(
-      query.limit ? query.limit : 20,
-      query.skip ? query.skip : 0,
-    );
-  }
-
-
-  @Get('search')
-  @ApiQuery({ name: 'query', required: true, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'skip', required: false, type: Number })
-  async searchEvents(
-    @Query() query: { query: string; limit: number; skip: number },
+  @ApiQuery({ name: 'search', required: false, type: String })
+  async getAll(
+    @Query('limit') limit = 20,
+    @Query('skip') skip = 0,
+    @Query('search') search,
   ): Promise<Location[]> {
-    return this.locationsService.search(query.query, query.limit, query.skip);
+    return await this.locationsService.getAll(
+      +limit,
+      +skip,
+      search
+    );
   }
 
   @ApiBearerAuth('jwt')

@@ -9,22 +9,23 @@ import {
   Body,
   UseGuards,
   HttpException,
-  HttpStatus
+  HttpStatus,
 } from '@nestjs/common';
 import { RegionService } from './region.service';
-import {ApiBearerAuth, ApiQuery, ApiTags} from '@nestjs/swagger';
-import {Right} from "../auth/rights/rights.decorator";
-import {JwtAuthGuard} from "../auth/jwt/jwt-auth.guard";
-import {RightsGuard} from "../auth/rights/rights.guard";
-import {RegionDTO, createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
-
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Right } from '../auth/rights/rights.decorator';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { RightsGuard } from '../auth/rights/rights.guard';
+import {
+  RegionDTO,
+  createRegionDTO,
+  updateRegionDTO,
+} from '../../shared/dtos/region.dto';
 
 @ApiTags('Regions')
 @Controller('regions')
 export class RegionController {
-  constructor(
-    private readonly regionService: RegionService
-  ) {}
+  constructor(private readonly regionService: RegionService) {}
   // Auth
   @ApiBearerAuth('jwt')
   @Post('migrate')
@@ -33,31 +34,26 @@ export class RegionController {
   }
 
   @Get()
-  @ApiQuery({ name: 'limit', required: false, type: Number})
-  @ApiQuery({ name: 'skip', required: false, type: Number })
-  async getAll(@Query('limit') limit = 20, @Query('skip') skip = 0) {
-    return this.regionService.getAll(limit, skip);
-  }
-
-  @Get('counter')
-  async count(): Promise<{totalCount: number}> {
-    return this.regionService.count();
-  }
-
-  @Get('search')
-  @ApiQuery({ name: 'query', required: true, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'skip', required: false, type: Number })
-  async searchRigoin(
-    @Query() query: { query: string; limit: number; skip: number },
-  ): Promise<any[]> {
-    if (query.limit > 40)
-      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+  @ApiQuery({ name: 'search', required: false, type: String })
+  async getAll(
+    @Query('limit') limit = 20,
+    @Query('skip') skip = 0,
+    @Query('search') search,
+  ) {    
     try {
-      return await this.regionService.searchString(query.query, query.limit, query.skip);
+      if (search && search.length > 40)
+        throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+      return this.regionService.getAll(limit, skip, search);
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @Get('counter')
+  async count(): Promise<{ totalCount: number }> {
+    return this.regionService.count();
   }
 
   @Right('REGIONS_CREATE')
@@ -82,8 +78,7 @@ export class RegionController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id){
-    return this.regionService.getById(id)
+  async getById(@Param('id') id) {
+    return this.regionService.getById(id);
   }
 }
-

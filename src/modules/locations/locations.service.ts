@@ -24,8 +24,14 @@ export class LocationsService {
   ) {
   }
 
-  async getAll(limit: number, skip: number): Promise<Location[]> {
-    return await this.locationModel.find().sort({"id": 1}).limit(limit).skip(skip);
+  async getAll(limit: number, skip: number, search?: string): Promise<Location[]> {
+    return await this.locationModel.find(search?{
+      $or: [
+        { 'address.street': { $regex: search, $options: 'i' } },
+        { 'address.place': { $regex: search, $options: 'i' } },
+        { 'address.zip': { $regex: search, $options: 'i' } },
+      ],
+    }: {}).sort({"id": 1}).limit(limit).skip(skip);
   }
 
   async getNumberOfAllLocations() {
@@ -184,16 +190,5 @@ export class LocationsService {
     } catch (error){
       throw new HttpException('Location not found', HttpStatus.NOT_FOUND);
     }
-  }
-
-  async search(query: string, skip: number, limit: number) {
-    return this.locationModel.find({
-      $or: [
-        {name: {$regex: query, $options: 'i'}},
-        {'address.street': {$regex: query, $options: 'i'}},
-        {'address.place': {$regex: query, $options: 'i'}},
-      ],
-    }).limit(limit).skip(skip).exec();
-
   }
 }

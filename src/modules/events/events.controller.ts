@@ -62,15 +62,19 @@ export class ResultsController {
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   async getEventList(
-    @Query() query: { limit: number; skip: number },
+    @Query('limit') limit = 20,
+    @Query('skip') skip = 0,
+    @Query('search') search,
   ): Promise<any[]> {
-    if (query.limit > 40)
+    if (limit > 40)
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     try {
       return await this.eventsService.getListByLimitAndSkip(
-        query.skip ? +query.skip : 0,
-        query.limit ? +query.limit : 20,
+        +skip,
+        +limit,
+        search
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
@@ -80,22 +84,6 @@ export class ResultsController {
   async getCount(): Promise<{totalCount: number}> {
     try {
       return await this.eventsService.countEvents();
-    } catch (error) {
-      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
-    }
-  }
-  // search for events
-  @Get('search')
-  @ApiQuery({ name: 'query', required: true, type: String })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'skip', required: false, type: Number })
-  async searchEvents(
-    @Query() query: { query: string; limit: number; skip: number },
-  ): Promise<any[]> {
-    if (query.limit > 40)
-      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
-    try {
-      return await this.eventsService.search(query.query, query.skip, query.limit);
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
@@ -147,6 +135,4 @@ export class ResultsController {
   async deleteEvent(@Param('id') id: string) {
     return this.eventsService.delete(id);
   }
-
-
 }
