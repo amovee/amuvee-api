@@ -78,7 +78,7 @@ export class RegionController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id) {
+  async getById(@Param('id') id: string) {
     return this.regionService.getById(id);
   }
 }
