@@ -32,7 +32,6 @@ export interface CreateResultTypeDTO {
 export class ResultDTO {
   _id?: string;
   id?: number;
-  specific?: string;
   name?: string;
   categories: Ref<CategoryDTO>[];
   type?: Ref<ResultTypeDTO>;
@@ -48,6 +47,7 @@ export class VariationDTO {
   status?: StateType;
   roles?: RolesDTO;
   history?: HistoryDTO[];
+  specific?: string;
   name?: string;
   timespan?: Timespan;
   amountOfMoney?: NumberRange;
@@ -106,7 +106,6 @@ export interface MinResultDTO {
 }
 //CREATE
 export class CreateResultDTO {
-  specific?: string;
   name: string;
   categories: Ref<CategoryDTO>[];
   type: Ref<ResultTypeDTO>;

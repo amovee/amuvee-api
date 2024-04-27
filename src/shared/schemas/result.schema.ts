@@ -78,6 +78,8 @@ export class Variation {
   updatedAt: Date;
   @Prop()
   name: string;
+  @Prop()
+  specific: string;
   @Prop({ type: { from: Date, to: Date, _id: false } })
   timespan: { from: Date; to: Date };
   @Prop([{ type: ResultFilters }])
@@ -122,8 +124,6 @@ export class Result {
     ],
   })
   history: [{ by: UserDTO; date: Date; eventType: string; value: string }];
-  @Prop()
-  specific: string;
   @Prop()
   name: string;
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }] })
