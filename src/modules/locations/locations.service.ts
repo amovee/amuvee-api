@@ -14,6 +14,9 @@ import {Result, ResultDocument} from "../../shared/schemas/result.schema";
 
 @Injectable()
 export class LocationsService {
+
+  private searchParameters = ['name', 'address.street', 'address.place', 'address.zip']
+
   constructor(
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
@@ -26,11 +29,7 @@ export class LocationsService {
 
   async getAll(limit: number, skip: number, search?: string): Promise<Location[]> {
     return await this.locationModel.find(search?{
-      $or: [
-        { 'address.street': { $regex: search, $options: 'i' } },
-        { 'address.place': { $regex: search, $options: 'i' } },
-        { 'address.zip': { $regex: search, $options: 'i' } },
-      ],
+      $or: this.searchParameters.map(param => ({ [param]: { $regex: search, $options: 'i' } })),
     }: {}).sort({"id": 1}).limit(limit).skip(skip);
   }
 
@@ -109,8 +108,10 @@ export class LocationsService {
     }
   }
 
-  async getCounter(): Promise<{ totalCount: number }> {
-    const totalCount = await this.locationModel.countDocuments();
+  async getCounter(search?: string): Promise<{ totalCount: number }> {
+    const totalCount = await this.locationModel.find(search?{
+      $or: this.searchParameters.map(param => ({ [param]: { $regex: search, $options: 'i' } })),
+    }: {}).countDocuments();
     return {totalCount};
   }
 
