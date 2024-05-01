@@ -364,8 +364,8 @@ export class ResultsService {
           type: result.type,
           categories: result.categories,
           status: variation.status,
-          updatedAt: variation.createdAt,
-          createdAt: variation.updatedAt,
+          updatedAt: result.createdAt,
+          createdAt: result.updatedAt,
         }).save();
       }
     }
@@ -441,8 +441,8 @@ export class ResultsService {
           type: result.type,
           categories: result.categories,
           status: variation.status,
-          updatedAt: variation.updatedAt,
-          createdAt: variation.createdAt,
+          updatedAt: result.updatedAt,
+          createdAt: result.createdAt,
         }).save();
       }
     }
@@ -456,10 +456,6 @@ export class ResultsService {
       date: new Date(),
       eventType: HistoryEventType.created,
     }];
-    result.variations.forEach(variation => {
-      variation.roles = roles;
-      variation.history = history;
-    });
     
     const r = await new this.resultModel({
       _id: new mongoose.Types.ObjectId(),

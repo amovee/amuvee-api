@@ -45,8 +45,6 @@ export class ResultDTO {
 export class VariationDTO {
   _id: string;
   status?: StateType;
-  roles?: RolesDTO;
-  history?: HistoryDTO[];
   name?: string;
   timespan?: Timespan;
   amountOfMoney?: NumberRange;
@@ -57,8 +55,6 @@ export class VariationDTO {
   locations?: Ref<LocationDTO>[];
   variables: Variables;
   filters: ResultFilters[];
-  updatedAt: Date;
-  createdAt: Date;
 }
 
 class Timespan {

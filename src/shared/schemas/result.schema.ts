@@ -73,10 +73,6 @@ export class Variation {
   @Prop()
   status: string;
   @Prop()
-  createdAt: Date;
-  @Prop()
-  updatedAt: Date;
-  @Prop()
   name: string;
   @Prop({ type: { from: Date, to: Date, _id: false } })
   timespan: { from: Date; to: Date };
