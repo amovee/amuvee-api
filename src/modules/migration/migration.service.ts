@@ -21,7 +21,7 @@ import {
 import mongoose from 'mongoose';
 import { CounterService } from '../counters/counters.service';
 import { result_types } from '../results/result.migration';
-import { mappingStateType } from 'src/shared/dtos/types.dto';
+import { State, mappingStateType } from 'src/shared/dtos/types.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { ResultsService } from '../results/results.service';
 
@@ -70,10 +70,38 @@ export class MigrationService {
   }
   async migrateResultsFromAllCategories(): Promise<void> {
     await this.resultModel.deleteMany().exec();
+    console.log('load_blocks');
+    const blocks = (
+      await axios.get(
+        `${process.env.DIRECTUS_URL}items/building_block?fields=id,name,result`,
+      )
+    ).data.data;
+    console.log('load_categories');
     const categories = await this.categoryModel.find().exec();
+    const locationIds: any = await this.getlocationIDs();
+    const insuranceIds: any = await this.getInsuranceIds();
+    const users: User[] = await this.userModel.find().exec();
+    const resultTypes: ResultType[] = await this.resultTypeModel.find().exec();
+    const resultTypeMap = {};
+    resultTypes.forEach((type) => {
+      resultTypeMap[type.weight] = type._id;
+    });
+
+    const excluded_resultids = []
+    console.log('create results from blocks');
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i]
+      block.result.forEach(id=>{
+        excluded_resultids.push(+id)
+      })
+      console.log('block', block.id);
+      await this.migrateBuildingBlock(block, categories, locationIds, insuranceIds, users, resultTypeMap);
+    }
+    console.log('create results from categories');
     for (let i = 0; i < categories.length; i++) {
       const category = categories[i];
-      await this.migrateResults(category);
+      console.log('category', category._id);
+      await this.migrateResults(category, excluded_resultids, locationIds, insuranceIds, users, resultTypeMap);
     }
   }
   generateMinMaxFilter(
@@ -137,7 +165,13 @@ export class MigrationService {
     }
     return actions;
   }
-  async createFilter(result: any, insurances: any, locationIds: any, createdAt: Date, updatedAt: Date) {
+  async createVariation(
+    result: any,
+    insurances: any,
+    locationIds: any,
+    createdAt: Date,
+    updatedAt: Date,
+  ) {
     const relationships = result.has_relationship.map(
       (i) => i.relationship_types_id,
     );
@@ -146,7 +180,7 @@ export class MigrationService {
     );
     const parentGender = result.parent_gender ? [result.parent_gender] : [];
     const variation = {
-      name: 'Variation 1',
+      name: !!result.specific? result.specific: 'Main',
       status: mappingStateType(result.status),
       createdAt: createdAt,
       updatedAt: updatedAt,
@@ -176,7 +210,6 @@ export class MigrationService {
         result.min_amount_of_money,
         result.max_amount_of_money,
       ),
-      specific: result.specific,
       title: { de: result.name },
       description: { de: result.description },
       shortDescription: { de: result.short_description },
@@ -198,15 +231,81 @@ export class MigrationService {
     }
     return variation;
   }
-  async migrateResults(category: Category): Promise<any> {
-    const locationIds: any = await this.getlocationIDs();
-    const insuranceIds: any = await this.getInsuranceIds();
-    const users: User[] = await this.userModel.find().exec();
-    const resultTypes: ResultType[] = await this.resultTypeModel.find().exec();
-    const resultTypeMap = {};
-    resultTypes.forEach((type) => {
-      resultTypeMap[type.weight] = type._id;
-    });
+  async migrateBuildingBlock(block: {
+    id: number;
+    name: string;
+    result: number[];
+  }, categories: Category[],
+
+  locationIds: any,
+  insuranceIds: any,
+  users: User[],
+  resultTypeMap: any) {
+    const fields = [
+      '*',
+      'has_insurance.*',
+      'has_relationship.*',
+      'has_job_related_situation.*',
+      'relationship_types.*',
+      'type.*',
+      'russian.*',
+      'ukrainian.*',
+      'actions.*',
+    ].join(',');
+    const counter = await this.getNumberOfAllResults();
+    const results = (
+      await axios.get(
+        `${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"id":{"_in": [${block.result}]}}`,
+      )
+    ).data.data;
+    const admin = await this.userModel.findOne({ name: 'admin' }).exec();
+    let minId = Infinity;
+    const category_ids = [];
+    const variations = [];
+    for (let j = 0; j < results.length; j++) {
+      if (+results[j].id < minId) minId = +results[j].id;
+      const cid = categories.find(c=>c.id === +results[j].category)._id;
+      if(!!cid && !category_ids.includes(cid)){
+        category_ids.push(cid)
+      }
+      variations.push(await this.createVariation(
+        results[j],
+        results[j].has_insurance.map((i) => insuranceIds[i.insurance_id]),
+        locationIds,
+        new Date(results[j].date_created),
+        new Date(results[j].date_updated),
+      ));
+    }
+    new this.resultModel({
+      _id: new mongoose.Types.ObjectId(),
+      name: block.name,
+      status: State.published,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      id: await this.counter.setMaxSequenceValue('results', +minId),
+      categories: category_ids,
+      variations,
+      roles: { author: admin },
+      history: [
+        {
+          by: admin._id,
+          date: new Date(),
+          eventType: HistoryEventType.created,
+          value: 'Created on migration',
+        },
+      ],
+      type: resultTypeMap[results[0].type.weight],
+    }).save();
+  }
+  async migrateResults(
+    category: Category,
+    excluded_results: number[],
+    locationIds: any,
+    insuranceIds: any,
+    users: User[],
+    resultTypeMap: any
+  ): Promise<any> {
+    
     const fields = [
       '*',
       'has_insurance.*',
@@ -220,11 +319,13 @@ export class MigrationService {
     ].join(',');
 
     const counter = await this.getNumberOfAllResults();
+    console.log('Req:',`${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"_and":[{"id":{"_nin": [${excluded_results}]}},{"category":{"_eq":${category.id}}}]}`);
     const results = (
       await axios.get(
-        `${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"category":{"_eq":${category.id}}}`,
+        `${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"_and":[{"id":{"_nin": [${excluded_results}]}},{"category":{"_eq":${category.id}}}]}`,
       )
     ).data.data;
+    console.log('DONE');
     const admin = await this.userModel.findOne({ name: 'admin' }).exec();
     for (let j = 0; j < results.length; j++) {
       const result = results[j];
@@ -267,19 +368,19 @@ export class MigrationService {
         eventType: HistoryEventType.migrated,
         value: 'Migrated from Directus',
       });
-      const variation = await this.createFilter(
+      const variation = await this.createVariation(
         result,
         result.has_insurance.map((i) => insuranceIds[i.insurance_id]),
         locationIds,
         history[0].date,
-        history[history.length-1].date
+        history[history.length - 1].date,
       );
       new this.resultModel({
         _id: new mongoose.Types.ObjectId(),
         name: result.name.replaceAll('&shy;', ''),
         status: mappingStateType(result.status),
         createdAt: history[0].date,
-        updatedAt: history[history.length-1].date,
+        updatedAt: history[history.length - 1].date,
         id: await this.counter.setMaxSequenceValue('results', +result.id),
         categories: [category._id],
         variations: [{ ...variation, roles, history }],

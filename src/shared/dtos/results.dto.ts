@@ -47,7 +47,6 @@ export class VariationDTO {
   status?: StateType;
   roles?: RolesDTO;
   history?: HistoryDTO[];
-  specific?: string;
   name?: string;
   timespan?: Timespan;
   amountOfMoney?: NumberRange;

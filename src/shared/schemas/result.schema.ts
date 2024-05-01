@@ -78,8 +78,6 @@ export class Variation {
   updatedAt: Date;
   @Prop()
   name: string;
-  @Prop()
-  specific: string;
   @Prop({ type: { from: Date, to: Date, _id: false } })
   timespan: { from: Date; to: Date };
   @Prop([{ type: ResultFilters }])
