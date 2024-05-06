@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
-import { Model, ObjectId } from 'mongoose';
+import mongoose, { Model, ObjectId } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import axios from 'axios';
 import { right } from 'src/shared/dtos/rights';
@@ -70,6 +70,12 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.userModel.find().select('-password').exec();
+  }
+  async findOne(id: string | number): Promise<User[]> {
+    const idMatch = isNaN(+id)
+      ? { _id: new mongoose.Types.ObjectId(id) }
+      : { id: +id };
+    return this.userModel.find(idMatch).select('-password').exec();
   }
   async updateUserPassword(
     updatePasswordDTO: UpdatePasswordDTO,

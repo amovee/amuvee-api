@@ -110,4 +110,9 @@ export class UsersController {
     this.usersService.deleteOne(req.user.email, id);
     // TODO: return value
   }
+
+  @Get('/:id')
+  async getUser(@Request() req, @Param('_id') _id: string | number): Promise<void> {
+    this.usersService.findOne(_id);
+  }
 }
