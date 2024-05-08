@@ -55,8 +55,12 @@ export class InsurancesController {
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
   @Get(':id')
-  async getInsurance(@Param('id') id: string): Promise<Insurance> {
-    return this.insurancesService.getById(id);
+  async getInsurance(@Param('id') id: string): Promise<Insurance>{
+    const insurance = await this.insurancesService.getById(id);
+    if (insurance.name instanceof Map) {
+      insurance.name = Object.fromEntries(insurance.name);
+    }
+    return insurance
   }
 
 }
