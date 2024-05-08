@@ -25,6 +25,23 @@ import { UserDTO } from 'src/shared/dtos/types.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @Get('/account')
+  async getAccount(@Request() req): Promise<User> {
+    if (req.hasOwnProperty('user') && req['user'].email) {
+      const user = await this.usersService.findOneByEmail(req['user'].email);
+      return {
+        _id: user._id,
+        isAdmin: user.isAdmin,
+        rights: user.rights,
+        email: user.email,
+        oldId: user.oldId,
+        name: user.name,
+      };
+    }
+    throw new UnauthorizedException();
+  }
 
   @Get('/:id')
   @ApiParam({
@@ -68,27 +85,15 @@ export class UsersController {
   ): Promise<{ password: string }> {
     return { password: await this.usersService.regeneratePassword(id) };
   }
+
   // @Right('USERS_READ')
   // @UseGuards(JwtAuthGuard)
+  
+  
+  
   @Get()
   async getAllUsers(): Promise<User[]> {
     return this.usersService.findAll();
-  }
-  @UseGuards(JwtAuthGuard)
-  @Get('account')
-  async getAccount(@Request() req): Promise<User> {
-    if (req.hasOwnProperty('user') && req['user'].email) {
-      const user = await this.usersService.findOneByEmail(req['user'].email);
-      return {
-        _id: user._id,
-        isAdmin: user.isAdmin,
-        rights: user.rights,
-        email: user.email,
-        oldId: user.oldId,
-        name: user.name,
-      };
-    }
-    throw new UnauthorizedException();
   }
 
   // // TODO: update password
