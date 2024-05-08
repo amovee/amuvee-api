@@ -71,11 +71,8 @@ export class UsersService {
   async findAll(): Promise<User[]> {
     return this.userModel.find().select('-password').exec();
   }
-  async findOne(id: string | number): Promise<User[]> {
-    const idMatch = isNaN(+id)
-      ? { _id: new mongoose.Types.ObjectId(id) }
-      : { id: +id };
-    return this.userModel.find(idMatch).select('-password').exec();
+  async findOne(id: string): Promise<User> {
+    return this.userModel.findById({_id: id}).select(['-password', '-token']).exec();
   }
   async updateUserPassword(
     updatePasswordDTO: UpdatePasswordDTO,

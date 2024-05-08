@@ -17,12 +17,28 @@ import { Right } from '../auth/rights/rights.decorator';
 import { RightsGuard } from '../auth/rights/rights.guard';
 import { UsersService } from './users.service';
 import { UpdatePasswordDTO, createUserDTO, updateUserDTO } from 'src/shared/dtos/user.dto';
-import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiParam, ApiQuery, ApiTags} from '@nestjs/swagger';
+import { UserDTO } from 'src/shared/dtos/types.dto';
 
 @ApiTags('Users')
 @Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+
+  @Get('/:id')
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description:
+      'Die ID des Users',
+    type: String,
+  })
+  async getOneUser(
+    @Param('id') id: string,
+  ): Promise<User | undefined> {
+    return this.usersService.findOne(id);
+  }
 
   @Right('USERS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
@@ -52,8 +68,8 @@ export class UsersController {
   ): Promise<{ password: string }> {
     return { password: await this.usersService.regeneratePassword(id) };
   }
-  @Right('USERS_READ')
-  @UseGuards(JwtAuthGuard)
+  // @Right('USERS_READ')
+  // @UseGuards(JwtAuthGuard)
   @Get()
   async getAllUsers(): Promise<User[]> {
     return this.usersService.findAll();
@@ -109,10 +125,5 @@ export class UsersController {
   async deleteUser(@Request() req, @Param('id') id: string): Promise<void> {
     this.usersService.deleteOne(req.user.email, id);
     // TODO: return value
-  }
-
-  @Get('/:id')
-  async getUser(@Request() req, @Param('_id') _id: string | number): Promise<void> {
-    this.usersService.findOne(_id);
   }
 }
