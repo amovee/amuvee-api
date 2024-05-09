@@ -5,7 +5,7 @@ import { Event, EventDocument } from 'src/shared/schemas/event.schema';
 import mongoose, { Model } from 'mongoose';
 import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
-import { mappingStateType } from 'src/shared/dtos/types.dto';
+import { mappingStateType, State } from 'src/shared/dtos/types.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { CreateEventDTO, EventDTO, UpdateEventDTO } from 'src/shared/dtos/events.dto';
 
@@ -99,6 +99,7 @@ export class EventsService {
     const endOfMonth = new Date(filter.year, filter.month, 0, 23, 59, 59, 999);
     const events = await this.eventModel
       .find({
+        'status': { $eq: 'PUBLISHED'},
         'timespan.from': { $lte: endOfMonth },
         'timespan.to': { $gte: startOfMonth },
       })
@@ -111,6 +112,7 @@ export class EventsService {
       .aggregate([
         {
           $match: {
+            'status': { $eq: 'PUBLISHED'},
             'timespan.from': { $gte: currentTimestamp },
           },
         },

@@ -43,6 +43,10 @@ export class UsersController {
     throw new UnauthorizedException();
   }
 
+  
+  @Right('USERS_READ')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Get('/:id')
   @ApiParam({
     name: 'id',
@@ -71,11 +75,6 @@ export class UsersController {
     return 'done';
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Get(':id')
-  // async getUser(@Param('id') id: string): Promise<User> {
-  //   return this.usersService.findOneById(id);
-  // }
   @Right('USERS_UPDATE') // TODO auch für eigenen account erlauben
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
@@ -85,12 +84,12 @@ export class UsersController {
   ): Promise<{ password: string }> {
     return { password: await this.usersService.regeneratePassword(id) };
   }
-
-  // @Right('USERS_READ')
-  // @UseGuards(JwtAuthGuard)
   
   
   
+  @Right('USERS_READ')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @ApiBearerAuth('jwt')
   @Get()
   async getAllUsers(): Promise<User[]> {
     return this.usersService.findAll();
