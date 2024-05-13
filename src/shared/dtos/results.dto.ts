@@ -5,7 +5,7 @@ import { CategoryDTO } from './categories.dto';
 import { HistoryDTO, RolesDTO } from './roles.dto';
 import { NumberRange, StateType, Variables } from './types.dto';
 import { RegionDTO } from './region.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { ObjectId } from 'mongoose';
 export type ResultTypeDTO = {
   _id?: string;
   id?: number;
@@ -69,7 +69,7 @@ export class ResultFilters {
   childrenAge?: NumberRange;
   parentAge?: NumberRange;
   parentGender?: ('FEMALE' | 'MALE' | 'DIVERSE')[];
-  regions?: Ref<RegionDTO>[];
+  regions?: RegionDTO[] | ObjectId[];
   isPregnant?: boolean;
   isVictimOfViolence?: boolean;
   insurances?: string[]; // _id[]

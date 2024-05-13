@@ -6,12 +6,16 @@ import {
   Result,
   ResultDocument,
 } from 'src/shared/schemas/result.schema';
-import mongoose, { PipelineStage } from 'mongoose';
+import mongoose, { ObjectId, PipelineStage } from 'mongoose';
 import { Model } from 'mongoose';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
 import { QueryFilterDTO } from 'src/shared/dtos/query-filter.dto';
-import {CreateResultDTO, MinResultDTO, ResultDTO} from 'src/shared/dtos/results.dto';
+import {
+  CreateResultDTO,
+  MinResultDTO,
+  ResultDTO,
+} from 'src/shared/dtos/results.dto';
 import {
   getVariationProjection,
   lookUpInVariation,
@@ -22,6 +26,8 @@ import {
 import { CounterService } from '../counters/counters.service';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
+import { RegionDTO } from 'src/shared/dtos/region.dto';
+import { isString } from 'class-validator';
 
 @Injectable()
 export class ResultsService {
@@ -90,6 +96,54 @@ export class ResultsService {
       //     type: { $arrayElemAt: ['$type', 0] },
       //   },
       // },
+
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'roles.author',
+          foreignField: '_id',
+          as: 'roles.authorObjects',
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'roles.reviewer',
+          foreignField: '_id',
+          as: 'roles.reviewerObjects',
+        },
+      },
+      {
+        $addFields: {
+          'roles.author': {
+            $arrayElemAt: [
+              {
+                $map: {
+                  input: '$roles.authorObjects',
+                  as: 'author',
+                  in: { _id: '$$author._id', name: '$$author.name' },
+                },
+              },
+              0,
+            ],
+          },
+          'roles.reviewer': {
+            $arrayElemAt: [
+              {
+                $map: {
+                  input: '$roles.reviewerObjects',
+                  as: 'reviewer',
+                  in: { _id: '$$reviewer._id', name: '$$reviewer.name' },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $unset: ['roles.authorObjects', 'roles.reviewerObjects'],
+      },
       {
         $group: {
           _id: '$_id',
@@ -110,6 +164,34 @@ export class ResultsService {
       .aggregate<ResultDTO>(request)
       .limit(1);
     if (list.length === 0) return;
+    let regions: {[_id: string]: RegionDTO | null} = {};
+    for (let i = 0; i < list[0].variations.length; i++) {
+      for (let j = 0; j < list[0].variations[i].filters.length; j++) {
+        for (let k = 0; k < list[0].variations[i].filters[j].regions.length; k++) {
+          const key = list[0].variations[i].filters[j].regions[j];
+          if(key instanceof mongoose.Types.ObjectId) {
+            regions[key.toString()] = null;
+          }
+        }
+      }
+    }
+    const r = await this.regionModel.find({ _id: { $in: Object.keys(regions) } }).exec();
+    regions = r.reduce((acc, region) => {
+      acc[region._id.toString()] = region;
+      return acc;
+    }, {});
+    for (let i = 0; i < list[0].variations.length; i++) {
+      for (let j = 0; j < list[0].variations[i].filters.length; j++) {
+        for (let k = 0; k < list[0].variations[i].filters[j].regions.length; k++) {
+          const key = list[0].variations[i].filters[j].regions[j];
+          if(key instanceof mongoose.Types.ObjectId) {
+            list[0].variations[i].filters[j].regions[j] = regions[key._id.toString()]
+          }
+        }
+      }
+    }
+    
+    
     return list[0];
   }
   async getAllFromCategory(
@@ -136,7 +218,7 @@ export class ResultsService {
     const filters = await this.getMinMongoDBFilters(query);
     return (
       await this.minResultModel
-        .find<MinResultDTO>( filters ) // TODO: sort by type weight
+        .find<MinResultDTO>(filters) // TODO: sort by type weight
         .skip(skip)
         .limit(limit)
     ).map((res: MinResultDTO) => {
@@ -188,9 +270,9 @@ export class ResultsService {
     limit: number,
     skip: number,
     query: QueryFilterDTO,
-    search?: string
+    search?: string,
   ): Promise<ResultDTO[]> {
-    const filters = await this.getMongoDBFilters(query, search);  
+    const filters = await this.getMongoDBFilters(query, search);
     const request: PipelineStage[] = [
       {
         $match: filters,
@@ -295,13 +377,12 @@ export class ResultsService {
     return null;
   }
 
-
   async minifyAllResults() {
     const Minifiyrequest: PipelineStage[] = [
       {
         $unwind: '$variations',
       },
-      { $unwind: "$variations"},
+      { $unwind: '$variations' },
       lookUpInVariation('actions'),
       lookUpInVariation('locations'),
       {
@@ -312,41 +393,39 @@ export class ResultsService {
           as: 'type',
         },
       },
-      {$unwind: '$type'},
+      { $unwind: '$type' },
       {
-        $lookup:{
+        $lookup: {
           from: 'categories',
           localField: 'categories',
           foreignField: '_id',
-          as: 'categories'
-        }
+          as: 'categories',
+        },
       },
       {
-       $group: {
-         _id: "$_id",
-         doc: { $first: "$$ROOT" },
-         variations: { $push: "$variations" }
-        }
+        $group: {
+          _id: '$_id',
+          doc: { $first: '$$ROOT' },
+          variations: { $push: '$variations' },
+        },
       },
       {
         $addFields: {
-          "doc.variations": "$variations",
-        }
+          'doc.variations': '$variations',
+        },
       },
       {
         $replaceRoot: {
-          newRoot: "$doc"
-        }
+          newRoot: '$doc',
+        },
       },
     ];
     await this.minResultModel.deleteMany().exec();
-    const results = await this.resultModel.aggregate<ResultDTO>(
-      Minifiyrequest,
-    );
+    const results = await this.resultModel.aggregate<ResultDTO>(Minifiyrequest);
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       for (let j = 0; j < result.variations.length; j++) {
-        const variation =result.variations[j];
+        const variation = result.variations[j];
         await new this.minResultModel({
           _id: new mongoose.Types.ObjectId(),
           vid: j,
@@ -375,7 +454,7 @@ export class ResultsService {
       {
         $unwind: '$variations',
       },
-      { $unwind: "$variations"},
+      { $unwind: '$variations' },
       lookUpInVariation('actions'),
       lookUpInVariation('locations'),
       {
@@ -386,40 +465,38 @@ export class ResultsService {
           as: 'type',
         },
       },
-      {$unwind: '$type'},
+      { $unwind: '$type' },
       {
-        $lookup:{
+        $lookup: {
           from: 'categories',
           localField: 'categories',
           foreignField: '_id',
-          as: 'categories'
-        }
+          as: 'categories',
+        },
       },
       {
         $group: {
-          _id: "$_id",
-          doc: { $first: "$$ROOT" },
-          variations: { $push: "$variations" }
-        }
+          _id: '$_id',
+          doc: { $first: '$$ROOT' },
+          variations: { $push: '$variations' },
+        },
       },
       {
         $addFields: {
-          "doc.variations": "$variations",
-        }
+          'doc.variations': '$variations',
+        },
       },
       {
         $replaceRoot: {
-          newRoot: "$doc"
-        }
+          newRoot: '$doc',
+        },
       },
       {
-        $match: { _id:  new mongoose.Types.ObjectId(_id) },
+        $match: { _id: new mongoose.Types.ObjectId(_id) },
       },
     ];
     await this.regionModel.deleteMany({ r_id: _id }).exec();
-    const results = await this.resultModel.aggregate<ResultDTO>(
-      Minifiyrequest,
-    );
+    const results = await this.resultModel.aggregate<ResultDTO>(Minifiyrequest);
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       for (let j = 0; j < result.variations.length; j++) {
@@ -447,16 +524,18 @@ export class ResultsService {
       }
     }
   }
-  async create(result: CreateResultDTO, _id: string){
+  async create(result: CreateResultDTO, _id: string) {
     const roles = {
       author: _id,
     };
-    const history = [{
-      by: _id,
-      date: new Date(),
-      eventType: HistoryEventType.created,
-    }];
-    
+    const history = [
+      {
+        by: _id,
+        date: new Date(),
+        eventType: HistoryEventType.created,
+      },
+    ];
+
     const r = await new this.resultModel({
       _id: new mongoose.Types.ObjectId(),
       name: result.name,
@@ -466,7 +545,7 @@ export class ResultsService {
       roles,
       history,
       type: result.type,
-    })
+    });
     r.save();
     this.minifyResult(r._id);
     return r;
@@ -474,8 +553,8 @@ export class ResultsService {
 
   async deleteResult(_id) {
     if (await this.resultModel.findById(_id)) {
-      await this.minResultModel.deleteMany({r_id: _id})
-      return await this.resultModel.findByIdAndDelete(_id)
+      await this.minResultModel.deleteMany({ r_id: _id });
+      return await this.resultModel.findByIdAndDelete(_id);
     }
     throw new HttpException('Not found', HttpStatus.NOT_FOUND);
   }
@@ -483,14 +562,17 @@ export class ResultsService {
   //TODO: check if Refs are used multiple times and if Refs exist
   async update(_id: string, changes: CreateResultDTO, userId: string) {
     const result = await this.resultModel.findById<ResultDTO>(_id);
-    if(result) {
+    if (result) {
       result.history.push({
-      by: userId,
-      date: new Date().toISOString(),
-      eventType: HistoryEventType.updated,
-    })
-      const response = await this.resultModel.findByIdAndUpdate({ _id }, {...changes, history: [...result.history]});
-      await this.minResultModel.deleteMany({r_id: _id});
+        by: userId,
+        date: new Date().toISOString(),
+        eventType: HistoryEventType.updated,
+      });
+      const response = await this.resultModel.findByIdAndUpdate(
+        { _id },
+        { ...changes, history: [...result.history] },
+      );
+      await this.minResultModel.deleteMany({ r_id: _id });
       this.minifyResult(_id);
       return response;
     }
@@ -507,8 +589,10 @@ export class ResultsService {
       await this.minifyResult(_id);
       return { message: 'related Result has updated' };
     } catch (error) {
-      throw new HttpException('min Results can not updated', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'min Results can not updated',
+        HttpStatus.NOT_FOUND,
+      );
     }
   }
-
 }
