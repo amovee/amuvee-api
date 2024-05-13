@@ -5,6 +5,7 @@ const EQ_NULL = { $eq: null };
 export function mongoDBFiltersFromQueryFilter(
   query: QueryFilterDTO,
   regions?: mongoose.Types.ObjectId[],
+  search?: string
 ) {
   const outerfilters = [];
   if (query.category) {
@@ -96,11 +97,15 @@ export function mongoDBFiltersFromQueryFilter(
   }
 
   if (innerfilters.length == 0 && outerfilters.length == 0) {
+    if(search && search.length) {
+      return { name: { $regex: search, $options: 'i' } }
+    }
     return { _id: { $ne: '' } };
   }
   return {
     $and: [
       ...outerfilters,
+      ...(search?[{ 'name': { $regex: search, $options: 'i' } }]:[]),
       ...(innerfilters.length > 0
         ? [
             {

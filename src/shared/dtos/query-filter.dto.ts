@@ -8,6 +8,8 @@ export class QueryFilterDTO {
   @ApiProperty({ required: false })
   language?: string;
   @ApiProperty({ required: false })
+  search?: string;
+  @ApiProperty({ required: false })
   category?: string;
   @ApiProperty({ required: false })
   rent?: number;

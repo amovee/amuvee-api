@@ -16,7 +16,7 @@ import { RightsGuard } from './rights/rights.guard';
     PassportModule,
     JwtModule.register({
       secret: process.env.SECRET,
-      signOptions: { expiresIn: '60m' },
+      signOptions: { expiresIn: '1y' },
     }),
   ],
   providers: [

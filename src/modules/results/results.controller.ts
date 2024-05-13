@@ -32,13 +32,15 @@ export class ResultsController {
     return this.resultsService.getMongoDBFilters(queryFilterParser(query));
   }
   @Get()
-  async getFilteredResults(@Query() query: QueryFilterDTO): Promise<any[]> {
+  @ApiQuery({ name: 'search', required: false, type: String })
+  async getFilteredResults(@Query() query: QueryFilterDTO, @Query('search') search): Promise<any[]> {    
     query = queryFilterParser(query);
     try {
       return await this.resultsService.getFilteredResults(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
         query,
+        search
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
@@ -98,13 +100,14 @@ export class ResultsController {
     }
   }
 
+  @ApiQuery({ name: 'search', required: false, type: String })
   @Get('counter')
   async getCounter(
-    @Query() query: QueryFilterDTO,
+    @Query() query: QueryFilterDTO, @Query('search') search
   ): Promise<{ filtered?: number; total: number }> {
     query = queryFilterParser(query);
     try {
-      return await this.resultsService.getCounter(query);
+      return await this.resultsService.getCounter(query, search);
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }

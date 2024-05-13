@@ -9,8 +9,9 @@ import {
   Get,
   Delete,
   Param,
+  HttpStatus,
 } from '@nestjs/common';
-import { UnauthorizedException } from '@nestjs/common/exceptions';
+import { HttpException, UnauthorizedException } from '@nestjs/common/exceptions';
 import { User } from 'src/shared/schemas/user.schema';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { Right } from '../auth/rights/rights.decorator';
@@ -58,7 +59,11 @@ export class UsersController {
   async getOneUser(
     @Param('id') id: string,
   ): Promise<User | undefined> {
-    return this.usersService.findOne(id);
+    try {
+      return this.usersService.findOne(id);
+    } catch (error) {
+      new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+    }
   }
 
   @Right('USERS_CREATE')

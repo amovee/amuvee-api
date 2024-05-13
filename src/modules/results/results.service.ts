@@ -43,14 +43,14 @@ export class ResultsService {
       .select('_id');
     return regions;
   }
-  async getMongoDBFilters(query: QueryFilterDTO) {
+  async getMongoDBFilters(query: QueryFilterDTO, search?: string) {
     let regions: mongoose.Types.ObjectId[] = null;
     if (query.zip) {
       regions = (await this.getRegionsByZip(query.zip)).map(
         (region: Region) => new mongoose.Types.ObjectId(region._id.toString()),
       );
     }
-    return mongoDBFiltersFromQueryFilter(query, regions);
+    return mongoDBFiltersFromQueryFilter(query, regions, search);
   }
   async getMinMongoDBFilters(query: QueryFilterDTO) {
     let regions: mongoose.Types.ObjectId[] = null;
@@ -77,19 +77,19 @@ export class ResultsService {
       },
       lookUpInVariation('actions'),
       lookUpInVariation('locations'),
-      {
-        $lookup: {
-          from: 'resulttypes',
-          localField: 'type',
-          foreignField: '_id',
-          as: 'type',
-        },
-      },
-      {
-        $addFields: {
-          type: { $arrayElemAt: ['$type', 0] },
-        },
-      },
+      // {
+      //   $lookup: {
+      //     from: 'resulttypes',
+      //     localField: 'type',
+      //     foreignField: '_id',
+      //     as: 'type',
+      //   },
+      // },
+      // {
+      //   $addFields: {
+      //     type: { $arrayElemAt: ['$type', 0] },
+      //   },
+      // },
       {
         $group: {
           _id: '$_id',
@@ -188,8 +188,9 @@ export class ResultsService {
     limit: number,
     skip: number,
     query: QueryFilterDTO,
+    search?: string
   ): Promise<ResultDTO[]> {
-    const filters = await this.getMongoDBFilters(query);
+    const filters = await this.getMongoDBFilters(query, search);  
     const request: PipelineStage[] = [
       {
         $match: filters,
@@ -229,14 +230,13 @@ export class ResultsService {
         $sort: { id: 1 },
       },
     ];
-
     return await this.resultModel
       .aggregate<ResultDTO>(request)
       .skip(skip)
       .limit(limit);
   }
-  async getCounter(query: QueryFilterDTO): Promise<any> {
-    const filters = await this.getMongoDBFilters(query);
+  async getCounter(query: QueryFilterDTO, search?: string): Promise<any> {
+    const filters = await this.getMongoDBFilters(query, search);
     const total = await this.resultModel.aggregate([
       { $match: filters },
       {
