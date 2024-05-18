@@ -102,8 +102,8 @@ export interface MinResultDTO {
 //CREATE
 export class CreateResultDTO {
   name: string;
-  categories: Ref<CategoryDTO>[];
-  type: Ref<ResultTypeDTO>;
+  categories: string[];
+  type: string;
   variations: VariationDTO[];
 }
 export class CreateResultFilters {

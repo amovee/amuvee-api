@@ -68,21 +68,21 @@ export function mongoDBFiltersFromQueryFilter(
   }
   if (regions) {
     const ids = regions.map((r) => new mongoose.Types.ObjectId(r));
-    innerfilters.push(createSetFilter('regions', ids));
+    innerfilters.push(createVariationSetFilter('regions', ids));
   }
   if (query.parentGender) {
-    innerfilters.push(createSetFilter('parentGender', [query.parentGender]));
+    innerfilters.push(createVariationSetFilter('parentGender', [query.parentGender]));
   }
   if (query.insurance) {
-    innerfilters.push(createSetFilter('insurances', [query.insurance]));
+    innerfilters.push(createVariationSetFilter('insurances', [query.insurance]));
   }
   if (query.jobRelatedSituation != undefined) {
     innerfilters.push(
-      createSetFilter('jobRelatedSituations', [query.jobRelatedSituation]),
+      createVariationSetFilter('jobRelatedSituations', [query.jobRelatedSituation]),
     );
   }
   if (query.relationship != undefined) {
-    innerfilters.push(createSetFilter('relationships', [query.relationship]));
+    innerfilters.push(createVariationSetFilter('relationships', [query.relationship]));
   }
   if (query.isPregnant === false) {
     innerfilters.push({ [`variations.filters.isPregnant`]: { $eq: false } });
@@ -231,6 +231,12 @@ export function mongoDBMinFiltersFromQueryFilter(
  */
 
 export function createSetFilter(key: string, value: any[]) {
+  const objectKey = `filters.${key}`;
+  return {
+    $or: [{ [objectKey]: { $size: 0 } }, { [objectKey]: { $in: value } }],
+  };
+}
+export function createVariationSetFilter(key: string, value: any[]) {
   const objectKey = `variations.filters.${key}`;
   return {
     $or: [{ [objectKey]: { $size: 0 } }, { [objectKey]: { $in: value } }],
