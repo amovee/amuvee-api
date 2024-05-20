@@ -32,39 +32,39 @@ export const ResultTypeSchema = SchemaFactory.createForClass(ResultType);
 
 @Schema()
 export class NumberFilter {
-  @Prop()
-  min: number;
-  @Prop()
-  max: number;
+  @Prop({default: null})
+  min: number | null;
+  @Prop({default: null})
+  max: number | null;
 }
 
 @Schema()
 export class ResultFilters {
-  @Prop({ _id: false, type: NumberFilter })
+  @Prop({ _id: false, type: NumberFilter, default: {min: null, max: null} })
   rent: NumberFilter;
-  @Prop({ _id: false, type: NumberFilter })
+  @Prop({ _id: false, type: NumberFilter, default: {min: null, max: null} })
   income: NumberFilter;
-  @Prop({ _id: false, type: NumberFilter })
+  @Prop({ _id: false, type: NumberFilter, default: {min: null, max: null} })
   childrenCount: NumberFilter;
-  @Prop({ _id: false, type: NumberFilter })
+  @Prop({ _id: false, type: NumberFilter, default: {min: null, max: null} })
   childrenAge: NumberFilter;
-  @Prop({ _id: false, type: NumberFilter }) //???
+  @Prop({ _id: false, type: NumberFilter, default: {min: null, max: null} })
   parentAge: NumberFilter;
-  @Prop()
+  @Prop({type: [String], default: []})
   parentGender: string[];
-  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Region' }])
-  regions: Region[]; // TODO: generate from zips
-  @Prop()
+  @Prop([{ type: [mongoose.Schema.Types.ObjectId], ref: 'Region', default: []}])
+  regions: Region[];
+  @Prop({type: Boolean, default: false})
   isPregnant: boolean;
-  @Prop()
+  @Prop({type: Boolean, default: false})
   isVictimOfViolence: boolean;
-  @Prop({ type: [String] })
+  @Prop({ type: [String], default: [] })
   insurances: string[];
-  @Prop()
+  @Prop({type: [Number], default: []})
   relationships: number[];
-  @Prop()
+  @Prop({type: [Number], default: []})
   jobRelatedSituations: number[];
-  @Prop()
+  @Prop({type: Boolean, default: false})
   isRefugee: boolean;
 }
 

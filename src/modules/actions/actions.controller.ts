@@ -33,9 +33,10 @@ export class ActionsController {
     return 'done';
   }
   @Get('counter')
-  async getCounter(): Promise<{ totalCount: number }> {
+  @ApiQuery({ name: 'search', required: false, type: String })
+  async getCounter(@Query('search') search): Promise<{ totalCount: number }> {
     try {
-      return await this.actionsService.getCount();
+      return await this.actionsService.getCount(search);
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }

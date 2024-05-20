@@ -112,6 +112,14 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
+  @Get('variations/counter')
+  async getVariationsCounter(): Promise<{ total: number }> {
+    try {
+      return await this.resultsService.getVariationsCounter();
+    } catch (error) {
+      throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
+    }
+  }
   @Get('all')
   async getAll(
     @Query() query: { category: string; language: string },

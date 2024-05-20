@@ -1,8 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Action } from 'rxjs/internal/scheduler/Action';
 import mongoose, { Model } from 'mongoose';
@@ -19,6 +15,7 @@ import { ResultsService } from 'src/modules/results/results.service';
 
 @Injectable()
 export class ActionsService {
+  private searchParameters = ['name.de, description.de'];
   constructor(
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
@@ -222,8 +219,18 @@ export class ActionsService {
     await newAction.save();
     return newAction;
   }
-  async getCount(): Promise<{ totalCount: number }> {
-    const totalCount = await this.actionModel.countDocuments();
+  async getCount(search?: string): Promise<{ totalCount: number }> {
+    const totalCount = await this.actionModel
+      .find(
+        search
+          ? {
+              $or: this.searchParameters.map((param) => ({
+                [param]: { $regex: search, $options: 'i' },
+              })),
+            }
+          : {},
+      )
+      .countDocuments();
     return { totalCount };
   }
 

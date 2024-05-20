@@ -164,34 +164,47 @@ export class ResultsService {
       .aggregate<ResultDTO>(request)
       .limit(1);
     if (list.length === 0) return;
-    let regions: {[_id: string]: RegionDTO | null} = {};
+    let regions: { [_id: string]: RegionDTO | null } = {};
     for (let i = 0; i < list[0].variations.length; i++) {
-      for (let j = 0; j < list[0].variations[i].filters.length; j++) {
-        for (let k = 0; k < list[0].variations[i].filters[j].regions.length; k++) {
-          const key = list[0].variations[i].filters[j].regions[j];
-          if(key instanceof mongoose.Types.ObjectId) {
+      const variation = list[0].variations[i];
+      for (let j = 0; j < variation.filters.length; j++) {
+        const filter = variation.filters[j];
+        for (
+          let k = 0;
+          k < filter.regions.length;
+          k++
+        ) {
+          const key = filter.regions[k];
+          if (key instanceof mongoose.Types.ObjectId) {
             regions[key.toString()] = null;
           }
         }
       }
     }
-    const r = await this.regionModel.find({ _id: { $in: Object.keys(regions) } }).exec();
+    const r = await this.regionModel
+      .find({ _id: { $in: Object.keys(regions) } })
+      .exec();
     regions = r.reduce((acc, region) => {
       acc[region._id.toString()] = region;
       return acc;
-    }, {});
+    }, {});    
     for (let i = 0; i < list[0].variations.length; i++) {
-      for (let j = 0; j < list[0].variations[i].filters.length; j++) {
-        for (let k = 0; k < list[0].variations[i].filters[j].regions.length; k++) {
-          const key = list[0].variations[i].filters[j].regions[j];
-          if(key instanceof mongoose.Types.ObjectId) {
-            list[0].variations[i].filters[j].regions[j] = regions[key._id.toString()]
+      const variation = list[0].variations[i]
+      for (let j = 0; j < variation.filters.length; j++) {
+        const filter = variation.filters[j]
+        for (
+          let k = 0;
+          k < filter.regions.length;
+          k++
+        ) {
+          const key = filter.regions[k];
+          if (key instanceof mongoose.Types.ObjectId) {
+            list[0].variations[i].filters[j].regions[k] = regions[key._id.toString()];
           }
         }
+        list[0].variations[i].filters[j].regions = list[0].variations[i].filters[j].regions.filter(a => a!= null);
       }
     }
-    
-    
     return list[0];
   }
   async getAllFromCategory(
@@ -216,6 +229,11 @@ export class ResultsService {
     query: QueryFilterDTO,
   ): Promise<MinResultDTO[]> {
     const filters = await this.getMinMongoDBFilters(query);
+    console.log('########################');
+    
+    console.log(JSON.stringify(filters));
+    console.log('########################');
+
     return (
       await this.minResultModel
         .find<MinResultDTO>(filters) // TODO: sort by type weight
@@ -326,6 +344,15 @@ export class ResultsService {
       },
     ]);
     return total.length ? total[0] : { totalCount: 0 };
+  }
+  async getVariationsCounter(): Promise<any> {
+    const total = await this.minResultModel.aggregate([
+      { $match: {status: {$nin: ["ARCHIVED"]}} },
+      {
+        $count: 'totalCount',
+      },
+    ]);
+    return total.length==1?total[0]:{totalCount: 0};
   }
   async getMinCounter(query: QueryFilterDTO): Promise<any> {
     const filters = await this.getMinMongoDBFilters(query);
@@ -546,7 +573,7 @@ export class ResultsService {
       history,
       type: result.type,
     });
-    r.save();
+    await r.save();    
     this.minifyResult(r._id);
     return r;
   }
@@ -562,21 +589,20 @@ export class ResultsService {
   //TODO: check if Refs are used multiple times and if Refs exist
   async update(_id: string, changes: CreateResultDTO, userId: string) {
     const result = await this.resultModel.findById<ResultDTO>(_id);
-    if (result) {
-      result.history.push({
-        by: userId,
-        date: new Date().toISOString(),
-        eventType: HistoryEventType.updated,
-      });
-      const response = await this.resultModel.findByIdAndUpdate(
-        { _id },
-        { ...changes, history: [...result.history] },
-      );
-      await this.minResultModel.deleteMany({ r_id: _id });
-      this.minifyResult(_id);
-      return response;
-    }
-    throw new HttpException('Result not found', HttpStatus.NOT_FOUND);
+    if (!result)
+      throw new HttpException('Result not found', HttpStatus.NOT_FOUND);
+    result.history.push({
+      by: userId,
+      date: new Date().toISOString(),
+      eventType: HistoryEventType.updated,
+    });
+    const response = await this.resultModel.findByIdAndUpdate(
+      { _id },
+      { ...changes, history: [...result.history] },
+    );
+    await this.minResultModel.deleteMany({ r_id: _id });
+    this.minifyResult(_id);
+    return response;
   }
 
   async updateMinResult(_id: string) {

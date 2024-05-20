@@ -5,7 +5,11 @@ import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { CounterService } from '../counters/counters.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { regions } from './regions';
-import {RegionDTO, createRegionDTO, updateRegionDTO} from "../../shared/dtos/region.dto";
+import {
+  RegionDTO,
+  createRegionDTO,
+  updateRegionDTO,
+} from '../../shared/dtos/region.dto';
 import axios from 'axios';
 import { State } from 'src/shared/dtos/types.dto';
 
@@ -21,37 +25,44 @@ export class RegionService {
   async deleteById(id: string): Promise<RegionDTO> {
     const regionFromDB = await this.regionModel.findById(id);
     if (regionFromDB) {
-      return await this.regionModel.findByIdAndDelete<RegionDTO>(id)
+      return await this.regionModel.findByIdAndDelete<RegionDTO>(id);
     } else {
       throw new HttpException('Region not found', HttpStatus.BAD_REQUEST);
     }
   }
   async updateById(id: string, region: updateRegionDTO) {
-      return this.regionModel.findByIdAndUpdate(id, region, {new: true});
+    return this.regionModel.findByIdAndUpdate(id, region, { new: true });
   }
   async createRegion(region: createRegionDTO) {
     const regionFromDB = await this.regionModel.findOne({ name: region.name });
     if (regionFromDB) {
-      throw new HttpException('Region with the same name already exists', HttpStatus.BAD_REQUEST);
-    }
-    else {
+      throw new HttpException(
+        'Region with the same name already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
       region.id = await this.counter.getNextSequenceValue('regions');
-      return new this.regionModel(
-        region
-      ).save();
+      return new this.regionModel(region).save();
     }
   }
 
   async getAll(limit: number, skip: number, search?: string): Promise<any> {
-    return await this.regionModel.find(search?{
-      $or: [
-        { name: { $regex: search, $options: 'i' } },
-        { zips: { $regex: search, $options: 'i' } },
-      ],
-    }: {}).limit(limit).skip(skip);
+    return await this.regionModel
+      .find(
+        search
+          ? {
+              $or: [
+                { name: { $regex: search, $options: 'i' } },
+                { zips: { $regex: search, $options: 'i' } },
+              ],
+            }
+          : {},
+      )
+      .limit(limit)
+      .skip(skip);
   }
-  async count(): Promise<{totalCount: number}> {
-    return {totalCount: await this.regionModel.countDocuments()};
+  async count(): Promise<{ totalCount: number }> {
+    return { totalCount: await this.regionModel.countDocuments() };
   }
   async migrate(): Promise<any> {
     await this.counter.deleteSequenzDocument('regions');

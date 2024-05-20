@@ -5,7 +5,7 @@ const EQ_NULL = { $eq: null };
 export function mongoDBFiltersFromQueryFilter(
   query: QueryFilterDTO,
   regions?: mongoose.Types.ObjectId[],
-  search?: string
+  search?: string,
 ) {
   const outerfilters = [];
   if (query.category) {
@@ -45,16 +45,16 @@ export function mongoDBFiltersFromQueryFilter(
   }
   ['rent', 'income', 'parentAge'].forEach((key: string) => {
     if (query[key] != null && query[key] >= 0) {
-      innerfilters.push(...minMaxNumberFilter(key, query[key]));
+      innerfilters.push(...minMaxNumberVariationFilter(key, query[key]));
     }
   });
   if (query.childrenCount != null && query.childrenCount > 0) {
     innerfilters.push(
-      ...minMaxNumberFilter('childrenCount', query.childrenCount),
+      ...minMaxNumberVariationFilter('childrenCount', query.childrenCount),
     );
     if (query.childrenAgeGroups && query.childrenAgeGroups.length > 0) {
       innerfilters.push(
-        ...minMaxNumberFilter(
+        ...minMaxNumberVariationFilter(
           'childrenAge',
           Math.max(...(<number[]>query.childrenAgeGroups)),
         ),
@@ -71,18 +71,26 @@ export function mongoDBFiltersFromQueryFilter(
     innerfilters.push(createVariationSetFilter('regions', ids));
   }
   if (query.parentGender) {
-    innerfilters.push(createVariationSetFilter('parentGender', [query.parentGender]));
+    innerfilters.push(
+      createVariationSetFilter('parentGender', [query.parentGender]),
+    );
   }
   if (query.insurance) {
-    innerfilters.push(createVariationSetFilter('insurances', [query.insurance]));
+    innerfilters.push(
+      createVariationSetFilter('insurances', [query.insurance]),
+    );
   }
   if (query.jobRelatedSituation != undefined) {
     innerfilters.push(
-      createVariationSetFilter('jobRelatedSituations', [query.jobRelatedSituation]),
+      createVariationSetFilter('jobRelatedSituations', [
+        query.jobRelatedSituation,
+      ]),
     );
   }
   if (query.relationship != undefined) {
-    innerfilters.push(createVariationSetFilter('relationships', [query.relationship]));
+    innerfilters.push(
+      createVariationSetFilter('relationships', [query.relationship]),
+    );
   }
   if (query.isPregnant === false) {
     innerfilters.push({ [`variations.filters.isPregnant`]: { $eq: false } });
@@ -97,15 +105,15 @@ export function mongoDBFiltersFromQueryFilter(
   }
 
   if (innerfilters.length == 0 && outerfilters.length == 0) {
-    if(search && search.length) {
-      return { name: { $regex: search, $options: 'i' } }
+    if (search && search.length) {
+      return { name: { $regex: search, $options: 'i' } };
     }
     return { _id: { $ne: '' } };
   }
   return {
     $and: [
       ...outerfilters,
-      ...(search?[{ 'name': { $regex: search, $options: 'i' } }]:[]),
+      ...(search ? [{ name: { $regex: search, $options: 'i' } }] : []),
       ...(innerfilters.length > 0
         ? [
             {
@@ -125,7 +133,7 @@ export function mongoDBMinFiltersFromQueryFilter(
     outerfilters.push({
       $or: [
         {
-          categories: new mongoose.Types.ObjectId(query.category),
+          'categories._id': new mongoose.Types.ObjectId(query.category),
         },
         {
           categories: { $size: 0 },
@@ -150,10 +158,7 @@ export function mongoDBMinFiltersFromQueryFilter(
       ],
     });
     innerfilters.push({
-      $or: [
-        { [`timespan.to`]: EQ_NULL },
-        { [`timespan.to`]: { $gte: now } },
-      ],
+      $or: [{ [`timespan.to`]: EQ_NULL }, { [`timespan.to`]: { $gte: now } }],
     });
   }
   ['rent', 'income', 'parentAge'].forEach((key: string) => {
@@ -215,13 +220,24 @@ export function mongoDBMinFiltersFromQueryFilter(
   return {
     $and: [
       ...outerfilters,
-      ...(innerfilters.length > 0
-        ? [
-            {
-              $and: innerfilters,
-            },
-          ]
-        : []),
+      {
+        $or: [
+          {
+            filters: { $size: 0 },
+          },
+          {
+            $and: [
+              ...(innerfilters.length > 0
+                ? [
+                    {
+                      $and: innerfilters,
+                    },
+                  ]
+                : []),
+            ],
+          },
+        ],
+      },
     ],
   };
 }
@@ -242,6 +258,23 @@ export function createVariationSetFilter(key: string, value: any[]) {
     $or: [{ [objectKey]: { $size: 0 } }, { [objectKey]: { $in: value } }],
   };
 }
+export function minMaxNumberVariationFilter(key: string, value: number) {
+  return [
+    singleNumberVariationFilter(key, value, 'min'),
+    singleNumberVariationFilter(key, value, 'max'),
+  ];
+}
+export function singleNumberVariationFilter(
+  key: string,
+  value: number,
+  type: 'min' | 'max',
+) {
+  const objectKey = `variations.filters.${key}.${type}`;
+  const comparator = type === 'min' ? { $lte: value } : { $gte: value };
+  return {
+    $or: [{ [objectKey]: EQ_NULL }, { [objectKey]: comparator }],
+  };
+}
 export function minMaxNumberFilter(key: string, value: number) {
   return [
     singleNumberFilter(key, value, 'min'),
@@ -253,7 +286,7 @@ export function singleNumberFilter(
   value: number,
   type: 'min' | 'max',
 ) {
-  const objectKey = `variations.filters.${key}.${type}`;
+  const objectKey = `filters.${key}.${type}`;
   const comparator = type === 'min' ? { $lte: value } : { $gte: value };
   return {
     $or: [{ [objectKey]: EQ_NULL }, { [objectKey]: comparator }],

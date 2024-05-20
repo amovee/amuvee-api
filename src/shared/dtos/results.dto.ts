@@ -69,7 +69,7 @@ export class ResultFilters {
   childrenAge?: NumberRange;
   parentAge?: NumberRange;
   parentGender?: ('FEMALE' | 'MALE' | 'DIVERSE')[];
-  regions?: RegionDTO[] | ObjectId[];
+  regions?: (RegionDTO | ObjectId)[];
   isPregnant?: boolean;
   isVictimOfViolence?: boolean;
   insurances?: string[]; // _id[]
