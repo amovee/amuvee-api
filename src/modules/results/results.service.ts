@@ -229,13 +229,19 @@ export class ResultsService {
     query: QueryFilterDTO,
   ): Promise<MinResultDTO[]> {
     const filters = await this.getMinMongoDBFilters(query);
-
-    return (
-      await this.minResultModel
-        .find<MinResultDTO>(filters) // TODO: sort by type weight
-        .skip(skip)
-        .limit(limit)
-    ).map((res: MinResultDTO) => {
+    const results = await this.minResultModel.aggregate([
+      { $match: filters },
+      {
+        $group: {
+          _id: '$r_id',
+          doc: { $first: '$$ROOT' },
+        },
+      },
+      { $replaceRoot: { newRoot: '$doc' } },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+    return results.map((res: MinResultDTO) => {
       return res;
       // return filterResultLanguage(res, query.language);
     });
