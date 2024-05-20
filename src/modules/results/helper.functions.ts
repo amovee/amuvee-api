@@ -144,9 +144,9 @@ export function mongoDBMinFiltersFromQueryFilter(
   const innerfilters = [];
   if (query.status) {
     if (Array.isArray(query.status)) {
-      innerfilters.push({ ['status']: { $in: query.status } });
+      outerfilters.push({ ['status']: { $in: query.status } });
     } else {
-      innerfilters.push({ ['status']: query.status });
+      outerfilters.push({ ['status']: query.status });
     }
   }
   if (query.filterByDate) {
@@ -179,10 +179,10 @@ export function mongoDBMinFiltersFromQueryFilter(
       );
     }
   } else if (query.childrenCount == 0) {
-    innerfilters.push({ 'filters.childrenCount.min': EQ_NULL });
-    innerfilters.push({ 'filters.childrenCount.max': EQ_NULL });
-    innerfilters.push({ 'filters.childrenAge.min': EQ_NULL });
-    innerfilters.push({ 'filters.childrenAge.max': EQ_NULL });
+    innerfilters.push({ 'childrenCount.min': EQ_NULL });
+    innerfilters.push({ 'childrenCount.max': EQ_NULL });
+    innerfilters.push({ 'childrenAge.min': EQ_NULL });
+    innerfilters.push({ 'childrenAge.max': EQ_NULL });
   }
   if (regions) {
     const ids = regions.map((r) => new mongoose.Types.ObjectId(r));
@@ -203,43 +203,44 @@ export function mongoDBMinFiltersFromQueryFilter(
     innerfilters.push(createSetFilter('relationships', [query.relationship]));
   }
   if (query.isPregnant === false) {
-    innerfilters.push({ [`filters.isPregnant`]: { $eq: false } });
+    innerfilters.push({ [`isPregnant`]: { $eq: false } });
   }
   if (query.isRefugee === false) {
-    innerfilters.push({ [`filters.isRefugee`]: { $eq: false } });
+    innerfilters.push({ [`isRefugee`]: { $eq: false } });
   }
   if (query.isVictimOfViolence === false) {
     innerfilters.push({
-      [`filters.isVictimOfViolence`]: { $eq: false },
+      [`isVictimOfViolence`]: { $eq: false },
     });
   }
 
   if (innerfilters.length == 0 && outerfilters.length == 0) {
     return {};
   }
-  return {
-    $and: [
-      ...outerfilters,
-      {
-        $or: [
-          {
-            filters: { $size: 0 },
-          },
-          {
-            $and: [
-              ...(innerfilters.length > 0
-                ? [
-                    {
-                      $and: innerfilters,
-                    },
-                  ]
-                : []),
-            ],
-          },
-        ],
-      },
-    ],
-  };
+  if (innerfilters.length > 0) {
+    return {
+      $and: [
+        ...outerfilters,
+        {
+          $or: [
+            { filters: { $size: 0 } },
+            { filters: { $elemMatch: { $and: innerfilters } } },
+          ],
+        },
+      ],
+    };
+  } else {
+    return {
+      $and: [
+        ...outerfilters,
+        {
+          $or: [
+            { filters: { $size: 0 } },
+          ],
+        },
+      ],
+    };
+  }
 }
 
 /**
@@ -247,7 +248,7 @@ export function mongoDBMinFiltersFromQueryFilter(
  */
 
 export function createSetFilter(key: string, value: any[]) {
-  const objectKey = `filters.${key}`;
+  const objectKey = `${key}`;
   return {
     $or: [{ [objectKey]: { $size: 0 } }, { [objectKey]: { $in: value } }],
   };
@@ -286,7 +287,7 @@ export function singleNumberFilter(
   value: number,
   type: 'min' | 'max',
 ) {
-  const objectKey = `filters.${key}.${type}`;
+  const objectKey = `${key}.${type}`;
   const comparator = type === 'min' ? { $lte: value } : { $gte: value };
   return {
     $or: [{ [objectKey]: EQ_NULL }, { [objectKey]: comparator }],

@@ -229,10 +229,6 @@ export class ResultsService {
     query: QueryFilterDTO,
   ): Promise<MinResultDTO[]> {
     const filters = await this.getMinMongoDBFilters(query);
-    console.log('########################');
-    
-    console.log(JSON.stringify(filters));
-    console.log('########################');
 
     return (
       await this.minResultModel
