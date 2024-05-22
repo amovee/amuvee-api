@@ -52,7 +52,7 @@ export class ResultFilters {
   parentAge: NumberFilter;
   @Prop({type: [String], default: []})
   parentGender: string[];
-  @Prop([{ type: [mongoose.Schema.Types.ObjectId], ref: 'Region', default: []}])
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Region' }], default: [] })
   regions: Region[];
   @Prop({type: Boolean, default: false})
   isPregnant: boolean;
