@@ -151,14 +151,14 @@ export function mongoDBMinFiltersFromQueryFilter(
   }
   if (query.filterByDate) {
     const now = new Date();
-    innerfilters.push({
+    outerfilters.push({
       $or: [
         { [`timespan.from`]: EQ_NULL },
         { [`timespan.from`]: { $lte: now } },
       ],
     });
-    innerfilters.push({
-      $or: [{ [`timespan.to`]: EQ_NULL }, { [`timespan.to`]: { $gte: now } }],
+    outerfilters.push({
+      $or: [{ [`timespan.to`]: EQ_NULL },{ [`timespan.to`]: { $gte: now } }],
     });
   }
   ['rent', 'income', 'parentAge'].forEach((key: string) => {

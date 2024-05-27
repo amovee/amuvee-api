@@ -133,7 +133,7 @@ export class LocationsService {
       date: new Date().toISOString(),
       eventType: HistoryEventType.created,
     }
-    const newLocation = new this.locationModel({...location, ...roles, id, history});
+    const newLocation: any = new this.locationModel({...location, ...roles, id, history});
     newLocation._id = new mongoose.Types.ObjectId();
     return newLocation.save();
   }
@@ -180,7 +180,7 @@ export class LocationsService {
       });
       resultsToUpdate.map(async (r) => {
         r.variations.map((v) => {
-          v.locations = v.locations.filter((a) => a != deletedLocation._id);
+          v.locations = v.locations.filter((a: any) => a != deletedLocation._id);
         });
         await r.save();
       });

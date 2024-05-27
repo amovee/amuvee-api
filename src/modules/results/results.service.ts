@@ -228,7 +228,7 @@ export class ResultsService {
     skip: number,
     query: QueryFilterDTO,
   ): Promise<MinResultDTO[]> {
-    const filters = await this.getMinMongoDBFilters(query);
+    const filters = await this.getMinMongoDBFilters(query);    
     const results = await this.minResultModel.aggregate([
       { $match: filters },
       {
@@ -607,7 +607,7 @@ export class ResultsService {
     return response;
   }
 
-  async updateMinResult(_id: string) {
+  async updateMinResult(_id: any) {
     const result = await this.resultModel.findById<CreateResultDTO>(_id);
     if (!result) {
       throw new HttpException('Result not found', HttpStatus.NOT_FOUND);

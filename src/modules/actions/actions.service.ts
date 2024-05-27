@@ -163,7 +163,7 @@ export class ActionsService {
       });
       resultsToUpdate.map(async (r) => {
         r.variations.map((v) => {
-          v.actions = v.actions.filter((a) => a != action._id);
+          v.actions = v.actions.filter((a: any) => a != action._id);
         });
         await r.save();
       });
@@ -209,7 +209,7 @@ export class ActionsService {
       date: new Date().toISOString(),
       eventType: HistoryEventType.created,
     };
-    const newAction = new this.actionModel({
+    const newAction: any = new this.actionModel({
       ...action,
       ...roles,
       id,

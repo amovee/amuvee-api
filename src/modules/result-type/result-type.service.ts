@@ -38,7 +38,7 @@ export class ResultTypeService {
 
   async createResultType(body: CreateResultTypeDTO): Promise<ResultType> {
     const id = await this.counter.getNextSequenceValue('resultType');
-    const newResultType = new this.resultTypeModel({...body, id: id});
+    const newResultType: any = new this.resultTypeModel({...body, id: id});
     newResultType._id = new mongoose.Types.ObjectId();
     return newResultType.save();
   }
