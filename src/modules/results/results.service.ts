@@ -58,6 +58,7 @@ export class ResultsService {
     }
     return mongoDBFiltersFromQueryFilter(query, regions, search);
   }
+
   async getMinMongoDBFilters(query: QueryFilterDTO) {
     let regions: mongoose.Types.ObjectId[] = null;
     if (query.zip) {
@@ -67,6 +68,7 @@ export class ResultsService {
     }
     return mongoDBMinFiltersFromQueryFilter(query, regions);
   }
+
   async getResultFromId(
     id: string | number,
     language?: string,

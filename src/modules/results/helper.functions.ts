@@ -20,7 +20,27 @@ export function mongoDBFiltersFromQueryFilter(
       ],
     });
   }
+
   const innerfilters = [];
+  if (query.includedLanguages && query.includedLanguages.length > 0) {
+    const languageFilters = query.includedLanguages.map(language => ({
+      [`variations.title.${language}`]: { $exists: true },
+      [`variations.shortDescription.${language}`]: { $exists: true },
+      [`variations.description.${language}`]: { $exists: true },
+    }));
+    innerfilters.push({ $or: languageFilters });
+  }
+  if (query.excludedLanguages && query.excludedLanguages.length > 0) {
+    console.log('languagesNot', query.excludedLanguages);
+    const languageFilters = query.excludedLanguages.map(language => ({
+      [`variations.title.${language}`]: { $exists: false },
+      [`variations.shortDescription.${language}`]: { $exists: false },
+      [`variations.description.${language}`]: { $exists: false },
+    }));
+    outerfilters.push({ $and: languageFilters });
+  }
+
+
   if (query.status) {
     if (Array.isArray(query.status)) {
       innerfilters.push({ ['variations.status']: { $in: query.status } });
@@ -141,6 +161,7 @@ export function mongoDBMinFiltersFromQueryFilter(
       ],
     });
   }
+
   const innerfilters = [];
   if (query.status) {
     if (Array.isArray(query.status)) {

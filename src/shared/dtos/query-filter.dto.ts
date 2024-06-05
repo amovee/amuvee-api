@@ -6,7 +6,9 @@ export class QueryFilterDTO {
   @ApiProperty({ required: false })
   skip?: number;
   @ApiProperty({ required: false })
-  language?: string;
+  includedLanguages?: string[];
+  @ApiProperty({ required: false })
+  excludedLanguages?: string[];
   @ApiProperty({ required: false })
   search?: string;
   @ApiProperty({ required: false })
@@ -55,7 +57,12 @@ export function queryFilterParser(input: any): QueryFilterDTO {
   if (input.childrenCount) query.childrenCount = +input.childrenCount;
   if (input.parentAge) query.parentAge = +input.parentAge;
   if (input.parentGender) query.parentGender = input.parentGender;
-  if (input.language) query.language = input.language;
+  if (input.includedLanguages) {
+    query.includedLanguages = Array.isArray(input.includedLanguages) ? input.includedLanguages : [input.includedLanguages];
+  }
+  if (input.excludedLanguages) {
+    query.excludedLanguages = Array.isArray(input.excludedLanguages) ? input.excludedLanguages : [input.excludedLanguages];
+  }
   if (input.category) query.category = input.category;
   if (input.zip) query.zip = input.zip;
   if (input.insurance) query.insurance = input.insurance;
