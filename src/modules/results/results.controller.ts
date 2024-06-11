@@ -146,7 +146,14 @@ export class ResultsController {
   async minifyAllResults(): Promise<void> {
     await this.resultsService.minifyAllResults();
   }
-
+  @Get('min/:id')
+  @ApiQuery({ name: 'language', required: false, type: String })
+  async getMininmalResultsFromId(
+    @Param('id') id: string,
+    @Query('language') language?: string,
+  ): Promise<any> {
+    return this.resultsService.getMinifiedResultsById(id, language);
+  }
   @Right('RESULTS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
