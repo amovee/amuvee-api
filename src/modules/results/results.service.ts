@@ -162,6 +162,7 @@ export class ResultsService {
         $sort: { id: 1 },
       },
     ];
+    try{
     const list: ResultDTO[] = await this.resultModel
       .aggregate<ResultDTO>(request)
       .limit(1);
@@ -207,7 +208,17 @@ export class ResultsService {
         list[0].variations[i].filters[j].regions = list[0].variations[i].filters[j].regions.filter(a => a!= null);
       }
     }
+
+    if (list.length === 0){
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    }
+
+
     return list[0];
+  }catch(error){
+      console.error('Error fetching result by ID:', error);
+      return undefined;
+    }
   }
   async getAllFromCategory(
     id: string,
@@ -247,6 +258,12 @@ export class ResultsService {
       return res;
       // return filterResultLanguage(res, query.language);
     });
+  }
+  async getMinifiedResultsById(
+      id: string,
+      language: string,
+    ): Promise<MinResultDTO> {
+      return await this.minResultModel.findOne({ _id: id });
   }
   async getMinifiedResultsByIdList(
     language: string,

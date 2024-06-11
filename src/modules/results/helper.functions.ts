@@ -31,7 +31,6 @@ export function mongoDBFiltersFromQueryFilter(
     innerfilters.push({ $or: languageFilters });
   }
   if (query.excludedLanguages && query.excludedLanguages.length > 0) {
-    console.log('languagesNot', query.excludedLanguages);
     const languageFilters = query.excludedLanguages.map(language => ({
       [`variations.title.${language}`]: { $exists: false },
       [`variations.shortDescription.${language}`]: { $exists: false },
