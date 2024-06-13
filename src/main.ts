@@ -1,8 +1,10 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as fs from 'fs';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
+import { HttpException } from '@nestjs/common';
+import { GlobalExceptionsFilter } from './global.exception';
 
 const httpsOptions = {
   key: fs.readFileSync('./secrets/amuvee.de_private_key.key'),
@@ -13,6 +15,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule
     ,process.env.HTTPS=='true'?nestApplicationOprions:{}
   );
+  
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new GlobalExceptionsFilter(httpAdapter))
+
   const config = new DocumentBuilder()
     .setTitle('Amuvee API')
     .setDescription('The Amuvee API description')
