@@ -7,7 +7,11 @@ import axios from 'axios';
 import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { mappingStateType, State } from 'src/shared/dtos/types.dto';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
-import { CreateEventDTO, EventDTO, UpdateEventDTO } from 'src/shared/dtos/events.dto';
+import {
+  CreateEventDTO,
+  EventDTO,
+  UpdateEventDTO,
+} from 'src/shared/dtos/events.dto';
 
 @Injectable()
 export class EventsService {
@@ -54,8 +58,8 @@ export class EventsService {
           reviewer: undefined,
         },
         history: [],
-        name: {de: event.name},
-        shortDescription: {de: event.short_description},
+        name: { de: event.name },
+        shortDescription: { de: event.short_description },
       };
       if (event.user_created) {
         let userCreated = await this.userModel
@@ -99,7 +103,7 @@ export class EventsService {
     const endOfMonth = new Date(filter.year, filter.month, 0, 23, 59, 59, 999);
     const events = await this.eventModel
       .find({
-        'status': { $eq: 'PUBLISHED'},
+        status: { $eq: 'PUBLISHED' },
         'timespan.from': { $lte: endOfMonth },
         'timespan.to': { $gte: startOfMonth },
       })
@@ -112,7 +116,7 @@ export class EventsService {
       .aggregate([
         {
           $match: {
-            'status': { $eq: 'PUBLISHED'},
+            status: { $eq: 'PUBLISHED' },
             'timespan.from': { $gte: currentTimestamp },
           },
         },
@@ -133,23 +137,30 @@ export class EventsService {
 
     return events;
   }
-  async countEvents(): Promise<{totalCount: number}> {
-    return {totalCount: await this.eventModel.countDocuments()};
+  async countEvents(): Promise<{ totalCount: number }> {
+    return { totalCount: await this.eventModel.countDocuments() };
   }
   async getListByLimitAndSkip(skip: number, limit: number, search?: string) {
-    
-    return await this.eventModel.find(search?{
-      $or: [
-        { 'name.de': { $regex: search, $options: 'i' } },
-        { 'name.uk': { $regex: search, $options: 'i' } },
-        { 'name.ru': { $regex: search, $options: 'i' } },
-        { 'shortDescription.de': { $regex: search, $options: 'i' } },
-        { 'shortDescription.uk': { $regex: search, $options: 'i' } },
-        { 'shortDescription.ru': { $regex: search, $options: 'i' } },
-      ],
-    }: {}).sort({"id": 1}).limit(limit).skip(skip);
+    return await this.eventModel
+      .find(
+        search
+          ? {
+              $or: [
+                { 'name.de': { $regex: search, $options: 'i' } },
+                { 'name.uk': { $regex: search, $options: 'i' } },
+                { 'name.ru': { $regex: search, $options: 'i' } },
+                { 'shortDescription.de': { $regex: search, $options: 'i' } },
+                { 'shortDescription.uk': { $regex: search, $options: 'i' } },
+                { 'shortDescription.ru': { $regex: search, $options: 'i' } },
+              ],
+            }
+          : {},
+      )
+      .sort({ id: 1 })
+      .limit(limit)
+      .skip(skip);
   }
-  
+
   async create(event: CreateEventDTO, userId: string): Promise<Event> {
     const id = await this.counter.getNextSequenceValue('events');
     const roles = { roles: { author: userId } };
@@ -158,34 +169,51 @@ export class EventsService {
       date: new Date().toISOString(),
       eventType: HistoryEventType.created,
     };
-    const newEvent =  new this.eventModel({
+    const timespan = {
+      from: new Date(event.timespan.from.toString()),
+      to: new Date(event.timespan.to.toString()),
+    };
+    timespan.from.setHours(timespan.from.getHours() + 2);
+    timespan.to.setHours(timespan.to.getHours() + 2);
+
+    const newEvent = new this.eventModel({
       _id: new mongoose.Types.ObjectId(),
       ...event,
       ...roles,
       id,
+      timespan,
       history,
     }).save();
     return newEvent;
   }
 
-  async getOneFromId(
-    id: string,
-  ): Promise<EventDTO | undefined> {
+  async getOneFromId(id: string): Promise<EventDTO | undefined> {
     if (isNaN(+id)) {
-      return await this.eventModel.findById(new mongoose.Types.ObjectId(id))
+      return await this.eventModel.findById(new mongoose.Types.ObjectId(id));
     }
-    return await this.eventModel.findOne({ id: +id })
+    return await this.eventModel.findOne({ id: +id });
   }
 
   async update(_id: string, changes: UpdateEventDTO, userId: string) {
-    const event = await this.getOneFromId(_id)
-    if(event) {
+    const event = await this.getOneFromId(_id);
+    if (event) {
       event.history.push({
-      by: userId,
-      date: new Date().toISOString(),
-      eventType: HistoryEventType.updated,
-    })
-      return await this.eventModel.findByIdAndUpdate({ _id }, {...changes, history: [...event.history]});
+        by: userId,
+        date: new Date().toISOString(),
+        eventType: HistoryEventType.updated,
+      });
+
+      const timespan = {
+        from: new Date(changes.timespan.from.toString()),
+        to: new Date(changes.timespan.to.toString()),
+      };
+      timespan.from.setHours(timespan.from.getHours() + 2);
+      timespan.to.setHours(timespan.to.getHours() + 2);
+      changes.timespan = timespan;
+      return await this.eventModel.findByIdAndUpdate(
+        { _id },
+        { ...changes, history: [...event.history] },
+      );
     }
 
     return null;
@@ -194,7 +222,7 @@ export class EventsService {
   async delete(id: string): Promise<any> {
     let event;
     if (isNaN(+id)) {
-      event = await this.eventModel.findById(new mongoose.Types.ObjectId(id))
+      event = await this.eventModel.findById(new mongoose.Types.ObjectId(id));
     } else {
       event = await this.eventModel.findOne({ id: +id });
     }
@@ -206,11 +234,15 @@ export class EventsService {
 
   // DELETE
   async search(query: string, skip: number, limit: number): Promise<any[]> {
-    return await this.eventModel.find({
-      $or: [
-        { 'name.de': { $regex: query, $options: 'i' } },
-        { 'shortDescription.de': { $regex: query, $options: 'i' } },
-      ],
-    }).skip(skip).limit(limit).exec();
+    return await this.eventModel
+      .find({
+        $or: [
+          { 'name.de': { $regex: query, $options: 'i' } },
+          { 'shortDescription.de': { $regex: query, $options: 'i' } },
+        ],
+      })
+      .skip(skip)
+      .limit(limit)
+      .exec();
   }
 }
