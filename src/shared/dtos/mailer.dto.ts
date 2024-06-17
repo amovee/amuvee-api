@@ -1,4 +1,4 @@
-export interface ContactFormDto {
+export class ContactFormDto {
   name: string;
   surname: string;
   plz: number;
