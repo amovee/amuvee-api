@@ -169,12 +169,21 @@ export class EventsService {
       date: new Date().toISOString(),
       eventType: HistoryEventType.created,
     };
+    const berlinOffsetFrom = 60 * new Date().getTimezoneOffset();
+    const berlinTimeFrom = new Date(
+      new Date(event.timespan.from.toString() + 'Z').getTime() +
+        berlinOffsetFrom * 60 * 1000,
+    );
+    const berlinOffsetTo = 60 * new Date().getTimezoneOffset();
+    const berlinTimeTo = new Date(
+      new Date(event.timespan.to.toString() + 'Z').getTime() +
+        berlinOffsetTo * 60 * 1000,
+    );
+
     const timespan = {
-      from: new Date(event.timespan.from.toString()),
-      to: new Date(event.timespan.to.toString()),
+      from: berlinTimeFrom,
+      to: berlinTimeTo,
     };
-    timespan.from.setHours(timespan.from.getHours() + 2);
-    timespan.to.setHours(timespan.to.getHours() + 2);
 
     const newEvent = new this.eventModel({
       _id: new mongoose.Types.ObjectId(),
@@ -203,12 +212,22 @@ export class EventsService {
         eventType: HistoryEventType.updated,
       });
 
+      const berlinOffsetFrom = 60 * new Date().getTimezoneOffset();
+      const berlinTimeFrom = new Date(
+        new Date(changes.timespan.from.toString() + 'Z').getTime() +
+          berlinOffsetFrom * 60 * 1000,
+      );
+      const berlinOffsetTo = 60 * new Date().getTimezoneOffset();
+      const berlinTimeTo = new Date(
+        new Date(changes.timespan.to.toString() + 'Z').getTime() +
+          berlinOffsetTo * 60 * 1000,
+      );
+
       const timespan = {
-        from: new Date(changes.timespan.from.toString()),
-        to: new Date(changes.timespan.to.toString()),
+        from: berlinTimeFrom,
+        to: berlinTimeTo,
       };
-      timespan.from.setHours(timespan.from.getHours() + 2);
-      timespan.to.setHours(timespan.to.getHours() + 2);
+
       changes.timespan = timespan;
       return await this.eventModel.findByIdAndUpdate(
         { _id },

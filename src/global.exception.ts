@@ -8,5 +8,6 @@ import { BaseExceptionFilter } from '@nestjs/core';
 export class GlobalExceptionsFilter extends BaseExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     super.catch(exception, host);
+    console.error(exception);
   }
 }

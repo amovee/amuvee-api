@@ -34,6 +34,7 @@ import { RightsGuard } from '../auth/rights/rights.guard';
 @Controller('events')
 export class ResultsController {
   constructor(private readonly eventsService: EventsService) {}
+
   @Get('for_month')
   @ApiQuery({ name: 'month', type: Number})
   @ApiQuery({ name: 'year', type: Number})
@@ -47,6 +48,7 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
+
   @Get('nextTwoDistinct')
   async getNextTwoDistinctTypeEvents(): Promise<Event[]> {
     const currentTimestamp = new Date();
@@ -54,11 +56,13 @@ export class ResultsController {
       await this.eventsService.getNextTwoDistinctTypeEvents(currentTimestamp);
     return events;
   }
+
   @ApiBearerAuth('jwt')
   @Post('migrate')
   async migrate(): Promise<void> {
     await this.eventsService.migrate();
   }
+  
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'skip', required: false, type: Number })
