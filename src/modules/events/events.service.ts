@@ -169,20 +169,9 @@ export class EventsService {
       date: new Date().toISOString(),
       eventType: HistoryEventType.created,
     };
-    const berlinOffsetFrom = 60 * new Date().getTimezoneOffset();
-    const berlinTimeFrom = new Date(
-      new Date(event.timespan.from.toString() + 'Z').getTime() +
-        berlinOffsetFrom * 60 * 1000,
-    );
-    const berlinOffsetTo = 60 * new Date().getTimezoneOffset();
-    const berlinTimeTo = new Date(
-      new Date(event.timespan.to.toString() + 'Z').getTime() +
-        berlinOffsetTo * 60 * 1000,
-    );
-
     const timespan = {
-      from: berlinTimeFrom,
-      to: berlinTimeTo,
+      from: event.timespan.from ? new Date(event.timespan.from) : null,
+      to: event.timespan.to ? new Date(event.timespan.to) : null,
     };
 
     const newEvent = new this.eventModel({
@@ -212,20 +201,9 @@ export class EventsService {
         eventType: HistoryEventType.updated,
       });
 
-      const berlinOffsetFrom = 60 * new Date().getTimezoneOffset();
-      const berlinTimeFrom = new Date(
-        new Date(changes.timespan.from.toString() + 'Z').getTime() +
-          berlinOffsetFrom * 60 * 1000,
-      );
-      const berlinOffsetTo = 60 * new Date().getTimezoneOffset();
-      const berlinTimeTo = new Date(
-        new Date(changes.timespan.to.toString() + 'Z').getTime() +
-          berlinOffsetTo * 60 * 1000,
-      );
-
       const timespan = {
-        from: berlinTimeFrom,
-        to: berlinTimeTo,
+        from: changes.timespan.from ? new Date(changes.timespan.from) : null,
+        to: changes.timespan.to ? new Date(changes.timespan.to) : null,
       };
 
       changes.timespan = timespan;
