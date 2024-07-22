@@ -276,6 +276,15 @@ export class ResultsService {
     });
   }
 
+  async getMinifiedResultsByIds(
+    rid: string,
+    vid: string,
+    language: string,
+  ): Promise<MinResultDTO> {
+    // Fetch the result using both rid and vid
+    return await this.minResultModel.findOne({ rid, vid });
+  }
+
   async getUnwindedVariations(
     limit: number,
     skip: number,

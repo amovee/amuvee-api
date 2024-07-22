@@ -154,6 +154,17 @@ export class ResultsController {
   ): Promise<any> {
     return this.resultsService.getMinifiedResultsById(id, language);
   }
+
+  @Get('min/:rid/:vid')
+  @ApiQuery({ name: 'language', required: false, type: String })
+  async getMininmalResultsFromIds(
+    @Param('rid') rid: string,
+    @Param('vid') vid: string,
+    @Query('language') language?: string,
+  ): Promise<any> {
+    return this.resultsService.getMinifiedResultsByIds(rid, vid, language);
+  }
+
   @Right('RESULTS_CREATE')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
