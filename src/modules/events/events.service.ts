@@ -112,7 +112,7 @@ export class EventsService {
   }
   async getNextTwoDistinctTypeEvents(currentTimestamp: Date): Promise<Event[]> {
     // Find the next two distinct type events after the current timestamp
-    const events = await this.eventModel
+    return await this.eventModel
       .aggregate([
         {
           $match: {
@@ -134,8 +134,6 @@ export class EventsService {
         },
       ])
       .exec();
-
-    return events;
   }
   async countEvents(): Promise<{ totalCount: number }> {
     return { totalCount: await this.eventModel.countDocuments() };

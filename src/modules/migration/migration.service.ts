@@ -343,7 +343,6 @@ export class MigrationService {
         `${process.env.DIRECTUS_URL}items/result?fields=${fields}&sort=id&limit=${counter}&filter={"_and":[{"id":{"_nin": [${excluded_results}]}},{"category":{"_eq":${category.id}}}]}`,
       )
     ).data.data;
-    console.log('DONE');
     const admin = await this.userModel.findOne({ name: 'admin' }).exec();
     for (let j = 0; j < results.length; j++) {
       const result = results[j];

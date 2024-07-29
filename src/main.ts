@@ -1,23 +1,30 @@
+// main.ts
+
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as fs from 'fs';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
-import { HttpException } from '@nestjs/common';
 import { GlobalExceptionsFilter } from './global.exception';
+import { LoggingMiddleware } from './shared/middleware/logging-middleware';
 
 const httpsOptions = {
   key: fs.readFileSync('./secrets/amuvee.de_private_key.key'),
   cert: fs.readFileSync('./secrets/amuvee.de_ssl_certificate.cer'),
 };
-const nestApplicationOprions = { httpsOptions }
+
+const nestApplicationOptions = { httpsOptions };
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule
-    ,process.env.HTTPS=='true'?nestApplicationOprions:{}
+  const app = await NestFactory.create(
+    AppModule,
+    process.env.HTTPS === 'true' ? nestApplicationOptions : {},
   );
-  
+
+  app.use((req, res, next) => new LoggingMiddleware().use(req, res, next));
+
   const { httpAdapter } = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new GlobalExceptionsFilter(httpAdapter))
+  app.useGlobalFilters(new GlobalExceptionsFilter(httpAdapter));
 
   const config = new DocumentBuilder()
     .setTitle('Amuvee API')
