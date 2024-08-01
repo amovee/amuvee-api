@@ -9,6 +9,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from 'src/modules/users/users.module';
 import { CountersModule } from '../counters/counters.module';
 import { User, UserSchema } from 'src/shared/schemas/user.schema';
+import { Location, LocationSchema } from 'src/shared/schemas/location.schema';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { User, UserSchema } from 'src/shared/schemas/user.schema';
       { name: Result.name, schema: ResultSchema },
       { name: ResultType.name, schema: ResultTypeSchema },
       { name: Region.name, schema: RegionSchema },
+      { name: Location.name, schema: LocationSchema },
       { name: Insurance.name, schema: InsuranceSchema },
       { name: Action.name, schema: ActionSchema },
       { name: MinResult.name, schema: MinResultSchema },

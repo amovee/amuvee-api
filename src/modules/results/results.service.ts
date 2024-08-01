@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   MinResult,
@@ -6,7 +6,8 @@ import {
   Result,
   ResultDocument,
 } from 'src/shared/schemas/result.schema';
-import mongoose, { ObjectId, PipelineStage } from 'mongoose';
+import mongoose, { PipelineStage } from 'mongoose';
+import { ObjectId } from 'mongodb';
 import { Model } from 'mongoose';
 import { Region, RegionDocument } from 'src/shared/schemas/region.schema';
 import { Action, ActionDocument } from 'src/shared/schemas/action.schema';
@@ -28,6 +29,7 @@ import { User, UserDocument } from 'src/shared/schemas/user.schema';
 import { HistoryEventType } from 'src/shared/dtos/roles.dto';
 import { RegionDTO } from 'src/shared/dtos/region.dto';
 import { isString } from 'class-validator';
+import { Location, LocationDocument } from 'src/shared/schemas/location.schema';
 
 @Injectable()
 export class ResultsService {
@@ -35,6 +37,7 @@ export class ResultsService {
     @InjectModel(Result.name) private resultModel: Model<ResultDocument>,
     @InjectModel(Region.name) private regionModel: Model<RegionDocument>,
     @InjectModel(Action.name) private actionModel: Model<ActionDocument>,
+    @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(MinResult.name)
     private minResultModel: Model<MinResultDocument>,
@@ -649,6 +652,168 @@ export class ResultsService {
         'min Results can not updated',
         HttpStatus.NOT_FOUND,
       );
+    }
+  }
+  async findResultsByRegionId(regionId: number) {
+    const region = await this.regionModel.findOne({ id: regionId }).exec();
+    if (!region) {
+      throw new NotFoundException(`Region with id ${regionId} not found`);
+    }
+    const regionObjectId = region._id;
+    return await this.resultModel.find({
+      "variations.filters.regions": {
+        $elemMatch: {
+          $eq: regionObjectId
+        }
+      }
+    })
+    .select('_id id name')
+    .lean()
+    .exec();
+  }
+  async findResultsByActionId(actionId: number) {
+    const action = await this.actionModel.findOne({ id: actionId }).exec();
+    if (!action) {
+      throw new NotFoundException(`Action with id ${actionId} not found`);
+    }
+
+    const actionObjectId = action._id;
+    return await this.resultModel.find({
+      "variations.actions": {
+        $elemMatch: {
+          $eq: actionObjectId
+        }
+      }
+    })
+    .select('_id id name')
+    .lean()
+    .exec();
+  }
+  async findResultsByLocationId(locationId: number) {
+    const location = await this.locationModel.findOne({ id: locationId }).exec();
+    if (!location) {
+      throw new NotFoundException(`location with id ${locationId} not found`);
+    }
+
+    const locationObjectId = location._id;
+    return await this.resultModel.find({
+      "variations.locations": {
+        $elemMatch: {
+          $eq: locationObjectId
+        }
+      }
+    })
+    .select('_id id name')
+    .lean()
+    .exec();
+  }
+  async findUnreferencedActions() {
+    try {
+      const referencedActions = await this.resultModel.aggregate([
+        { $unwind: "$variations" },
+        { $unwind: "$variations.actions" },
+        { $group: { _id: "$variations.actions" } }
+      ]).exec();      
+      const referencedActionIds = referencedActions.map(action => action._id);      
+        const unreferencedActions = await this.actionModel.aggregate([
+        { 
+          $match: { 
+            _id: { 
+              $nin: referencedActionIds.map(id => {
+                try {
+                  return new ObjectId(id); 
+                } catch (e) {
+                  console.error(`Invalid ObjectId: ${id}`);
+                  return null;
+                }
+              }).filter(id => id !== null) 
+            } 
+          } 
+        },
+        { $project: { name: 1, id: 1, _id: 1 } }
+      ]).exec();
+  
+      return unreferencedActions;
+  
+    } catch (error) {
+      console.error("An error occurred while finding unreferenced actions:", error);
+      throw error;
+    }
+  }
+  async findUnreferencedLocations() {
+    try {
+      // 1. Hole alle referenzierten Locations
+      const referencedLocations = await this.resultModel.aggregate([
+        { $unwind: "$variations" },
+        { $unwind: "$variations.locations" },
+        { $group: { _id: "$variations.locations" } }
+      ]).exec();
+  
+      // 2. Erstelle eine Liste der referenzierten Location IDs
+      const referencedLocationIds = referencedLocations.map(location => location._id);
+  
+      // 3. Hole alle Locations, die nicht referenziert werden
+      const unreferencedLocations = await this.locationModel.aggregate([
+        { 
+          $match: { 
+            _id: { 
+              $nin: referencedLocationIds.map(id => {
+                try {
+                  return new ObjectId(id); 
+                } catch (e) {
+                  console.error(`Invalid ObjectId: ${id}`);
+                  return null;
+                }
+              }).filter(id => id !== null) // Filtere ungültige ObjectId-Instanzen heraus
+            } 
+          } 
+        },
+        { $project: { name: 1, id: 1, _id: 1 } }
+      ]).exec();
+  
+      return unreferencedLocations;
+  
+    } catch (error) {
+      console.error("An error occurred while finding unreferenced locations:", error);
+      throw error;
+    }
+  }
+  async findUnreferencedRegions() {
+    try {
+      // 1. Hole alle referenzierten Regionen
+      const referencedRegions = await this.resultModel.aggregate([
+        { $unwind: "$variations" },
+        { $unwind: "$variations.regions" },
+        { $group: { _id: "$variations.regions" } }
+      ]).exec();
+  
+      // 2. Erstelle eine Liste der referenzierten Region IDs
+      const referencedRegionIds = referencedRegions.map(region => region._id);
+  
+      // 3. Hole alle Regionen, die nicht referenziert werden
+      const unreferencedRegions = await this.regionModel.aggregate([
+        { 
+          $match: { 
+            _id: { 
+              $nin: referencedRegionIds.map(id => {
+                try {
+                  return new ObjectId(id); 
+                } catch (e) {
+                  console.error(`Invalid ObjectId: ${id}`);
+                  return null;
+                }
+              }).filter(id => id !== null) // Filtere ungültige ObjectId-Instanzen heraus
+            } 
+          } 
+        },
+        { $project: { name: 1, id: 1, _id: 1 } }
+      ]).exec();
+  
+      return unreferencedRegions;
+  
+    } catch (error) {
+      console.error("An error occurred while finding unreferenced regions:", error);
+      throw error;
     }
   }
 }

@@ -33,14 +33,17 @@ export class ResultsController {
   }
   @Get()
   @ApiQuery({ name: 'search', required: false, type: String })
-  async getFilteredResults(@Query() query: QueryFilterDTO, @Query('search') search): Promise<any[]> {    
+  async getFilteredResults(
+    @Query() query: QueryFilterDTO,
+    @Query('search') search,
+  ): Promise<any[]> {
     query = queryFilterParser(query);
     try {
       return await this.resultsService.getFilteredResults(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
         query,
-        search
+        search,
       );
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
@@ -72,7 +75,7 @@ export class ResultsController {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }
   }
-  
+
   @Get('min/counter')
   async getMinCounter(
     @Query() query: QueryFilterDTO,
@@ -103,7 +106,8 @@ export class ResultsController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @Get('counter')
   async getCounter(
-    @Query() query: QueryFilterDTO, @Query('search') search
+    @Query() query: QueryFilterDTO,
+    @Query('search') search,
   ): Promise<{ filtered?: number; total: number }> {
     query = queryFilterParser(query);
     try {
@@ -134,14 +138,33 @@ export class ResultsController {
     }
   }
 
-  @Get('/:id')
-  @ApiQuery({ name: 'language', required: false, type: String })
-  async getOne(
-    @Param('id') id: string,
-    @Query('language') language?: string,
-  ): Promise<ResultDTO | undefined> {
-    return this.resultsService.getResultFromId(id, language);
+  @Get('unreferenced-actions')
+  async findUnreferencedActions() {
+    return await this.resultsService.findUnreferencedActions();
   }
+  @Get('unreferenced-locations')
+  async findUnreferencedLocations() {
+    try {
+      return await this.resultsService.findUnreferencedLocations();
+    } catch (error) {
+      throw new HttpException(
+        'Error finding unreferenced locations',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  @Get('unreferenced-regions')
+  async findUnreferencedRegions() {
+    try {
+      return await this.resultsService.findUnreferencedRegions();
+    } catch (error) {
+      throw new HttpException(
+        'Error finding unreferenced regions',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Post('results/min')
   async minifyAllResults(): Promise<void> {
     await this.resultsService.minifyAllResults();
@@ -181,7 +204,7 @@ export class ResultsController {
   async updateResult(
     @Body() body: CreateResultDTO,
     @Param('id') id: string,
-    @Request() req
+    @Request() req,
   ) {
     return this.resultsService.update(id, body, req.user._id);
   }
@@ -193,5 +216,27 @@ export class ResultsController {
   @Delete('/:id')
   async deleteResult(@Param('id') id: string, @Request() req) {
     this.resultsService.deleteResult(id);
+  }
+
+  @Get('by-action/:actionId')
+  async getResultsByAction(@Param('actionId') actionId: number) {
+    return await this.resultsService.findResultsByActionId(+actionId);
+  }
+  @Get('by-location/:locationId')
+  async getResultsByLocation(@Param('locationId') locationId: number) {
+    return await this.resultsService.findResultsByLocationId(+locationId);
+  }
+  @Get('by-region/:regionId')
+  async getResultsByRegion(@Param('regionId') regionId: number) {
+    return await this.resultsService.findResultsByRegionId(+regionId);
+  }
+
+  @Get('/:id')
+  @ApiQuery({ name: 'language', required: false, type: String })
+  async getOne(
+    @Param('id') id: string,
+    @Query('language') language?: string,
+  ): Promise<ResultDTO | undefined> {
+    return this.resultsService.getResultFromId(id, language);
   }
 }
