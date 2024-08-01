@@ -392,6 +392,13 @@ export class ResultsService {
     const total = await this.minResultModel.aggregate([
       { $match: filters },
       {
+        $group: {
+          _id: '$r_id',
+          doc: { $first: '$$ROOT' },
+        },
+      },
+      { $replaceRoot: { newRoot: '$doc' } },
+      {
         $count: 'totalCount',
       },
     ]);
