@@ -17,9 +17,8 @@ import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { Right } from '../auth/rights/rights.decorator';
 import { RightsGuard } from '../auth/rights/rights.guard';
 import { UsersService } from './users.service';
-import { UpdatePasswordDTO, createUserDTO, updateUserDTO } from 'src/shared/dtos/user.dto';
-import {ApiBearerAuth, ApiParam, ApiQuery, ApiTags} from '@nestjs/swagger';
-import { UserDTO } from 'src/shared/dtos/types.dto';
+import { UpdatePasswordDTO, createUserDTO, updateUserDTO, AddRolesDto } from 'src/shared/dtos/user.dto';
+import {ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags} from '@nestjs/swagger';
 
 @ApiTags('Users')
 @Controller()
@@ -39,12 +38,12 @@ export class UsersController {
         email: user.email,
         oldId: user.oldId,
         name: user.name,
+        roles: user.roles,
       };
     }
     throw new UnauthorizedException();
   }
 
-  
   @Right('USERS_READ')
   @UseGuards(JwtAuthGuard, RightsGuard)
   @ApiBearerAuth('jwt')
@@ -134,5 +133,24 @@ export class UsersController {
   async deleteUser(@Request() req, @Param('id') id: string): Promise<void> {
     this.usersService.deleteOne(req.user.email, id);
     // TODO: return value
+  }
+
+  @Right('USERS_UPDATE')
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Post('usersroles')
+  async migrateUserRoles(): Promise<void> {
+    await this.usersService.migrateUserRoles();
+  }
+
+  @Right('USERS_UPDATE')
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Post('addusersroles/:id')
+  @ApiOperation({ summary: 'Add roles to a specific user' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 200, description: 'Roles successfully added.' })
+  async addRolesToUser(@Param('id') id: string, @Body() addRolesDto: AddRolesDto): Promise<void> {
+    await this.usersService.addRolesToUser(id, addRolesDto.roles);
   }
 }

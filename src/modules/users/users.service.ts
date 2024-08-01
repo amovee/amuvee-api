@@ -133,6 +133,7 @@ export class UsersService {
           email: user.email,
           rights: [],
           isAdmin: false,
+          roles: ['User'],
         }).save();
       }
     }
@@ -146,4 +147,30 @@ export class UsersService {
     }
     return retVal;
   }
+
+  async migrateUserRoles(): Promise<void> {
+    const defaultRole = ['User'];  // This sets the default role to 'User'
+    // Perform the update operation to add default roles to users without any roles
+    const updateResult = await this.userModel.updateMany(
+      { roles: { $exists: false } },  // This targets documents without the 'roles' field
+      { $set: { roles: defaultRole } }  // This sets the 'roles' field to the defaultRole
+    );
+    // Logging the results of the update operation
+    console.log(`Attempted to update users without roles.`);
+    console.log(`Matched ${updateResult.matchedCount} users.`);
+    console.log(`Updated ${updateResult.modifiedCount} users with default roles.`);
+  }
+
+  async addRolesToUser(id: string, roles: string[]): Promise<void> {
+    console.log(`Adding roles to user with id: ${id}`, roles);
+    try {
+      const user = await this.userModel.updateOne(
+        { _id: id },
+        { $addToSet: { roles: { $each: roles } } }
+      );
+      console.log(`Updated ${user.modifiedCount} users with new roles.`);
+    } catch (error) {
+      console.error('Failed to add roles to user:', error);
+    }
+  };
 }

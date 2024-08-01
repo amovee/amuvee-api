@@ -22,6 +22,8 @@ export class User {
   isAdmin: boolean;
   @Prop()
   token?: string;
+  @Prop()
+  roles: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
