@@ -33,6 +33,7 @@ export class UsersController {
       const user = await this.usersService.findOneByEmail(req['user'].email);
       return {
         _id: user._id,
+        uuid: user.uuid,
         isAdmin: user.isAdmin,
         rights: user.rights,
         email: user.email,
@@ -153,4 +154,16 @@ export class UsersController {
   async addRolesToUser(@Param('id') id: string, @Body() addRolesDto: AddRolesDto): Promise<void> {
     await this.usersService.addRolesToUser(id, addRolesDto.roles);
   }
+
+  @Right('USERS_UPDATE')
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard, RightsGuard)
+  @Post('MigrateUUIDUsers/:id')
+  @ApiOperation({ summary: 'Add UUID to the existing Users' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 200, description: 'UUID successfully added ' })
+  async addUUIDToUsers(): Promise<void> {
+    await this.usersService.assignUUIDs();
+  }
+
 }

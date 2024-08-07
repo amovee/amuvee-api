@@ -8,7 +8,7 @@ import {
   Param,
   Post,
   Put,
-  Query,
+  Query, Req,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -22,11 +22,17 @@ import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { RightsGuard } from '../auth/rights/rights.guard';
 import { Right } from '../auth/rights/rights.decorator';
+import { UserActivityService } from '../users/userActivity.service';
+import {JwtService} from "@nestjs/jwt";
 
 @ApiTags('Results')
 @Controller('results')
 export class ResultsController {
-  constructor(private readonly resultsService: ResultsService) {}
+  constructor(
+    private readonly resultsService: ResultsService,
+    private readonly userActivityService: UserActivityService,
+    private jwtService: JwtService,
+) {}
 
   @Get('currentfilters') async currentfilters(@Query() query: QueryFilterDTO) {
     return this.resultsService.getMongoDBFilters(queryFilterParser(query));
@@ -60,14 +66,22 @@ export class ResultsController {
     }
   }
   @Get('min')
-  async getMininmalResults(@Query() query: QueryFilterDTO): Promise<any[]> {
+  async getMininmalResults(@Req() req: Request, @Query() query: QueryFilterDTO): Promise<any[]> {
     query = queryFilterParser(query);
     try {
-      return await this.resultsService.getMinifiedResults(
+      const minResults =  await this.resultsService.getMinifiedResults(
         query.limit ? query.limit : 20,
         query.skip ? query.skip : 0,
         query,
       );
+
+      const userToken = req.headers['authorization']?.split(' ')[1];
+      const user = this.jwtService.decode(userToken);
+
+      if (!!user) {
+        await this.userActivityService.updateActivity(user.uuid,"fetch minimal results" , query);
+      }
+      return minResults;
     } catch (error) {
       throw new HttpException('Invalid query!', HttpStatus.BAD_REQUEST);
     }

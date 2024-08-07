@@ -10,6 +10,7 @@ import {
   createUserDTO,
   updateUserDTO,
 } from 'src/shared/dtos/user.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UsersService {
@@ -36,8 +37,8 @@ export class UsersService {
   async updateOne(_id: string, changes: updateUserDTO) {
     await this.userModel.findByIdAndUpdate({ _id: _id }, changes);
   }
-  async updateToken(_id: ObjectId, token: string) {
-    await this.userModel.findByIdAndUpdate({ _id: _id }, { token: token });
+  async updateToken(uuid: string, token: string) {
+    await this.userModel.findOne({ uuid }, { token: token });
   }
   async checkUserHasRight(right: right, _id: string): Promise<boolean> {
     const user = await this.userModel.findById(_id).exec()
@@ -59,6 +60,7 @@ export class UsersService {
     const newPassword = this.generatePassword(20);
     const encriptedKey = await bcrypt.hash(newPassword, 10);
     await new this.userModel({
+      uuid: uuidv4(),
       name: user.name,
       rights: user.rights,
       email: user.email,
@@ -149,11 +151,11 @@ export class UsersService {
   }
 
   async migrateUserRoles(): Promise<void> {
-    const defaultRole = ['User'];  // This sets the default role to 'User'
+    const defaultRole = ['User'];
     // Perform the update operation to add default roles to users without any roles
     const updateResult = await this.userModel.updateMany(
-      { roles: { $exists: false } },  // This targets documents without the 'roles' field
-      { $set: { roles: defaultRole } }  // This sets the 'roles' field to the defaultRole
+      { roles: { $exists: false } },
+      { $set: { roles: defaultRole } }
     );
     // Logging the results of the update operation
     console.log(`Attempted to update users without roles.`);
@@ -173,4 +175,17 @@ export class UsersService {
       console.error('Failed to add roles to user:', error);
     }
   };
+
+  async assignUUIDs() {
+    const users = await this.userModel.find({ uuid: { $exists: false } });
+    users.forEach(async (user) => {
+      user.uuid = uuidv4();
+      await user.save();
+    });
+  }
+
+  async addActivityToUser(userUUId: string, activityId: string) {
+    await this.userModel.findOneAndUpdate({ uuid: userUUId }, { activity: activityId });
+  }
+
 }

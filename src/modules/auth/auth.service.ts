@@ -26,17 +26,17 @@ export class AuthService {
     password: string,
   ): Promise<{
     access_token: string;
-  }> {    
+  }> {
     const user = await this.usersService.findOneByEmail(email);
     if (!user) throw new UnauthorizedException();
     const compare = await bcrypt.compare(password, user.password);
     if (!compare) throw new UnauthorizedException();
     const token = this.jwtService.sign({
-      _id: user._id,
+      uuid: user.uuid,
       password: user.password,
       email: user.email,
     });
-    await this.usersService.updateToken(user._id, token);
+    await this.usersService.updateToken(user.uuid, token);
 
     return {
       access_token: token,

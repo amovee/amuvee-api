@@ -1,4 +1,4 @@
-import {Controller, Delete, Get, Param, Post, Query,Body, UseGuards} from '@nestjs/common';
+import {Controller, Delete, Get, Param, Post, Query, Body, UseGuards, HttpException, HttpStatus} from '@nestjs/common';
 import { Insurance } from 'src/shared/schemas/insurance.schema';
 import { InsurancesService } from './insurances.service';
 import {ApiBearerAuth, ApiTags} from '@nestjs/swagger';
@@ -49,7 +49,11 @@ export class InsurancesController {
   @ApiBearerAuth('jwt')
   @Delete(':id')
   async deleteInsurance(@Param('id') id: string) {
-    return this.insurancesService.deleteInsurance(id);
+    try {
+      await this.insurancesService.deleteInsurance(id);
+    } catch (error) {
+      throw new HttpException('Failed to delete insurance', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
   @Right('INSURANCES_READ')
   @UseGuards(JwtAuthGuard, RightsGuard)

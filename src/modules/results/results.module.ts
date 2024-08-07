@@ -9,6 +9,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from 'src/modules/users/users.module';
 import { CountersModule } from '../counters/counters.module';
 import { User, UserSchema } from 'src/shared/schemas/user.schema';
+import { UserActivity, UserActivitySchema } from 'src/shared/schemas/userActivity.schema';
+import {JwtService} from "@nestjs/jwt";
+import {UserActivityService} from "../users/userActivity.service";
 
 @Module({
   imports: [
@@ -20,12 +23,13 @@ import { User, UserSchema } from 'src/shared/schemas/user.schema';
       { name: Action.name, schema: ActionSchema },
       { name: MinResult.name, schema: MinResultSchema },
       { name: User.name, schema: UserSchema },
+      { name: UserActivity.name , schema: UserActivitySchema },
     ]),
     forwardRef(()=> UsersModule),
     forwardRef(()=> CountersModule),
   ],
   controllers: [ResultsController],
-  providers: [ResultsService],
+  providers: [ResultsService, JwtService, UserActivityService],
   exports: [ResultsService]
 })
 export class ResultsModule {}
